@@ -1,0 +1,3 @@
+#[pub]
+expression -> bool
+  = "foo" { true }
