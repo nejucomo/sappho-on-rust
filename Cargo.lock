@@ -2,11 +2,11 @@
 name = "sappho"
 version = "0.0.1"
 dependencies = [
- "peg 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "peg 0.1.7 (git+https://github.com/kevinmehall/rust-peg.git)",
 ]
 
 [[package]]
 name = "peg"
 version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/kevinmehall/rust-peg.git#a4910b1180845652d83bd6177e76da299f5e9099"
 

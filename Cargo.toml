@@ -4,5 +4,5 @@ name = "sappho"
 version = "0.0.1"
 authors = ["Nathan Wilcox <nejucomo@gmail.com>"]
 
-[dependencies]
-peg = "0.1.7"
+[dependencies.peg]
+git = "https://github.com/kevinmehall/rust-peg.git"
