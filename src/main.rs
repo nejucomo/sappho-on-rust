@@ -1,6 +1,11 @@
 #![feature(plugin)]
 #![plugin(peg_syntax_ext)]
 
+#![feature(collections)]
+
+
+extern crate collections;
+
 
 /*
 fn main() {
@@ -9,31 +14,14 @@ fn main() {
 */
 
 mod parse {
+    use collections::string::String;
+
     // The main top-level interface to the parser:
     pub fn expression(source: &str) -> ParseResult<bool> {
-        ParseResult::from_result(peg::expression(source))
+        peg::expression(source)
     }
 
-    // We re-implement Result so that it has a fmt::String impl...  :-<
-    #[derive(Eq)]
-    #[derive(PartialEq)]
-    #[derive(Debug)]
-    pub enum ParseResult<T> {
-        Ok(T),
-        Err(String),
-    }
-
-    impl<T> ParseResult<T> {
-        fn from_result(r: Result<T, String>) -> ParseResult<T> {
-            /* Cumbersome boilerplate, since we're rewrapping Result
-             * for fmt::String impl.
-             */
-            match r {
-                Ok(v) => ParseResult::Ok(v),
-                Err(e) => ParseResult::Err(e),
-            }
-        }
-    }
+    type ParseResult<T> = Result<T, String>;
 
 
     peg_file! peg("sappho.rustpeg");
@@ -55,7 +43,7 @@ mod parse {
             }
         }
 
-        test_parse_expectation! { literal_true  : "true"  => ParseResult::Ok(true)  }
-        test_parse_expectation! { literal_false : "false" => ParseResult::Ok(false) }
+        test_parse_expectation! { literal_true  : "true"  => Ok(true)  }
+        test_parse_expectation! { literal_false : "false" => Ok(false) }
     }
 }
