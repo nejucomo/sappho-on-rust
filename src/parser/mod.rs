@@ -36,10 +36,14 @@ mod tests {
     }
 
 
+    // Test cases:
     test_parse_expectation! {
         literal_true : "true" => Ok(Expression::Literal(Literal::Bool(true)))
     }
     test_parse_expectation! {
         literal_false : "false" => Ok(Expression::Literal(Literal::Bool(false)))
+    }
+    test_parse_expectation! {
+        empty_object : "object {}" => Ok(Expression::Object)
     }
 }

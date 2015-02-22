@@ -4,7 +4,11 @@ use super::super::ast::{Expression, Literal};
 #[pub]
 expression -> Expression
   = l:literal { Expression::Literal(l) }
+  / _:object  { Expression::Object }
 
 literal -> Literal
   = "true"  { Literal::Bool(true)  }
   / "false" { Literal::Bool(false) }
+
+object -> ()
+  = "object {}" { () }

@@ -2,7 +2,8 @@
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum Expression {
-    Literal(Literal)
+    Literal(Literal),
+    Object,
 }
 
 
@@ -10,7 +11,7 @@ pub enum Expression {
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum Literal {
-    Bool(bool)
+    Bool(bool),
 }
 
 
