@@ -14,3 +14,18 @@ fn print_parse(src: &str) {
 }
 
 peg_file! parser("sappho.rustpeg");
+
+#[test]
+fn parse_expectations() {
+    let cases = vec![
+        ("true", Ok(true)),
+        ("false", Ok(false)),
+        ];
+
+    for (input, expectation) in cases {
+        let result = parser::expression(input);
+        assert!(result == expectation,
+                "Parse expectation failure:\nInput: {}\nExpectation: {}\nResult: {}\n",
+                input, expectation, result);
+    }
+}
