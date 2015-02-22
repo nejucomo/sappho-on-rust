@@ -3,7 +3,7 @@
 #[derive(Debug)]
 pub enum Expression {
     Literal(Literal),
-    Object,
+    Object(Object),
 }
 
 
@@ -13,5 +13,11 @@ pub enum Expression {
 pub enum Literal {
     Bool(bool),
 }
+
+
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub struct Object;
 
 

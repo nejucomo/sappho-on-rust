@@ -1,14 +1,14 @@
-use super::super::ast::{Expression, Literal};
+use super::super::ast::{Expression, Literal, Object};
 
 
 #[pub]
 expression -> Expression
   = l:literal { Expression::Literal(l) }
-  / _:object  { Expression::Object }
+  / o:object  { Expression::Object(o)  }
 
 literal -> Literal
   = "true"  { Literal::Bool(true)  }
   / "false" { Literal::Bool(false) }
 
-object -> ()
-  = "object {}" { () }
+object -> Object
+  = "object" [ ]+ "{" [\n ]* "}" { Object }
