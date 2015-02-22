@@ -3,5 +3,8 @@ use super::super::ast::{Expression, Literal};
 
 #[pub]
 expression -> Expression
-  = "true"  { Expression::Literal(Literal::Bool(true)) }
-  / "false" { Expression::Literal(Literal::Bool(false)) }
+  = l:literal { Expression::Literal(l) }
+
+literal -> Literal
+  = "true"  { Literal::Bool(true)  }
+  / "false" { Literal::Bool(false) }
