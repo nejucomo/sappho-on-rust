@@ -41,19 +41,21 @@ mod parse {
     mod tests {
         use super::{ParseResult, expression};
 
-        #[test]
-        fn parse_expectations() {
-            let cases = vec![
-                ("true", ParseResult::Ok(true)),
-                ("false", ParseResult::Ok(false)),
-                ];
+        fn check_parse_expectation(input: &str, expectation: ParseResult<bool>) {
+            let result = expression(input);
+            assert!(result == expectation,
+                    "Parse expectation failure:\nInput: {:?}\nExpectation: {:?}\nResult: {:?}\n",
+                    input, expectation, result);
+        }
 
-            for (input, expectation) in cases {
-                let result = expression(input);
-                assert!(result == expectation,
-                        "Parse expectation failure:\nInput: {:?}\nExpectation: {:?}\nResult: {:?}\n",
-                        input, expectation, result);
+        macro_rules! test_parse_expectation {
+            ( $name:ident : $input:expr => $expectation:expr ) => {
+                #[test]
+                fn $name () { check_parse_expectation( $input, $expectation ) }
             }
         }
+
+        test_parse_expectation! { literal_true  : "true"  => ParseResult::Ok(true)  }
+        test_parse_expectation! { literal_false : "false" => ParseResult::Ok(false) }
     }
 }
