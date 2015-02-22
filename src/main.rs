@@ -1,31 +1,55 @@
 #![feature(plugin)]
 #![plugin(peg_syntax_ext)]
 
+
+/*
 fn main() {
-    print_parse("foo");
+    assert!(false, "not implemented");
 }
+*/
 
-fn print_parse(src: &str) {
-    println!("Source: {}", src);
-    match parser::expression(src) {
-        Ok(v) => println!("Ok({})", v),
-        Err(e) => println!("Err({})", e),
+mod parse {
+    // The main top-level interface to the parser:
+    pub fn expression(source: &str) -> ParseResult<bool> {
+        ParseResult::from_result(peg::expression(source))
     }
-}
 
-peg_file! parser("sappho.rustpeg");
+    // We re-implement Result so that it has a fmt::String impl...  :-<
+    #[derive(Eq)]
+    #[derive(PartialEq)]
+    #[derive(Debug)]
+    pub enum ParseResult<T> {
+        Ok(T),
+        Err(String),
+    }
 
-#[test]
-fn parse_expectations() {
-    let cases = vec![
-        ("true", Ok(true)),
-        ("false", Ok(false)),
-        ];
+    impl<T> ParseResult<T> {
+        fn from_result(r: Result<T, String>) -> ParseResult<T> {
+            /* Cumbersome boilerplate, since we're rewrapping Result
+             * for fmt::String impl.
+             */
+            match r {
+                Ok(v) => ParseResult::Ok(v),
+                Err(e) => ParseResult::Err(e),
+            }
+        }
+    }
 
-    for (input, expectation) in cases {
-        let result = parser::expression(input);
-        assert!(result == expectation,
-                "Parse expectation failure:\nInput: {}\nExpectation: {}\nResult: {}\n",
-                input, expectation, result);
+
+    peg_file! peg("sappho.rustpeg");
+
+    #[test]
+    fn parse_expectations() {
+        let cases = vec![
+            ("true", ParseResult::Ok(true)),
+            ("false", ParseResult::Ok(false)),
+            ];
+
+        for (input, expectation) in cases {
+            let result = expression(input);
+            assert!(result == expectation,
+                    "Parse expectation failure:\nInput: {:?}\nExpectation: {:?}\nResult: {:?}\n",
+                    input, expectation, result);
+        }
     }
 }
