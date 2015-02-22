@@ -1,3 +1,4 @@
 #[pub]
 expression -> bool
-  = "foo" { true }
+  = "true" { true }
+  / "false" { false }
