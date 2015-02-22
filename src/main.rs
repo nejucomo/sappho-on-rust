@@ -38,18 +38,22 @@ mod parse {
 
     peg_file! peg("sappho.rustpeg");
 
-    #[test]
-    fn parse_expectations() {
-        let cases = vec![
-            ("true", ParseResult::Ok(true)),
-            ("false", ParseResult::Ok(false)),
-            ];
+    mod tests {
+        use super::{ParseResult, expression};
 
-        for (input, expectation) in cases {
-            let result = expression(input);
-            assert!(result == expectation,
-                    "Parse expectation failure:\nInput: {:?}\nExpectation: {:?}\nResult: {:?}\n",
-                    input, expectation, result);
+        #[test]
+        fn parse_expectations() {
+            let cases = vec![
+                ("true", ParseResult::Ok(true)),
+                ("false", ParseResult::Ok(false)),
+                ];
+
+            for (input, expectation) in cases {
+                let result = expression(input);
+                assert!(result == expectation,
+                        "Parse expectation failure:\nInput: {:?}\nExpectation: {:?}\nResult: {:?}\n",
+                        input, expectation, result);
+            }
         }
     }
 }
