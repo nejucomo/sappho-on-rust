@@ -1,4 +1,7 @@
+use super::super::ast::{Expression, Literal};
+
+
 #[pub]
-expression -> bool
-  = "true" { true }
-  / "false" { false }
+expression -> Expression
+  = "true"  { Expression::Literal(Literal::Bool(true)) }
+  / "false" { Expression::Literal(Literal::Bool(false)) }

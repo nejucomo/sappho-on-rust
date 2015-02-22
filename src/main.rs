@@ -6,11 +6,5 @@
 
 extern crate collections;
 
+mod ast;
 mod parser;
-
-
-/*
-fn main() {
-    assert!(false, "not implemented");
-}
-*/
