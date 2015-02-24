@@ -3,8 +3,15 @@ use super::super::ast::{Expression, Literal, Object};
 
 #[pub]
 expression -> Expression
-  = l:literal { Expression::Literal(l) }
-  / o:object  { Expression::Object(o)  }
+  = i:identifier { Expression::Dereference(i) }
+  / l:literal    { Expression::Literal(l)     }
+  / o:object     { Expression::Object(o)      }
+
+identifier -> String
+  = ! "true"
+    ! "false"
+    ! "object"
+    [A-Za-z][A-Za-z0-9_]* { match_str.to_string() }
 
 literal -> Literal
   = "true"  { Literal::Bool(true)  }
