@@ -1,5 +1,14 @@
-use super::super::ast::{Expression, Literal, Object};
-use super::{ParseResult, parse_expression};
+use super::super::ast::{
+    Expression,
+    FuncRule,
+    Literal,
+    Object,
+    Pattern,
+};
+use super::{
+    ParseResult,
+    parse_expression,
+};
 
 
 fn check_parse_expectation(inputs: &[&str], expectation: ParseResult) {
@@ -40,5 +49,16 @@ test_parse_expectations! {
         : &["object {}",
             "object { }",
             "object {\n}"]
-        => Ok(Expression::Object(Object::empty()))
+        => Ok(Expression::Object(Object::empty()));
+
+    identity_func
+        : &["object { func { x -> x } }"]
+        => Ok(
+            Expression::Object(
+                Object::from_func(
+                    vec![
+                        FuncRule {
+                            pattern: Pattern::Bind("x".to_string()),
+                            body: Expression::Dereference("x".to_string()),
+                        }])))
 }

@@ -2,9 +2,9 @@
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum Expression {
+    Dereference(String),
     Literal(Literal),
     Object(Object),
-    Dereference(String),
 }
 
 
@@ -41,11 +41,14 @@ type Function = Vec<FuncRule>;
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct FuncRule {
-    pattern: Pattern,
-    body: Expression,
+    pub pattern: Pattern,
+    pub body: Expression,
 }
 
 
-type Pattern = ();
-
-
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub enum Pattern {
+    Bind(String),
+}
