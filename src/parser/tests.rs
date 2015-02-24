@@ -36,5 +36,5 @@ test_parse_expectations! {
 
     empty_object
         : "object {}"
-        => Ok(Expression::Object(Object))
+        => Ok(Expression::Object(Object::empty()))
 }
