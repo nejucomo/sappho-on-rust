@@ -30,6 +30,10 @@ test_parse_expectations! {
         : "false"
         => Ok(Expression::Literal(Literal::Bool(false)));
 
+    dereference
+        : "x"
+        => Ok(Expression::Dereference("x".to_string()));
+
     empty_object
         : "object {}"
         => Ok(Expression::Object(Object))

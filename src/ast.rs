@@ -4,6 +4,7 @@
 pub enum Expression {
     Literal(Literal),
     Object(Object),
+    Dereference(String),
 }
 
 
