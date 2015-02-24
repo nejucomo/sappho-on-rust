@@ -10,21 +10,27 @@ fn check_parse_expectation(input: &str, expectation: ParseResult) {
 }
 
 
-macro_rules! test_parse_expectation {
-    ( $name:ident : $input:expr => $expectation:expr ) => {
-        #[test]
-        fn $name () { check_parse_expectation( $input, $expectation ) }
+macro_rules! test_parse_expectations {
+    ( $( $name:ident : $input:expr => $expectation:expr );* ) => {
+        $(
+            #[test]
+            fn $name () { check_parse_expectation( $input, $expectation ) }
+        )*
     }
 }
 
 
 // Test cases:
-test_parse_expectation! {
-    literal_true : "true" => Ok(Expression::Literal(Literal::Bool(true)))
-}
-test_parse_expectation! {
-    literal_false : "false" => Ok(Expression::Literal(Literal::Bool(false)))
-}
-test_parse_expectation! {
-    empty_object : "object {}" => Ok(Expression::Object(Object))
+test_parse_expectations! {
+    literal_true
+        : "true"
+        => Ok(Expression::Literal(Literal::Bool(true)));
+
+    literal_false
+        : "false"
+        => Ok(Expression::Literal(Literal::Bool(false)));
+
+    empty_object
+        : "object {}"
+        => Ok(Expression::Object(Object))
 }
