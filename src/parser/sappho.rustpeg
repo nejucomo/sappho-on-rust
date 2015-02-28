@@ -17,6 +17,7 @@ expression -> Expression
 identifier -> String
   = ! "true"
     ! "false"
+    ! "func"
     ! "object"
     [A-Za-z][A-Za-z0-9_]* { match_str.to_string() }
 
@@ -29,6 +30,8 @@ object -> Object
     {
       Object::from_func(f.unwrap_or_else(|| Function::empty()))
     }
+  / f:func
+    { Object::from_func(f) }
 
 func -> Function
   = "func" [ ]+ "{" [\n ]* rs:func_rules [\n ]* "}"
