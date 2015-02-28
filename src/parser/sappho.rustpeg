@@ -33,6 +33,8 @@ object -> Object
 func -> Function
   = "func" [ ]+ "{" [\n ]* rs:func_rules [\n ]* "}"
     { Function(rs) }
+  / "func" [ ]+ r:func_rule
+    { Function(vec![r]) }
 
 func_rules -> Vec<FuncRule>
   = rs:func_rule ** semisep
