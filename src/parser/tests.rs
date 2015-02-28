@@ -57,7 +57,8 @@ test_parse_expectations! {
             "object {func { x -> x }}",
             "object { func {x -> x} }",
             "object {func {x -> x}}",
-            "object {\n  func {\n    x -> x\n  }\n}"]
+            "object {\n  func {\n    x -> x\n  }\n}",
+            "object {\n  func x -> x\n}"]
         => Ok(
             Expression::Object(
                 Object::from_func(
