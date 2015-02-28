@@ -53,7 +53,11 @@ test_parse_expectations! {
         => Ok(Expression::Object(Object::empty()));
 
     identity_func
-        : &["object { func { x -> x } }"]
+        : &["object { func { x -> x } }",
+            "object {func { x -> x }}",
+            "object { func {x -> x} }",
+            "object {func {x -> x}}",
+            "object {\n  func {\n    x -> x\n  }\n}"]
         => Ok(
             Expression::Object(
                 Object::from_func(
