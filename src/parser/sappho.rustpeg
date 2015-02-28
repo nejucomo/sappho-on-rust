@@ -1,4 +1,11 @@
-use super::super::ast::{Expression, Literal, Object};
+use super::super::ast::{
+    Expression,
+    Function,
+    FuncRule,
+    Literal,
+    Object,
+    Pattern
+};
 
 
 #[pub]
@@ -18,4 +25,27 @@ literal -> Literal
   / "false" { Literal::Bool(false) }
 
 object -> Object
-  = "object" [ ]+ "{" [\n ]* "}" { Object::empty() }
+  = "object" [ ]+ "{" [\n ]* f:func? [\n ]* "}"
+    {
+      Object::from_func(f.unwrap_or_else(|| vec![]))
+    }
+
+func -> Function
+  = "func" [ ]+ "{" [\n ]* rs:func_rules [\n ]* "}"
+    { rs }
+
+func_rules -> Function
+  = rs:func_rule ** semisep
+    { rs }
+
+func_rule -> FuncRule
+  = p:pattern [ ]+ "->" [\n ]* b:expression
+    { FuncRule { pattern: p, body: b } }
+
+pattern -> Pattern
+  = i:identifier
+    { Pattern::Bind(i) }
+
+semisep -> ()
+  = ";" [\n ]*
+    { () }

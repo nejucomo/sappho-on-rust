@@ -34,7 +34,7 @@ impl Object {
 }
 
 
-type Function = Vec<FuncRule>;
+pub type Function = Vec<FuncRule>;
 
 
 #[derive(Eq)]
