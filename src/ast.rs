@@ -25,7 +25,7 @@ pub struct Object {
 
 impl Object {
     pub fn empty() -> Object {
-        Object::from_func(vec![])
+        Object::from_func(Function::empty())
     }
 
     pub fn from_func(f: Function) -> Object {
@@ -34,7 +34,16 @@ impl Object {
 }
 
 
-pub type Function = Vec<FuncRule>;
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub struct Function(pub Vec<FuncRule>);
+
+impl Function {
+    pub fn empty() -> Function {
+        Function(vec![])
+    }
+}
 
 
 #[derive(Eq)]

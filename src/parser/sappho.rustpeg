@@ -27,14 +27,14 @@ literal -> Literal
 object -> Object
   = "object" [ ]+ "{" [\n ]* f:func? [\n ]* "}"
     {
-      Object::from_func(f.unwrap_or_else(|| vec![]))
+      Object::from_func(f.unwrap_or_else(|| Function::empty()))
     }
 
 func -> Function
   = "func" [ ]+ "{" [\n ]* rs:func_rules [\n ]* "}"
-    { rs }
+    { Function(rs) }
 
-func_rules -> Function
+func_rules -> Vec<FuncRule>
   = rs:func_rule ** semisep
     { rs }
 

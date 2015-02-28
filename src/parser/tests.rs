@@ -1,5 +1,6 @@
 use super::super::ast::{
     Expression,
+    Function,
     FuncRule,
     Literal,
     Object,
@@ -56,9 +57,10 @@ test_parse_expectations! {
         => Ok(
             Expression::Object(
                 Object::from_func(
-                    vec![
-                        FuncRule {
-                            pattern: Pattern::Bind("x".to_string()),
-                            body: Expression::Dereference("x".to_string()),
-                        }])))
+                    Function(
+                        vec![
+                            FuncRule {
+                                pattern: Pattern::Bind("x".to_string()),
+                                body: Expression::Dereference("x".to_string()),
+                            }]))))
 }
