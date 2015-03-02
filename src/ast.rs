@@ -1,8 +1,11 @@
+use std::collections::HashMap;
+
+
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum Expression {
-    Dereference(String),
+    Dereference(Identifier),
     Literal(Literal),
     Object(Object),
 }
@@ -21,6 +24,7 @@ pub enum Literal {
 #[derive(Debug)]
 pub struct Object {
     func: Function,
+    props: Properties,
 }
 
 impl Object {
@@ -29,7 +33,7 @@ impl Object {
     }
 
     pub fn from_func(f: Function) -> Object {
-        Object { func: f }
+        Object { func: f, props: Properties::empty() }
     }
 }
 
@@ -59,5 +63,26 @@ pub struct FuncRule {
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum Pattern {
-    Bind(String),
+    Bind(Identifier),
 }
+
+
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub struct Properties {
+    map: HashMap<Identifier, Box<Expression>>,
+    varprop: Option<(Identifier, Box<Expression>)>,
+}
+
+impl Properties {
+    pub fn empty() -> Properties {
+        Properties {
+            map: HashMap::new(),
+            varprop: None,
+        }
+    }
+}
+
+
+pub type Identifier = String;
