@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::super::ast::{
     Expression,
     Function,
@@ -5,6 +7,7 @@ use super::super::ast::{
     Literal,
     Object,
     Pattern,
+    Properties,
 };
 use super::{
     ParseResult,
@@ -30,6 +33,20 @@ macro_rules! test_parse_expectations {
         )*
     }
 }
+
+macro_rules! Properties_from_items {
+    ( $( $key:expr => $value:expr ),* ) => {
+        {
+            let mut m = HashMap::new();
+
+            $( m.insert( ($key).to_string(), Box::new($value) ); )*
+
+            Properties { map: m, varprop: None }
+        }
+    }
+}
+
+
 
 
 // Test cases:
@@ -73,5 +90,15 @@ test_parse_expectations! {
                             FuncRule {
                                 pattern: Pattern::Bind("x".to_string()),
                                 body: Expression::Dereference("x".to_string()),
-                            }]))))
+                            }]))));
+
+    properties
+        : &["object { prop .t -> true; prop .f -> false; prop (x) -> x }"]
+        => Ok(
+            Expression::Object(
+                Object::from_properties(
+                    Properties_from_items!{
+                        "t" => Expression::Literal(Literal::Bool(true)),
+                        "f" => Expression::Literal(Literal::Bool(false))
+                    })))
 }

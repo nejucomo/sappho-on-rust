@@ -35,6 +35,10 @@ impl Object {
     pub fn from_func(f: Function) -> Object {
         Object { func: f, props: Properties::empty() }
     }
+
+    pub fn from_properties(p: Properties) -> Object {
+        Object { func: Function::empty(), props: p }
+    }
 }
 
 
@@ -71,8 +75,8 @@ pub enum Pattern {
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Properties {
-    map: HashMap<Identifier, Box<Expression>>,
-    varprop: Option<(Identifier, Box<Expression>)>,
+    pub map: HashMap<Identifier, Box<Expression>>,
+    pub varprop: Option<(Identifier, Box<Expression>)>,
 }
 
 impl Properties {
