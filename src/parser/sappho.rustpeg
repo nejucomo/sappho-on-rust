@@ -6,7 +6,6 @@ use super::super::ast::{
     Literal,
     Object,
     Pattern,
-    PropBuilder,
     Properties
 };
 
@@ -59,21 +58,17 @@ pattern -> Pattern
     { Pattern::Bind(i) }
 
 properties -> Properties
-  = pb:prop_builder
-    { pb.as_properties() }
-
-prop_builder -> PropBuilder
   = "prop" [ ]+ props:props_from_pattern
     { props }
 
-props_from_pattern -> PropBuilder
+props_from_pattern -> Properties
   = "(" [\n ]* id:identifier [\n ]* ")" [ ]+ "->" [\n ]* b:expression
     {
-      PropBuilder::new_from_varprop(id, b)
+      Properties::from_items(vec![], Some((id, Box::new(b))))
     }
-  / "." id:identifier [ ]+ "->" [\n ]* b:expression semisep pb:prop_builder
+  / "." id:identifier [ ]+ "->" [\n ]* b:expression semisep props:properties
     {
-      pb.add_item(id, b)
+      props.plus_item(id, b)
     }
 
 
