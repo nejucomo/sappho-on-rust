@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use super::super::ast::{
     Expression,
     Function,
@@ -33,20 +31,6 @@ macro_rules! test_parse_expectations {
         )*
     }
 }
-
-macro_rules! Properties_from_items {
-    ( $( $key:expr => $value:expr ),* ) => {
-        {
-            let mut m = HashMap::new();
-
-            $( m.insert( ($key).to_string(), Box::new($value) ); )*
-
-            Properties { map: m, varprop: None }
-        }
-    }
-}
-
-
 
 
 // Test cases:
@@ -97,8 +81,26 @@ test_parse_expectations! {
         => Ok(
             Expression::Object(
                 Object::from_properties(
-                    Properties_from_items!{
-                        "t" => Expression::Literal(Literal::Bool(true)),
-                        "f" => Expression::Literal(Literal::Bool(false))
-                    })))
+                    Properties::from_items(
+                        vec![
+                            ("t".to_string(),
+                             Box::new(Expression::Literal(Literal::Bool(true)))),
+                            ("f".to_string(),
+                             Box::new(Expression::Literal(Literal::Bool(false))))],
+                        Some(
+                            ("x".to_string(),
+                             Box::new(Expression::Dereference("x".to_string()))))))));
+
+    concrete_properties
+        : &["object { prop .t -> true; prop .f -> false }"]
+        => Ok(
+            Expression::Object(
+                Object::from_properties(
+                    Properties::from_items(
+                        vec![
+                            ("t".to_string(),
+                             Box::new(Expression::Literal(Literal::Bool(true)))),
+                            ("f".to_string(),
+                             Box::new(Expression::Literal(Literal::Bool(false))))],
+                        None))))
 }
