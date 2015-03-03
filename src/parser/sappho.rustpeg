@@ -2,9 +2,11 @@ use super::super::ast::{
     Expression,
     Function,
     FuncRule,
+    Identifier,
     Literal,
     Object,
-    Pattern
+    Pattern,
+    Properties
 };
 
 
@@ -19,6 +21,7 @@ identifier -> String
     ! "false"
     ! "func"
     ! "object"
+    ! "prop"
     [A-Za-z][A-Za-z0-9_]* { match_str.to_string() }
 
 literal -> Literal
@@ -26,9 +29,12 @@ literal -> Literal
   / "false" { Literal::Bool(false) }
 
 object -> Object
-  = "object" [ ]+ "{" [\n ]* f:func? [\n ]* "}"
+  = "object" [ ]+ "{" [\n ]* f:func? [\n ]* p:properties? [\n ]* "}"
     {
-      Object::from_func(f.unwrap_or_else(|| Function::empty()))
+      Object {
+        func: f.unwrap_or_else(|| Function::empty()),
+        props: p.unwrap_or_else(|| Properties::empty()),
+      }
     }
   / f:func
     { Object::from_func(f) }
@@ -50,6 +56,24 @@ func_rule -> FuncRule
 pattern -> Pattern
   = i:identifier
     { Pattern::Bind(i) }
+
+properties -> Properties
+  = cps:concrete_properties [\n ]* vp:varprop?
+    {
+      Properties::from_items(cps, vp)
+    }
+
+concrete_properties -> Vec<(Identifier, Box<Expression>)>
+  = cps:concrete_property ** semisep
+    { cps }
+
+concrete_property -> (Identifier, Box<Expression>)
+  = "prop" [ ]+ "." id:identifier [ ]+ "->" [\n ]* b:expression
+    { (id, Box::new(b)) }
+
+varprop -> (Identifier, Box<Expression>)
+  = "prop" [ ]+ "(" [\n ]* id:identifier [\n ]* ")" [ ]+ "->" [\n ]* b:expression
+    { (id, Box::new(b)) }
 
 semisep -> ()
   = ";" [\n ]*

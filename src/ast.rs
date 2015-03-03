@@ -23,8 +23,8 @@ pub enum Literal {
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Object {
-    func: Function,
-    props: Properties,
+    pub func: Function,
+    pub props: Properties,
 }
 
 impl Object {
@@ -85,6 +85,19 @@ impl Properties {
             map: HashMap::new(),
             varprop: None,
         }
+    }
+
+    pub fn from_items(concretes: Vec<(Identifier, Box<Expression>)>,
+                      vp: Option<(Identifier, Box<Expression>)>)
+                      -> Properties
+    {
+        let mut m = HashMap::with_capacity(concretes.len());
+
+        for (id, expr) in concretes.into_iter() {
+            m.insert(id, expr);
+        }
+
+        Properties { map: m, varprop: vp }
     }
 }
 
