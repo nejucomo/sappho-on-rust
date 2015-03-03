@@ -6,6 +6,7 @@ use super::super::ast::{
     Literal,
     Object,
     Pattern,
+    PropBuilder,
     Properties
 };
 
@@ -58,22 +59,23 @@ pattern -> Pattern
     { Pattern::Bind(i) }
 
 properties -> Properties
-  = cps:concrete_properties [\n ]* vp:varprop?
+  = pb:prop_builder
+    { pb.as_properties() }
+
+prop_builder -> PropBuilder
+  = "prop" [ ]+ props:props_from_pattern
+    { props }
+
+props_from_pattern -> PropBuilder
+  = "(" [\n ]* id:identifier [\n ]* ")" [ ]+ "->" [\n ]* b:expression
     {
-      Properties::from_items(cps, vp)
+      PropBuilder::new_from_varprop(id, b)
+    }
+  / "." id:identifier [ ]+ "->" [\n ]* b:expression semisep pb:prop_builder
+    {
+      pb.add_item(id, b)
     }
 
-concrete_properties -> Vec<(Identifier, Box<Expression>)>
-  = cps:concrete_property ** semisep
-    { cps }
-
-concrete_property -> (Identifier, Box<Expression>)
-  = "prop" [ ]+ "." id:identifier [ ]+ "->" [\n ]* b:expression
-    { (id, Box::new(b)) }
-
-varprop -> (Identifier, Box<Expression>)
-  = "prop" [ ]+ "(" [\n ]* id:identifier [\n ]* ")" [ ]+ "->" [\n ]* b:expression
-    { (id, Box::new(b)) }
 
 semisep -> ()
   = ";" [\n ]*
