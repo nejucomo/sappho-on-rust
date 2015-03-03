@@ -66,10 +66,16 @@ props_from_pattern -> Properties
     {
       Properties::from_varprop(id, b)
     }
-  / "." id:identifier [ ]+ "->" [\n ]* b:expression semisep props:properties
+  / "." id:identifier [ ]+ "->" [\n ]* b:expression props:props_continue
     {
       props.plus_item(id, b)
     }
+
+props_continue -> Properties
+  = semisep props:properties
+    { props }
+  / ""
+    { Properties::empty() }
 
 
 semisep -> ()
