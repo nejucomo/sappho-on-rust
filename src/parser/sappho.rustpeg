@@ -64,7 +64,7 @@ properties -> Properties
 props_from_pattern -> Properties
   = "(" [\n ]* id:identifier [\n ]* ")" [ ]+ "->" [\n ]* b:expression
     {
-      Properties::from_items(vec![], Some((id, Box::new(b))))
+      Properties::from_varprop(id, b)
     }
   / "." id:identifier [ ]+ "->" [\n ]* b:expression semisep props:properties
     {

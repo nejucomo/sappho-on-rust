@@ -93,6 +93,10 @@ impl Properties {
         }
     }
 
+    pub fn from_varprop(id: Identifier, expr: Expression) -> Properties {
+        Properties::from_items(vec![], Some((id, Box::new(expr))))
+    }
+
     pub fn from_items(concretes: Vec<PropItem>,
                       vp: Option<PropItem>)
                       -> Properties
