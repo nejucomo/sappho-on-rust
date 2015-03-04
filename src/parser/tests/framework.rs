@@ -6,6 +6,7 @@ use super::super::super::ast::{
     Literal,
     Object,
     Properties,
+    PropItem,
 };
 use super::super::{
     parse_expression,
@@ -79,4 +80,10 @@ impl IntoExpr for Properties {
     fn into_expr(self) -> Expression {
         iexpr(Object::from_properties(self))
     }
+}
+
+
+// Helpers for PropItems:
+pub fn propitem(id: &str, expr: Expression) -> PropItem {
+    (id.to_string(), Box::new(expr))
 }

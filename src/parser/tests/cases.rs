@@ -7,6 +7,7 @@ use super::super::super::ast::{
 };
 use super::framework::{
     iexpr,
+    propitem,
 };
 
 // Test cases:
@@ -85,13 +86,10 @@ test_parse_expectations! {
             iexpr(
                 Properties::from_items(
                     vec![
-                        ("t".to_string(),
-                         Box::new(iexpr(true))),
-                        ("f".to_string(),
-                         Box::new(iexpr(false)))],
-                    Some(
-                        ("x".to_string(),
-                         Box::new(iexpr("x")))))));
+                        propitem("t", iexpr(true)),
+                        propitem("f", iexpr(false)),
+                        ],
+                    Some(propitem("x", iexpr("x"))))));
 
     concrete_properties
         : &["object { prop .t -> true; prop .f -> false }"]
@@ -99,9 +97,8 @@ test_parse_expectations! {
             iexpr(
                 Properties::from_items(
                     vec![
-                        ("t".to_string(),
-                         Box::new(iexpr(true))),
-                        ("f".to_string(),
-                         Box::new(iexpr(false)))],
+                        propitem("t", iexpr(true)),
+                        propitem("f", iexpr(false)),
+                        ],
                     None)))
 }

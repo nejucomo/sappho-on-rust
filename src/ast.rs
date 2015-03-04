@@ -82,7 +82,7 @@ pub struct Properties {
     pub varprop: Option<PropItem>,
 }
 
-type PropItem = (Identifier, Box<Expression>);
+pub type PropItem = (Identifier, Box<Expression>);
 
 
 impl Properties {
