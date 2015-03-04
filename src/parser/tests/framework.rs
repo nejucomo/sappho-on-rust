@@ -18,8 +18,8 @@ use super::super::{
 
 pub fn check_parse_expectation(inputs: &[&str], expectation: Option<Expression>) {
     for input in inputs.iter() {
-        let result = parse_expression(input).ok();
-        assert!(result == expectation,
+        let result = parse_expression(input);
+        assert!(result.as_ref().ok() == expectation.as_ref(),
                 "Parse expectation failure:\nInput: {:?}\nExpectation: {:?}\nResult: {:?}\n",
                 input, expectation, result);
     }
