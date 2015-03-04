@@ -62,6 +62,22 @@ test_parse_expectations! {
             "object{}"]
         => None;
 
+    empty_func
+        : &["object { func { } }",
+            "object {func {}}",
+            "object { func {} }",
+            "object {func {}}",
+            "object {\n  func {\n  }\n}",
+
+            // func-only-object shorthand:
+            "func { }",
+            "func {}",
+            "func {\n}"]
+        => Some(
+            Expression::Object(
+                Object::from_func(
+                    Function::empty())));
+
     identity_func
         : &["object { func { x -> x } }",
             "object {func { x -> x }}",
