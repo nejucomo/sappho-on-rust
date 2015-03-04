@@ -39,8 +39,10 @@ test_parse_expectations! {
         : &[
             "func",
             "object",
+            "proc",
             "prop",
             "query",
+            "return",
             ]
         => None;
 

@@ -1,16 +1,19 @@
 use super::super::ast::{
     Expression,
-    Function,
     FuncRule,
+    Function,
     Identifier,
     List,
     Literal,
     Object,
     Pattern,
+    Proc,
+    ProcExpression,
     Properties,
     PureLeafExpression,
     Query,
-    QueryExpression
+    QueryExpression,
+    StatementBlock
 };
 
 
@@ -22,7 +25,13 @@ expression -> Expression
 queryexpression -> QueryExpression
   = ple:pureleafexpression   { QueryExpression::PLE(ple)     }
   / lqe:list_queryexpression { QueryExpression::LE(lqe)      }
-  / qa:queryapp              { QueryExpression::QueryApp(qa) }
+  / qa:queryqueryapp         { QueryExpression::QueryApp(qa) }
+
+procexpression -> ProcExpression
+  = ple:pureleafexpression  { ProcExpression::PLE(ple)     }
+  / lpe:list_procexpression { ProcExpression::LE(lpe)      }
+  / qa:procqueryapp         { ProcExpression::QueryApp(qa) }
+  / pa:procapp              { ProcExpression::ProcApp(pa)  }
 
 
 pureleafexpression -> PureLeafExpression
@@ -34,8 +43,10 @@ identifier -> String
   = ! "false"
     ! "func"
     ! "object"
+    ! "proc"
     ! "prop"
     ! "query"
+    ! "return"
     ! "true"
     [A-Za-z][A-Za-z0-9_]* { match_str.to_string() }
 
@@ -45,15 +56,35 @@ literal -> Literal
 
 
 object -> Object
-  = "object" [ ]+ "{" [\n ]* tup:object_at_query
+  = "object" [ ]+ "{" [\n ]* tup:object_at_proc
     {
-      let (q, f, p) = tup;
-      Object { proc_: None, query: q, func: f, props: p }
+      let (p, q, f, props) = tup;
+      Object { proc_: p, query: q, func: f, props: props }
     }
+  / p:proc
+    { Object::from_proc(p) }
   / q:query
     { Object::from_query(q) }
   / f:func
     { Object::from_func(f) }
+
+object_at_proc -> (Option<Proc>, Option<Query>, Function, Properties)
+  = p:proc [\n ]* tup:object_after_proc
+    {
+      let (q, f, props) = tup;
+      (Some(p), q, f, props)
+    }
+  / tup:object_at_query
+    {
+      let (q, f, props) = tup;
+      (None, q, f, props)
+    }
+
+object_after_proc -> (Option<Query>, Function, Properties)
+  = semisep tup:object_at_query
+    { tup }
+  / "}"
+    { (None, Function::empty(), Properties::empty()) }
 
 object_at_query -> (Option<Query>, Function, Properties)
   = q:query [\n ]* tup:object_after_query
@@ -92,13 +123,18 @@ object_at_props -> Properties
     { Properties::empty() }
 
 
+proc -> Proc
+  = "proc" [ ]+ "{" [\n ]* sb:statementblock [\n ]* "}"
+    { Proc(sb) }
+
+statementblock -> StatementBlock
+  = "return" [ ]+ pe:procexpression
+    { StatementBlock::Return(Box::new(pe)) }
+
+
 query -> Query
   = "query" arrowsep body:queryexpression
     { Query(Box::new(body)) }
-
-queryapp -> Box<QueryExpression>
-  = "$" target:queryexpression
-    { Box::new(target) }
 
 func -> Function
   = "func" [ ]+ "{" [\n ]* rs:func_rules [\n ]* "}"
@@ -146,6 +182,23 @@ list_expression -> List<Expression>
 list_queryexpression -> List<QueryExpression>
   = "[" [\n ]* xs:queryexpression ** commasep [\n ]* "]"
     { List::from_unboxed_vec(xs) }
+
+list_procexpression -> List<ProcExpression>
+  = "[" [\n ]* xs:procexpression ** commasep [\n ]* "]"
+    { List::from_unboxed_vec(xs) }
+
+
+queryqueryapp -> Box<QueryExpression>
+  = "$" target:queryexpression
+    { Box::new(target) }
+
+procqueryapp -> Box<ProcExpression>
+  = "$" target:procexpression
+    { Box::new(target) }
+
+procapp -> Box<ProcExpression>
+  = "!" target:procexpression
+    { Box::new(target) }
 
 
 arrowsep -> ()
