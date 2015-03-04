@@ -4,11 +4,26 @@ use std::collections::HashMap;
 pub type Identifier = String;
 
 
+/* The top level expression grammar is deterministic and excludes query
+ * and proc applications (which are not deterministic).
+ */
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum Expression {
     PLE(PureLeafExpression),
+}
+
+
+/* A QueryExpression tree is like a (deterministic) Expression tree,
+ * except it may contain QueryApp productions.
+ */
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub enum QueryExpression {
+    PLE(PureLeafExpression),
+    QueryApp(Box<QueryExpression>),
 }
 
 
@@ -37,6 +52,7 @@ pub enum Literal {
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Object {
+    pub query: Option<Query>,
     pub func: Function,
     pub props: Properties,
 }
@@ -46,14 +62,36 @@ impl Object {
         Object::from_func(Function::empty())
     }
 
+    pub fn from_query(q: Query) -> Object {
+        Object {
+            query: Some(q),
+            func: Function::empty(),
+            props: Properties::empty(),
+        }
+    }
+
     pub fn from_func(f: Function) -> Object {
-        Object { func: f, props: Properties::empty() }
+        Object {
+            query: None,
+            func: f,
+            props: Properties::empty(),
+        }
     }
 
     pub fn from_properties(p: Properties) -> Object {
-        Object { func: Function::empty(), props: p }
+        Object {
+            query: None,
+            func: Function::empty(),
+            props: p,
+        }
     }
 }
+
+
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub struct Query(pub Box<QueryExpression>);
 
 
 #[derive(Eq)]

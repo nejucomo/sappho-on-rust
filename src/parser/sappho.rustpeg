@@ -36,6 +36,7 @@ object -> Object
   = "object" [ ]+ "{" [\n ]* f:func? [\n ]* p:properties? [\n ]* "}"
     {
       Object {
+        query: None,
         func: f.unwrap_or_else(|| Function::empty()),
         props: p.unwrap_or_else(|| Properties::empty()),
       }

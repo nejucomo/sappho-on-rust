@@ -6,39 +6,58 @@ use super::super::super::ast::{
     Properties,
 };
 use super::framework::{
-    iexpr,
+    expr,
     propitem,
+    qapp,
+    query,
 };
 
 // Test cases:
 test_parse_expectations! {
     literal_true
         : &["true"]
-        => Some(iexpr(true));
+        => Some(expr(true));
 
     literal_false
         : &["false"]
-        => Some(iexpr(false));
+        => Some(expr(false));
 
     dereference
         : &["x"]
-        => Some(iexpr("x"));
+        => Some(expr("x"));
 
-    dangling_keyword
-        : &["object"]
+    dangling_keywords
+        : &[
+            "func",
+            "object",
+            "prop",
+            "query",
+            ]
         => None;
 
     empty_object
         : &["object {}",
             "object { }",
             "object {\n}"]
-        => Some(iexpr(Object::empty()));
+        => Some(expr(Object::empty()));
 
     object_braces_malformed
         : &["object\n{}",
             "object\t{}",
             "object{}"]
         => None;
+
+    query_false
+        : &["object { query -> false }",
+            "object {\n query ->\n  false\n}",
+            "query -> false"]
+        => Some(expr(query(false)));
+
+    query_query_x
+        : &["object { query -> $x }",
+            "object {\n query ->\n  $x\n}",
+            "query -> $x"]
+        => Some(expr(qapp("x")));
 
     empty_func
         : &["object { func { } }",
@@ -51,7 +70,7 @@ test_parse_expectations! {
             "func { }",
             "func {}",
             "func {\n}"]
-        => Some(iexpr(Function::empty()));
+        => Some(expr(Function::empty()));
 
     identity_func
         : &["object { func { x -> x } }",
@@ -68,10 +87,10 @@ test_parse_expectations! {
             "func x -> x",
             "func x ->\n  x"]
         => Some(
-            iexpr(
+            expr(
                 FuncRule {
                     pattern: Pattern::Bind("x".to_string()),
-                    body: iexpr("x"),
+                    body: expr("x"),
                 }));
 
     func_braces_malformed
@@ -84,23 +103,23 @@ test_parse_expectations! {
     properties
         : &["object { prop .t -> true; prop .f -> false; prop (x) -> x }"]
         => Some(
-            iexpr(
+            expr(
                 Properties::from_items(
                     vec![
-                        propitem("t", iexpr(true)),
-                        propitem("f", iexpr(false)),
+                        propitem("t", expr(true)),
+                        propitem("f", expr(false)),
                         ],
-                    Some(propitem("x", iexpr("x"))))));
+                    Some(propitem("x", expr("x"))))));
 
     concrete_properties
         : &["object { prop .t -> true; prop .f -> false }",
             "object {\n prop .t ->\n  true;\n prop .f ->\n  false\n}"]
         => Some(
-            iexpr(
+            expr(
                 Properties::from_items(
                     vec![
-                        propitem("t", iexpr(true)),
-                        propitem("f", iexpr(false)),
+                        propitem("t", expr(true)),
+                        propitem("f", expr(false)),
                         ],
                     None)));
 
