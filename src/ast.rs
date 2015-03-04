@@ -4,6 +4,8 @@ use std::collections::HashMap;
 pub type Identifier = String;
 
 
+/** Top-Level Expressions **/
+
 /* The top level expression grammar is deterministic and excludes query
  * and proc applications (which are not deterministic).
  */
@@ -12,6 +14,7 @@ pub type Identifier = String;
 #[derive(Debug)]
 pub enum Expression {
     PLE(PureLeafExpression),
+    LE(List<Expression>),
 }
 
 
@@ -23,9 +26,13 @@ pub enum Expression {
 #[derive(Debug)]
 pub enum QueryExpression {
     PLE(PureLeafExpression),
+    LE(List<QueryExpression>),
     QueryApp(Box<QueryExpression>),
 }
 
+
+
+/** PureLeafExpressions and subgrammars **/
 
 /* A PureLeafExpression does not contain subexpressions which are
  * evaluated prerequisite to the PureLeafExpression itself.
@@ -165,3 +172,10 @@ impl Properties {
         self
     }
 }
+
+
+/** List Expressions **/
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub struct List<T>(pub Vec<Box<T>>);

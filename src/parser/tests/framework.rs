@@ -1,8 +1,10 @@
+use std::iter::FromIterator;
 use super::super::super::ast::{
     Expression,
     FuncRule,
     Function,
     Identifier,
+    List,
     Literal,
     Object,
     Properties,
@@ -54,6 +56,20 @@ pub fn qapp<T: IntoExpr>(x: T) -> QueryExpression {
 
 pub fn query<T: IntoExpr>(x: T) -> Query {
     Query(Box::new(qexpr(x)))
+}
+
+pub fn expr_list<T: IntoExpr>(xs: Vec<T>) -> Expression {
+    Expression::LE(
+        List(
+            FromIterator::from_iter(
+                xs.into_iter().map(|x| Box::new(expr(x))))))
+}
+
+pub fn qexpr_list<T: IntoExpr>(xs: Vec<T>) -> QueryExpression {
+    QueryExpression::LE(
+        List(
+            FromIterator::from_iter(
+                xs.into_iter().map(|x| Box::new(qexpr(x))))))
 }
 
 

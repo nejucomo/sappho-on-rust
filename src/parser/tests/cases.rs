@@ -1,14 +1,19 @@
 use super::super::super::ast::{
+    Expression,
     Function,
     FuncRule,
+    List,
     Object,
     Pattern,
     Properties,
 };
 use super::framework::{
     expr,
+    expr_list,
     propitem,
     qapp,
+    qexpr,
+    qexpr_list,
     query,
 };
 
@@ -231,5 +236,29 @@ test_parse_expectations! {
             "object { prop .foo-> bar }",
             "object { prop .foo ->bar }",
             "object { prop .foo\n-> bar }"]
-        => None
+        => None;
+
+    list_expression_empty
+        : &["[]", "[ ]", "[\n]"]
+        => Some(Expression::LE(List(vec![])));
+
+    list_expression_single
+        : &["[false]", "[ false ]", "[\n false\n]"]
+        => Some(expr_list(vec![false]));
+
+    list_expression_pair
+        : &["[false,true]",
+            "[false, true]",
+            "[ false, true ]",
+            "[ false , true ]",
+            "[\n  false,\n  true\n]"]
+        => Some(expr_list(vec![false, true]));
+
+    query_list_expression_single
+        : &["query -> [$x]"]
+        => Some(expr(query(qexpr_list(vec![qapp("x")]))));
+
+    query_list_expression_pair
+        : &["query -> [$x, y]"]
+        => Some(expr(query(qexpr_list(vec![qapp("x"), qexpr("y")]))))
 }
