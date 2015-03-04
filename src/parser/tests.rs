@@ -8,14 +8,13 @@ use super::super::ast::{
     Properties,
 };
 use super::{
-    ParseResult,
     parse_expression,
 };
 
 
-fn check_parse_expectation(inputs: &[&str], expectation: ParseResult) {
+fn check_parse_expectation(inputs: &[&str], expectation: Option<Expression>) {
     for input in inputs.iter() {
-        let result = parse_expression(input);
+        let result = parse_expression(input).ok();
         assert!(result == expectation,
                 "Parse expectation failure:\nInput: {:?}\nExpectation: {:?}\nResult: {:?}\n",
                 input, expectation, result);
@@ -37,21 +36,21 @@ macro_rules! test_parse_expectations {
 test_parse_expectations! {
     literal_true
         : &["true"]
-        => Ok(Expression::Literal(Literal::Bool(true)));
+        => Some(Expression::Literal(Literal::Bool(true)));
 
     literal_false
         : &["false"]
-        => Ok(Expression::Literal(Literal::Bool(false)));
+        => Some(Expression::Literal(Literal::Bool(false)));
 
     dereference
         : &["x"]
-        => Ok(Expression::Dereference("x".to_string()));
+        => Some(Expression::Dereference("x".to_string()));
 
     empty_object
         : &["object {}",
             "object { }",
             "object {\n}"]
-        => Ok(Expression::Object(Object::empty()));
+        => Some(Expression::Object(Object::empty()));
 
     identity_func
         : &["object { func { x -> x } }",
@@ -66,7 +65,7 @@ test_parse_expectations! {
             "func {x -> x}",
             "func {\n  x -> x\n}",
             "func x -> x"]
-        => Ok(
+        => Some(
             Expression::Object(
                 Object::from_func(
                     Function(
@@ -78,7 +77,7 @@ test_parse_expectations! {
 
     properties
         : &["object { prop .t -> true; prop .f -> false; prop (x) -> x }"]
-        => Ok(
+        => Some(
             Expression::Object(
                 Object::from_properties(
                     Properties::from_items(
@@ -93,7 +92,7 @@ test_parse_expectations! {
 
     concrete_properties
         : &["object { prop .t -> true; prop .f -> false }"]
-        => Ok(
+        => Some(
             Expression::Object(
                 Object::from_properties(
                     Properties::from_items(
