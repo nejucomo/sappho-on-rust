@@ -2,6 +2,7 @@ use super::super::ast::{
     Expression,
     Function,
     FuncRule,
+    Identifier,
     Literal,
     Object,
     Pattern,
@@ -32,19 +33,60 @@ macro_rules! test_parse_expectations {
 }
 
 
+// A helper trait for concisely specifying tests:
+trait IntoExpr {
+    fn into_expr(self) -> Expression;
+}
+
+impl IntoExpr for Identifier {
+    fn into_expr(self) -> Expression {
+        Expression::Dereference(self)
+    }
+}
+impl IntoExpr for &'static str {
+    fn into_expr(self) -> Expression {
+        iexpr(self.to_string())
+    }
+}
+impl IntoExpr for bool {
+    fn into_expr(self) -> Expression {
+        Expression::Literal(Literal::Bool(self))
+    }
+}
+impl IntoExpr for Object {
+    fn into_expr(self) -> Expression {
+        Expression::Object(self)
+    }
+}
+impl IntoExpr for Function {
+    fn into_expr(self) -> Expression {
+        iexpr(Object::from_func(self))
+    }
+}
+impl IntoExpr for Properties {
+    fn into_expr(self) -> Expression {
+        iexpr(Object::from_properties(self))
+    }
+}
+
+fn iexpr<T: IntoExpr>(x: T) -> Expression {
+    IntoExpr::into_expr(x)
+}
+
+
 // Test cases:
 test_parse_expectations! {
     literal_true
         : &["true"]
-        => Some(Expression::Literal(Literal::Bool(true)));
+        => Some(iexpr(true));
 
     literal_false
         : &["false"]
-        => Some(Expression::Literal(Literal::Bool(false)));
+        => Some(iexpr(false));
 
     dereference
         : &["x"]
-        => Some(Expression::Dereference("x".to_string()));
+        => Some(iexpr("x"));
 
     dangling_keyword
         : &["object"]
@@ -54,7 +96,7 @@ test_parse_expectations! {
         : &["object {}",
             "object { }",
             "object {\n}"]
-        => Some(Expression::Object(Object::empty()));
+        => Some(iexpr(Object::empty()));
 
     object_braces_malformed
         : &["object\n{}",
@@ -73,10 +115,7 @@ test_parse_expectations! {
             "func { }",
             "func {}",
             "func {\n}"]
-        => Some(
-            Expression::Object(
-                Object::from_func(
-                    Function::empty())));
+        => Some(iexpr(Function::empty()));
 
     identity_func
         : &["object { func { x -> x } }",
@@ -92,14 +131,13 @@ test_parse_expectations! {
             "func {\n  x -> x\n}",
             "func x -> x"]
         => Some(
-            Expression::Object(
-                Object::from_func(
-                    Function(
-                        vec![
-                            FuncRule {
-                                pattern: Pattern::Bind("x".to_string()),
-                                body: Expression::Dereference("x".to_string()),
-                            }]))));
+            iexpr(
+                Function(
+                    vec![
+                        FuncRule {
+                            pattern: Pattern::Bind("x".to_string()),
+                            body: Expression::Dereference("x".to_string()),
+                        }])));
 
     func_braces_malformed
         : &["object {func{}}",
@@ -111,28 +149,26 @@ test_parse_expectations! {
     properties
         : &["object { prop .t -> true; prop .f -> false; prop (x) -> x }"]
         => Some(
-            Expression::Object(
-                Object::from_properties(
-                    Properties::from_items(
-                        vec![
-                            ("t".to_string(),
-                             Box::new(Expression::Literal(Literal::Bool(true)))),
-                            ("f".to_string(),
-                             Box::new(Expression::Literal(Literal::Bool(false))))],
-                        Some(
-                            ("x".to_string(),
-                             Box::new(Expression::Dereference("x".to_string()))))))));
+            iexpr(
+                Properties::from_items(
+                    vec![
+                        ("t".to_string(),
+                         Box::new(Expression::Literal(Literal::Bool(true)))),
+                        ("f".to_string(),
+                         Box::new(Expression::Literal(Literal::Bool(false))))],
+                    Some(
+                        ("x".to_string(),
+                         Box::new(Expression::Dereference("x".to_string())))))));
 
     concrete_properties
         : &["object { prop .t -> true; prop .f -> false }"]
         => Some(
-            Expression::Object(
-                Object::from_properties(
-                    Properties::from_items(
-                        vec![
-                            ("t".to_string(),
-                             Box::new(Expression::Literal(Literal::Bool(true)))),
-                            ("f".to_string(),
-                             Box::new(Expression::Literal(Literal::Bool(false))))],
-                        None))))
+            iexpr(
+                Properties::from_items(
+                    vec![
+                        ("t".to_string(),
+                         Box::new(Expression::Literal(Literal::Bool(true)))),
+                        ("f".to_string(),
+                         Box::new(Expression::Literal(Literal::Bool(false))))],
+                    None)))
 }
