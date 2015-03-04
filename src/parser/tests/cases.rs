@@ -124,7 +124,7 @@ test_parse_expectations! {
                     None)));
 
     query_and_func
-        : &["object { query -> $x; fn x -> x }"]
+        : &["object { query -> $x; func x -> x }"]
         => Some(
             expr(
                 Object {
@@ -167,7 +167,7 @@ test_parse_expectations! {
                 }));
 
     func_and_props_with_varprop
-        : &["object { fn x -> x; prop .t -> true; prop (x) -> x }"]
+        : &["object { func x -> x; prop .t -> true; prop (x) -> x }"]
         => Some(
             expr(
                 Object {
@@ -186,7 +186,7 @@ test_parse_expectations! {
                 }));
 
     func_and_props_without_varprop
-        : &["object { fn x -> x; prop .t -> true }"]
+        : &["object { func x -> x; prop .t -> true }"]
         => Some(
             expr(
                 Object {
@@ -205,7 +205,7 @@ test_parse_expectations! {
                 }));
 
     full_object
-        : &["object { query -> $x; fn x -> x; prop .t -> true; prop (x) -> x }"]
+        : &["object { query -> $x; func x -> x; prop .t -> true; prop (x) -> x }"]
         => Some(
             expr(
                 Object {
