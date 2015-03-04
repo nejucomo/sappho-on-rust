@@ -65,7 +65,8 @@ test_parse_expectations! {
             "func { x -> x }",
             "func {x -> x}",
             "func {\n  x -> x\n}",
-            "func x -> x"]
+            "func x -> x",
+            "func x ->\n  x"]
         => Some(
             iexpr(
                 FuncRule {
@@ -92,7 +93,8 @@ test_parse_expectations! {
                     Some(propitem("x", iexpr("x"))))));
 
     concrete_properties
-        : &["object { prop .t -> true; prop .f -> false }"]
+        : &["object { prop .t -> true; prop .f -> false }",
+            "object {\n prop .t ->\n  true;\n prop .f ->\n  false\n}"]
         => Some(
             iexpr(
                 Properties::from_items(
@@ -100,5 +102,15 @@ test_parse_expectations! {
                         propitem("t", iexpr(true)),
                         propitem("f", iexpr(false)),
                         ],
-                    None)))
+                    None)));
+
+    bad_arrows
+        // Notice that newline immediately after an arrow is acceptable.
+        : &["func x-> x",
+            "func x ->x",
+            "func x\n-> x",
+            "object { prop .foo-> bar }",
+            "object { prop .foo ->bar }",
+            "object { prop .foo\n-> bar }"]
+        => None
 }
