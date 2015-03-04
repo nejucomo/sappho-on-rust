@@ -7,6 +7,7 @@ use super::super::super::ast::{
     Object,
     Properties,
     PropItem,
+    PureLeafExpression,
 };
 use super::super::{
     parse_expression,
@@ -46,9 +47,14 @@ trait IntoExpr {
     fn into_expr(self) -> Expression;
 }
 
+impl IntoExpr for PureLeafExpression {
+    fn into_expr(self) -> Expression {
+        Expression::PLE(self)
+    }
+}
 impl IntoExpr for Identifier {
     fn into_expr(self) -> Expression {
-        Expression::Dereference(self)
+        iexpr(PureLeafExpression::Dereference(self))
     }
 }
 impl IntoExpr for &'static str {
@@ -58,12 +64,12 @@ impl IntoExpr for &'static str {
 }
 impl IntoExpr for bool {
     fn into_expr(self) -> Expression {
-        Expression::Literal(Literal::Bool(self))
+        iexpr(PureLeafExpression::Literal(Literal::Bool(self)))
     }
 }
 impl IntoExpr for Object {
     fn into_expr(self) -> Expression {
-        Expression::Object(self)
+        iexpr(PureLeafExpression::Object(self))
     }
 }
 impl IntoExpr for Function {

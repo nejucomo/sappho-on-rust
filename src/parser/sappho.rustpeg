@@ -6,15 +6,19 @@ use super::super::ast::{
     Literal,
     Object,
     Pattern,
-    Properties
+    Properties,
+    PureLeafExpression
 };
 
 
 #[pub]
 expression -> Expression
-  = i:identifier { Expression::Dereference(i) }
-  / l:literal    { Expression::Literal(l)     }
-  / o:object     { Expression::Object(o)      }
+  = ple:pureleafexpression { Expression::PLE(ple) }
+
+pureleafexpression -> PureLeafExpression
+  = i:identifier { PureLeafExpression::Dereference(i) }
+  / l:literal    { PureLeafExpression::Literal(l)     }
+  / o:object     { PureLeafExpression::Object(o)      }
 
 identifier -> String
   = ! "true"

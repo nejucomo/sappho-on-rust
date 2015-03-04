@@ -8,6 +8,17 @@ pub type Identifier = String;
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum Expression {
+    PLE(PureLeafExpression),
+}
+
+
+/* A PureLeafExpression does not contain subexpressions which are
+ * evaluated prerequisite to the PureLeafExpression itself.
+ */
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub enum PureLeafExpression {
     Dereference(Identifier),
     Literal(Literal),
     Object(Object),
