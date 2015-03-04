@@ -138,7 +138,7 @@ test_parse_expectations! {
                     props: Properties::empty(),
                 }));
 
-    query_and_props
+    query_and_props_with_var_prop
         : &["object { query -> $x; prop .t -> true; prop (x) -> x }"]
         => Some(
             expr(
@@ -149,11 +149,44 @@ test_parse_expectations! {
                         vec![
                             propitem("t", expr(true)),
                             ],
-                        None),
+                        Some(propitem("x", expr("x"))))
                 }));
 
-    func_and_props
+    query_and_props_without_var_prop
+        : &["object { query -> $x; prop .t -> true }"]
+        => Some(
+            expr(
+                Object {
+                    query: Some(query(qapp("x"))),
+                    func: Function::empty(),
+                    props: Properties::from_items(
+                        vec![
+                            propitem("t", expr(true)),
+                            ],
+                        None)
+                }));
+
+    func_and_props_with_varprop
         : &["object { fn x -> x; prop .t -> true; prop (x) -> x }"]
+        => Some(
+            expr(
+                Object {
+                    query: None,
+                    func: Function(
+                        vec![
+                            FuncRule {
+                                pattern: Pattern::Bind("x".to_string()),
+                                body: expr("x"),
+                            }]),
+                    props: Properties::from_items(
+                        vec![
+                            propitem("t", expr(true)),
+                            ],
+                        Some(propitem("x", expr("x")))),
+                }));
+
+    func_and_props_without_varprop
+        : &["object { fn x -> x; prop .t -> true }"]
         => Some(
             expr(
                 Object {
@@ -187,7 +220,7 @@ test_parse_expectations! {
                         vec![
                             propitem("t", expr(true)),
                             ],
-                        None),
+                        Some(propitem("x", expr("x")))),
                 }));
 
     bad_arrows

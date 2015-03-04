@@ -7,7 +7,9 @@ use super::super::ast::{
     Object,
     Pattern,
     Properties,
-    PureLeafExpression
+    PureLeafExpression,
+    Query,
+    QueryExpression
 };
 
 
@@ -15,34 +17,84 @@ use super::super::ast::{
 expression -> Expression
   = ple:pureleafexpression { Expression::PLE(ple) }
 
+queryexpression -> QueryExpression
+  = ple:pureleafexpression { QueryExpression::PLE(ple)     }
+  / qa:queryapp            { QueryExpression::QueryApp(qa) }
+
 pureleafexpression -> PureLeafExpression
   = i:identifier { PureLeafExpression::Dereference(i) }
   / l:literal    { PureLeafExpression::Literal(l)     }
   / o:object     { PureLeafExpression::Object(o)      }
 
 identifier -> String
-  = ! "true"
-    ! "false"
+  = ! "false"
     ! "func"
     ! "object"
     ! "prop"
+    ! "query"
+    ! "true"
     [A-Za-z][A-Za-z0-9_]* { match_str.to_string() }
 
 literal -> Literal
   = "true"  { Literal::Bool(true)  }
   / "false" { Literal::Bool(false) }
 
+
 object -> Object
-  = "object" [ ]+ "{" [\n ]* f:func? [\n ]* p:properties? [\n ]* "}"
+  = "object" [ ]+ "{" [\n ]* tup:object_at_query
     {
-      Object {
-        query: None,
-        func: f.unwrap_or_else(|| Function::empty()),
-        props: p.unwrap_or_else(|| Properties::empty()),
-      }
+      let (q, f, p) = tup;
+      Object { query: q, func: f, props: p }
     }
+  / q:query
+    { Object::from_query(q) }
   / f:func
     { Object::from_func(f) }
+
+object_at_query -> (Option<Query>, Function, Properties)
+  = q:query [\n ]* tup:object_after_query
+    {
+      let (f, p) = tup;
+      (Some(q), f, p)
+    }
+  / tup:object_at_func
+    {
+      let (f, p) = tup;
+      (None, f, p)
+    }
+
+object_after_query -> (Function, Properties)
+  = semisep tup:object_at_func
+    { tup }
+  / "}"
+    { (Function::empty(), Properties::empty()) }
+
+object_at_func -> (Function, Properties)
+  = f:func [\n ]* props:object_after_func
+    { (f, props) }
+  / props:object_at_props
+    { (Function::empty(), props) }
+
+object_after_func -> Properties
+  = semisep p:object_at_props
+    { p }
+  / "}"
+    { Properties::empty() }
+
+object_at_props -> Properties
+  = p:properties [\n ]* "}"
+    { p }
+  / "}"
+    { Properties::empty() }
+
+
+query -> Query
+  = "query" arrowsep body:queryexpression
+    { Query(Box::new(body)) }
+
+queryapp -> Box<QueryExpression>
+  = "$" target:queryexpression
+    { Box::new(target) }
 
 func -> Function
   = "func" [ ]+ "{" [\n ]* rs:func_rules [\n ]* "}"
