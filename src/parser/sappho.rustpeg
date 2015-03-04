@@ -50,7 +50,7 @@ func_rules -> Vec<FuncRule>
     { rs }
 
 func_rule -> FuncRule
-  = p:pattern [ ]+ "->" [\n ]* b:expression
+  = p:pattern arrowsep b:expression
     { FuncRule { pattern: p, body: b } }
 
 pattern -> Pattern
@@ -62,11 +62,11 @@ properties -> Properties
     { props }
 
 props_from_pattern -> Properties
-  = "(" [\n ]* id:identifier [\n ]* ")" [ ]+ "->" [\n ]* b:expression
+  = "(" [\n ]* id:identifier [\n ]* ")" arrowsep b:expression
     {
       Properties::from_varprop(id, b)
     }
-  / "." id:identifier [ ]+ "->" [\n ]* b:expression props:props_continue
+  / "." id:identifier arrowsep b:expression props:props_continue
     {
       props.plus_item(id, b)
     }
@@ -77,6 +77,9 @@ props_continue -> Properties
   / ""
     { Properties::empty() }
 
+
+arrowsep -> ()
+  = [ ]+ "->" [\n ]+
 
 semisep -> ()
   = ";" [\n ]*
