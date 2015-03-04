@@ -15,5 +15,6 @@ type ParseResult = Result<ast::Expression, String>;
 peg_file! peg("sappho.rustpeg");
 
 
+#[cfg(test)]
 mod tests;
 
