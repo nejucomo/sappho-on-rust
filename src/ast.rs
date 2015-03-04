@@ -1,3 +1,4 @@
+use std::iter::FromIterator;
 use std::collections::HashMap;
 
 
@@ -179,3 +180,13 @@ impl Properties {
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct List<T>(pub Vec<Box<T>>);
+
+
+impl<T> List<T> {
+    pub fn from_unboxed_vec(xs: Vec<T>) -> List<T> {
+        List(
+            FromIterator::from_iter(
+                xs.into_iter().map(
+                    |x| Box::new(x))))
+    }
+}

@@ -250,7 +250,6 @@ test_parse_expectations! {
         : &["[false,true]",
             "[false, true]",
             "[ false, true ]",
-            "[ false , true ]",
             "[\n  false,\n  true\n]"]
         => Some(expr_list(vec![false, true]));
 
