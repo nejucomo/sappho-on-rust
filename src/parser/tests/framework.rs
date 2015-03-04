@@ -1,5 +1,6 @@
 use super::super::super::ast::{
     Expression,
+    FuncRule,
     Function,
     Identifier,
     Literal,
@@ -35,42 +36,47 @@ macro_rules! test_parse_expectations {
 
 
 // A helper fn & trait for concisely specifying tests:
-pub fn iexpr<T: IntoExpr>(x: T) -> Option<Expression> {
+pub fn iexpr<T: IntoExpr>(x: T) -> Expression {
     IntoExpr::into_expr(x)
 }
 
 
 trait IntoExpr {
-    fn into_expr(self) -> Option<Expression>;
+    fn into_expr(self) -> Expression;
 }
 
 impl IntoExpr for Identifier {
-    fn into_expr(self) -> Option<Expression> {
-        Some(Expression::Dereference(self))
+    fn into_expr(self) -> Expression {
+        Expression::Dereference(self)
     }
 }
 impl IntoExpr for &'static str {
-    fn into_expr(self) -> Option<Expression> {
+    fn into_expr(self) -> Expression {
         iexpr(self.to_string())
     }
 }
 impl IntoExpr for bool {
-    fn into_expr(self) -> Option<Expression> {
-        Some(Expression::Literal(Literal::Bool(self)))
+    fn into_expr(self) -> Expression {
+        Expression::Literal(Literal::Bool(self))
     }
 }
 impl IntoExpr for Object {
-    fn into_expr(self) -> Option<Expression> {
-        Some(Expression::Object(self))
+    fn into_expr(self) -> Expression {
+        Expression::Object(self)
     }
 }
 impl IntoExpr for Function {
-    fn into_expr(self) -> Option<Expression> {
+    fn into_expr(self) -> Expression {
         iexpr(Object::from_func(self))
     }
 }
+impl IntoExpr for FuncRule {
+    fn into_expr(self) -> Expression {
+        iexpr(Function(vec![self]))
+    }
+}
 impl IntoExpr for Properties {
-    fn into_expr(self) -> Option<Expression> {
+    fn into_expr(self) -> Expression {
         iexpr(Object::from_properties(self))
     }
 }
