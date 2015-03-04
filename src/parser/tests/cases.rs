@@ -1,11 +1,15 @@
 use super::super::super::ast::{
     Expression,
-    Function,
     FuncRule,
+    Function,
     List,
     Object,
     Pattern,
+    Proc,
+    ProcExpression,
     Properties,
+    PureLeafExpression,
+    StatementBlock,
 };
 use super::framework::{
     expr,
@@ -133,6 +137,7 @@ test_parse_expectations! {
         => Some(
             expr(
                 Object {
+                    proc_: None,
                     query: Some(query(qapp("x"))),
                     func: Function(
                         vec![
@@ -148,6 +153,7 @@ test_parse_expectations! {
         => Some(
             expr(
                 Object {
+                    proc_: None,
                     query: Some(query(qapp("x"))),
                     func: Function::empty(),
                     props: Properties::from_items(
@@ -162,6 +168,7 @@ test_parse_expectations! {
         => Some(
             expr(
                 Object {
+                    proc_: None,
                     query: Some(query(qapp("x"))),
                     func: Function::empty(),
                     props: Properties::from_items(
@@ -176,6 +183,7 @@ test_parse_expectations! {
         => Some(
             expr(
                 Object {
+                    proc_: None,
                     query: None,
                     func: Function(
                         vec![
@@ -195,6 +203,7 @@ test_parse_expectations! {
         => Some(
             expr(
                 Object {
+                    proc_: None,
                     query: None,
                     func: Function(
                         vec![
@@ -210,10 +219,19 @@ test_parse_expectations! {
                 }));
 
     full_object
-        : &["object { query -> $x; func x -> x; prop .t -> true; prop (x) -> x }"]
+        : &["object { proc { return !x }; query -> $x; func x -> x; prop .t -> true; prop (x) -> x }"]
         => Some(
             expr(
                 Object {
+                    proc_: Some(
+                        Proc(
+                            StatementBlock::Return(
+                                Box::new(
+                                    ProcExpression::ProcApp(
+                                        Box::new(
+                                            ProcExpression::PLE(
+                                                PureLeafExpression::Dereference(
+                                                    "x".to_string())))))))),
                     query: Some(query(qapp("x"))),
                     func: Function(
                         vec![

@@ -48,7 +48,7 @@ object -> Object
   = "object" [ ]+ "{" [\n ]* tup:object_at_query
     {
       let (q, f, p) = tup;
-      Object { query: q, func: f, props: p }
+      Object { proc_: None, query: q, func: f, props: p }
     }
   / q:query
     { Object::from_query(q) }

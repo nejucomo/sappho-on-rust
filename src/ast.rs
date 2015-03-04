@@ -32,6 +32,20 @@ pub enum QueryExpression {
 }
 
 
+/* A ProcExpression tree is like a QueryExpression tree,
+ * except it may also contain ProcApp productions.
+ */
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub enum ProcExpression {
+    PLE(PureLeafExpression),
+    LE(List<ProcExpression>),
+    QueryApp(Box<ProcExpression>),
+    ProcApp(Box<ProcExpression>),
+}
+
+
 
 /** PureLeafExpressions and subgrammars **/
 
@@ -60,8 +74,9 @@ pub enum Literal {
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Object {
+    pub proc_:  Option<Proc>,
     pub query: Option<Query>,
-    pub func: Function,
+    pub func:  Function,
     pub props: Properties,
 }
 
@@ -70,8 +85,18 @@ impl Object {
         Object::from_func(Function::empty())
     }
 
+    pub fn from_proc(p: Proc) -> Object {
+        Object {
+            proc_: Some(p),
+            query: None,
+            func: Function::empty(),
+            props: Properties::empty(),
+        }
+    }
+
     pub fn from_query(q: Query) -> Object {
         Object {
+            proc_: None,
             query: Some(q),
             func: Function::empty(),
             props: Properties::empty(),
@@ -80,6 +105,7 @@ impl Object {
 
     pub fn from_func(f: Function) -> Object {
         Object {
+            proc_: None,
             query: None,
             func: f,
             props: Properties::empty(),
@@ -88,11 +114,26 @@ impl Object {
 
     pub fn from_properties(p: Properties) -> Object {
         Object {
+            proc_: None,
             query: None,
             func: Function::empty(),
             props: p,
         }
     }
+}
+
+
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub struct Proc(pub StatementBlock);
+
+
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub enum StatementBlock {
+    Return(Box<ProcExpression>),
 }
 
 
