@@ -46,11 +46,21 @@ test_parse_expectations! {
         : &["x"]
         => Some(Expression::Dereference("x".to_string()));
 
+    dangling_keyword
+        : &["object"]
+        => None;
+
     empty_object
         : &["object {}",
             "object { }",
             "object {\n}"]
         => Some(Expression::Object(Object::empty()));
+
+    object_braces_malformed
+        : &["object\n{}",
+            "object\t{}",
+            "object{}"]
+        => None;
 
     identity_func
         : &["object { func { x -> x } }",
@@ -74,6 +84,13 @@ test_parse_expectations! {
                                 pattern: Pattern::Bind("x".to_string()),
                                 body: Expression::Dereference("x".to_string()),
                             }]))));
+
+    func_braces_malformed
+        : &["object {func{}}",
+            "object {func\n{}}",
+            "func{ }",
+            "func\n{}"]
+        => None;
 
     properties
         : &["object { prop .t -> true; prop .f -> false; prop (x) -> x }"]
