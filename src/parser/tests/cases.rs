@@ -47,13 +47,13 @@ test_parse_expectations! {
             "object{}"]
         => None;
 
-    query_false
+    query_to_false
         : &["object { query -> false }",
             "object {\n query ->\n  false\n}",
             "query -> false"]
         => Some(expr(query(false)));
 
-    query_query_x
+    query_to_qapp
         : &["object { query -> $x }",
             "object {\n query ->\n  $x\n}",
             "query -> $x"]
@@ -122,6 +122,73 @@ test_parse_expectations! {
                         propitem("f", expr(false)),
                         ],
                     None)));
+
+    query_and_func
+        : &["object { query -> $x; fn x -> x }"]
+        => Some(
+            expr(
+                Object {
+                    query: Some(query(qapp("x"))),
+                    func: Function(
+                        vec![
+                            FuncRule {
+                                pattern: Pattern::Bind("x".to_string()),
+                                body: expr("x"),
+                            }]),
+                    props: Properties::empty(),
+                }));
+
+    query_and_props
+        : &["object { query -> $x; prop .t -> true; prop (x) -> x }"]
+        => Some(
+            expr(
+                Object {
+                    query: Some(query(qapp("x"))),
+                    func: Function::empty(),
+                    props: Properties::from_items(
+                        vec![
+                            propitem("t", expr(true)),
+                            ],
+                        None),
+                }));
+
+    func_and_props
+        : &["object { fn x -> x; prop .t -> true; prop (x) -> x }"]
+        => Some(
+            expr(
+                Object {
+                    query: None,
+                    func: Function(
+                        vec![
+                            FuncRule {
+                                pattern: Pattern::Bind("x".to_string()),
+                                body: expr("x"),
+                            }]),
+                    props: Properties::from_items(
+                        vec![
+                            propitem("t", expr(true)),
+                            ],
+                        None),
+                }));
+
+    full_object
+        : &["object { query -> $x; fn x -> x; prop .t -> true; prop (x) -> x }"]
+        => Some(
+            expr(
+                Object {
+                    query: Some(query(qapp("x"))),
+                    func: Function(
+                        vec![
+                            FuncRule {
+                                pattern: Pattern::Bind("x".to_string()),
+                                body: expr("x"),
+                            }]),
+                    props: Properties::from_items(
+                        vec![
+                            propitem("t", expr(true)),
+                            ],
+                        None),
+                }));
 
     bad_arrows
         // Notice that newline immediately after an arrow is acceptable.
