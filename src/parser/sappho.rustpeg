@@ -79,6 +79,7 @@ leafexpr -> LeafExpression
 identifier -> String
   = ! "false"
     ! "func"
+    ! "let"
     ! "object"
     ! "proc"
     ! "prop"
