@@ -40,6 +40,7 @@ test_parse_expectations! {
     dangling_keywords
         : &[
             "func",
+            "in",
             "let",
             "object",
             "proc",
@@ -354,7 +355,7 @@ test_parse_expectations! {
                     })));
 
     pgram_let
-        : &["proc { return let { x = a; y = $b; z =!c } in [x, $y, !z] }"]
+        : &["proc { return let { x = a; y = $b; z = !c } in [x, $y, !z] }"]
         => Some(
             dgram(
                 Proc(

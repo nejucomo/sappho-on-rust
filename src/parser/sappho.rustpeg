@@ -4,6 +4,7 @@ use super::super::ast::{
     Function,
     Identifier,
     LeafExpression,
+    Let,
     List,
     Literal,
     Object,
@@ -35,14 +36,17 @@ pgram -> PGrammar
 dexpr -> Expression<DGrammar>
   = x:leafexpr { Expression::Leaf(x) }
   / l:dlist    { Expression::List(l) }
+  / l:dlet     { Expression::Let(l)  }
 
 qexpr -> Expression<QGrammar>
   = x:leafexpr { Expression::Leaf(x) }
   / l:qlist    { Expression::List(l) }
+  / l:qlet     { Expression::Let(l)  }
 
 pexpr -> Expression<PGrammar>
   = x:leafexpr { Expression::Leaf(x) }
   / l:plist    { Expression::List(l) }
+  / l:plet     { Expression::Let(l)  }
 
 
 dlist -> List<DGrammar>
@@ -56,6 +60,51 @@ qlist -> List<QGrammar>
 plist -> List<PGrammar>
   = "[" [\n ]* xs:pgram ** commasep [\n ]* "]"
     { List::from_unboxed_vec(xs) }
+
+
+dlet -> Let<DGrammar>
+  = "let" [ ]+ xs:dlet_bindings [\n ]+ "in" [ ]+ x:dgram
+    { Let { bindings: xs, expr: Box::new(x) } }
+
+qlet -> Let<QGrammar>
+  = "let" [ ]+ xs:qlet_bindings [\n ]+ "in" [ ]+ x:qgram
+    { Let { bindings: xs, expr: Box::new(x) } }
+
+plet -> Let<PGrammar>
+  = "let" [ ]+ xs:plet_bindings [\n ]+ "in" [ ]+ x:pgram
+    { Let { bindings: xs, expr: Box::new(x) } }
+
+
+dlet_bindings -> Vec<PatternItem<DGrammar>>
+  = "{" [\n ]* xs:dbindpair ** semisep [\n ]* "}"
+    { xs }
+  / x:dbindpair
+    { vec![x] }
+
+qlet_bindings -> Vec<PatternItem<QGrammar>>
+  = "{" [\n ]* xs:qbindpair ** semisep [\n ]* "}"
+    { xs }
+  / x:qbindpair
+    { vec![x] }
+
+plet_bindings -> Vec<PatternItem<PGrammar>>
+  = "{" [\n ]* xs:pbindpair ** semisep [\n ]* "}"
+    { xs }
+  / x:pbindpair
+    { vec![x] }
+
+
+dbindpair -> PatternItem<DGrammar>
+  = p:pattern [ ]+ "=" [\n ]+ x:dgram
+    { PatternItem { pattern: p, expr: Box::new(x) } }
+
+qbindpair -> PatternItem<QGrammar>
+  = p:pattern [ ]+ "=" [\n ]+ x:qgram
+    { PatternItem { pattern: p, expr: Box::new(x) } }
+
+pbindpair -> PatternItem<PGrammar>
+  = p:pattern [ ]+ "=" [\n ]+ x:pgram
+    { PatternItem { pattern: p, expr: Box::new(x) } }
 
 
 queryqueryapp -> Box<QGrammar>
@@ -79,6 +128,7 @@ leafexpr -> LeafExpression
 identifier -> String
   = ! "false"
     ! "func"
+    ! "in"
     ! "let"
     ! "object"
     ! "proc"
@@ -175,14 +225,10 @@ query -> Query
     { Query(Box::new(body)) }
 
 func -> Function
-  = "func" [ ]+ "{" [\n ]* rs:func_rules [\n ]* "}"
+  = "func" [ ]+ "{" [\n ]* rs:func_rule ** semisep [\n ]* "}"
     { Function(rs) }
   / "func" [ ]+ r:func_rule
     { Function(vec![r]) }
-
-func_rules -> Vec<PatternItem<DGrammar>>
-  = rs:func_rule ** semisep
-    { rs }
 
 func_rule -> PatternItem<DGrammar>
   = p:pattern arrowsep b:dgram
