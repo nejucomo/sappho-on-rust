@@ -13,49 +13,48 @@ pub type Identifier = String;
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub enum Expression {
-    PLE(PureLeafExpression),
-    LE(List<Expression>),
+pub enum DGrammar {
+    Expr(Expression<DGrammar>),
 }
 
 
-/* A QueryExpression tree is like a (deterministic) Expression tree,
- * except it may contain QueryApp productions.
+/* The Query expression grammar (QGrammar) allows queries of mutable
+ * state.
  */
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub enum QueryExpression {
-    PLE(PureLeafExpression),
-    LE(List<QueryExpression>),
-    QueryApp(Box<QueryExpression>),
+pub enum QGrammar {
+    Expr(Expression<QGrammar>),
+    QueryApp(Box<QGrammar>),
 }
 
 
-/* A ProcExpression tree is like a QueryExpression tree,
- * except it may also contain ProcApp productions.
- */
+/* PGrammar, the Proc grammar, allows mutations and i/o. */
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub enum ProcExpression {
-    PLE(PureLeafExpression),
-    LE(List<ProcExpression>),
-    QueryApp(Box<ProcExpression>),
-    ProcApp(Box<ProcExpression>),
+pub enum PGrammar {
+    Expr(Expression<PGrammar>),
+    QueryApp(Box<PGrammar>),
+    ProcApp(Box<PGrammar>),
 }
 
 
-
-/** PureLeafExpressions and subgrammars **/
-
-/* A PureLeafExpression does not contain subexpressions which are
- * evaluated prerequisite to the PureLeafExpression itself.
- */
+/* All grammars share a common expression syntax: */
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub enum PureLeafExpression {
+pub enum Expression<T> {
+    Leaf(LeafExpression),
+    List(List<T>),
+}
+
+
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub enum LeafExpression {
     Dereference(Identifier),
     Literal(Literal),
     Object(Object),
@@ -133,14 +132,14 @@ pub struct Proc(pub StatementBlock);
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum StatementBlock {
-    Return(Box<ProcExpression>),
+    Return(Box<PGrammar>),
 }
 
 
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub struct Query(pub Box<QueryExpression>);
+pub struct Query(pub Box<QGrammar>);
 
 
 #[derive(Eq)]
@@ -160,7 +159,7 @@ impl Function {
 #[derive(Debug)]
 pub struct FuncRule {
     pub pattern: Pattern,
-    pub body: Expression,
+    pub body: DGrammar,
 }
 
 
@@ -176,11 +175,11 @@ pub enum Pattern {
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Properties {
-    pub map: HashMap<Identifier, Box<Expression>>,
+    pub map: HashMap<Identifier, Box<DGrammar>>,
     pub varprop: Option<PropItem>,
 }
 
-pub type PropItem = (Identifier, Box<Expression>);
+pub type PropItem = (Identifier, Box<DGrammar>);
 
 
 impl Properties {
@@ -191,7 +190,7 @@ impl Properties {
         }
     }
 
-    pub fn from_varprop(id: Identifier, expr: Expression) -> Properties {
+    pub fn from_varprop(id: Identifier, expr: DGrammar) -> Properties {
         Properties::from_items(vec![], Some((id, Box::new(expr))))
     }
 
@@ -208,7 +207,7 @@ impl Properties {
         Properties { map: m, varprop: vp }
     }
 
-    pub fn plus_item(mut self, id: Identifier, expr: Expression) -> Properties {
+    pub fn plus_item(mut self, id: Identifier, expr: DGrammar) -> Properties {
         self.map.insert(id, Box::new(expr));
 
         self

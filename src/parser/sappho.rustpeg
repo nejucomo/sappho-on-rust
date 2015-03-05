@@ -1,43 +1,80 @@
 use super::super::ast::{
+    DGrammar,
     Expression,
     FuncRule,
     Function,
     Identifier,
+    LeafExpression,
     List,
     Literal,
     Object,
     Pattern,
+    PGrammar,
     Proc,
-    ProcExpression,
     Properties,
-    PureLeafExpression,
+    QGrammar,
     Query,
-    QueryExpression,
     StatementBlock
 };
 
 
 #[pub]
-expression -> Expression
-  = ple:pureleafexpression { Expression::PLE(ple) }
-  / le:list_expression     { Expression::LE(le)   }
+dgram -> DGrammar
+  = e:dexpr { DGrammar::Expr(e) }
 
-queryexpression -> QueryExpression
-  = ple:pureleafexpression   { QueryExpression::PLE(ple)     }
-  / lqe:list_queryexpression { QueryExpression::LE(lqe)      }
-  / qa:queryqueryapp         { QueryExpression::QueryApp(qa) }
+qgram -> QGrammar
+  = e:qexpr          { QGrammar::Expr(e)      }
+  / qa:queryqueryapp { QGrammar::QueryApp(qa) }
 
-procexpression -> ProcExpression
-  = ple:pureleafexpression  { ProcExpression::PLE(ple)     }
-  / lpe:list_procexpression { ProcExpression::LE(lpe)      }
-  / qa:procqueryapp         { ProcExpression::QueryApp(qa) }
-  / pa:procapp              { ProcExpression::ProcApp(pa)  }
+pgram -> PGrammar
+  = e:pexpr         { PGrammar::Expr(e)      }
+  / qa:procqueryapp { PGrammar::QueryApp(qa) }
+  / pa:procapp      { PGrammar::ProcApp(pa)  }
 
 
-pureleafexpression -> PureLeafExpression
-  = i:identifier { PureLeafExpression::Dereference(i) }
-  / l:literal    { PureLeafExpression::Literal(l)     }
-  / o:object     { PureLeafExpression::Object(o)      }
+dexpr -> Expression<DGrammar>
+  = x:leafexpr { Expression::Leaf(x) }
+  / l:dlist    { Expression::List(l) }
+
+qexpr -> Expression<QGrammar>
+  = x:leafexpr { Expression::Leaf(x) }
+  / l:qlist    { Expression::List(l) }
+
+pexpr -> Expression<PGrammar>
+  = x:leafexpr { Expression::Leaf(x) }
+  / l:plist    { Expression::List(l) }
+
+
+dlist -> List<DGrammar>
+  = "[" [\n ]* xs:dgram ** commasep [\n ]* "]"
+    { List::from_unboxed_vec(xs) }
+
+qlist -> List<QGrammar>
+  = "[" [\n ]* xs:qgram ** commasep [\n ]* "]"
+    { List::from_unboxed_vec(xs) }
+
+plist -> List<PGrammar>
+  = "[" [\n ]* xs:pgram ** commasep [\n ]* "]"
+    { List::from_unboxed_vec(xs) }
+
+
+queryqueryapp -> Box<QGrammar>
+  = "$" target:qgram
+    { Box::new(target) }
+
+procqueryapp -> Box<PGrammar>
+  = "$" target:pgram
+    { Box::new(target) }
+
+procapp -> Box<PGrammar>
+  = "!" target:pgram
+    { Box::new(target) }
+
+
+leafexpr -> LeafExpression
+  = i:identifier { LeafExpression::Dereference(i) }
+  / l:literal    { LeafExpression::Literal(l)     }
+  / o:object     { LeafExpression::Object(o)      }
 
 identifier -> String
   = ! "false"
@@ -128,12 +165,12 @@ proc -> Proc
     { Proc(sb) }
 
 statementblock -> StatementBlock
-  = "return" [ ]+ pe:procexpression
+  = "return" [ ]+ pe:pgram
     { StatementBlock::Return(Box::new(pe)) }
 
 
 query -> Query
-  = "query" arrowsep body:queryexpression
+  = "query" arrowsep body:qgram
     { Query(Box::new(body)) }
 
 func -> Function
@@ -147,7 +184,7 @@ func_rules -> Vec<FuncRule>
     { rs }
 
 func_rule -> FuncRule
-  = p:pattern arrowsep b:expression
+  = p:pattern arrowsep b:dgram
     { FuncRule { pattern: p, body: b } }
 
 pattern -> Pattern
@@ -159,11 +196,11 @@ properties -> Properties
     { props }
 
 props_from_pattern -> Properties
-  = "(" [\n ]* id:identifier [\n ]* ")" arrowsep b:expression
+  = "(" [\n ]* id:identifier [\n ]* ")" arrowsep b:dgram
     {
       Properties::from_varprop(id, b)
     }
-  / "." id:identifier arrowsep b:expression props:props_continue
+  / "." id:identifier arrowsep b:dgram props:props_continue
     {
       props.plus_item(id, b)
     }
@@ -173,32 +210,6 @@ props_continue -> Properties
     { props }
   / ""
     { Properties::empty() }
-
-
-list_expression -> List<Expression>
-  = "[" [\n ]* xs:expression ** commasep [\n ]* "]"
-    { List::from_unboxed_vec(xs) }
-
-list_queryexpression -> List<QueryExpression>
-  = "[" [\n ]* xs:queryexpression ** commasep [\n ]* "]"
-    { List::from_unboxed_vec(xs) }
-
-list_procexpression -> List<ProcExpression>
-  = "[" [\n ]* xs:procexpression ** commasep [\n ]* "]"
-    { List::from_unboxed_vec(xs) }
-
-
-queryqueryapp -> Box<QueryExpression>
-  = "$" target:queryexpression
-    { Box::new(target) }
-
-procqueryapp -> Box<ProcExpression>
-  = "$" target:procexpression
-    { Box::new(target) }
-
-procapp -> Box<ProcExpression>
-  = "!" target:procexpression
-    { Box::new(target) }
 
 
 arrowsep -> ()

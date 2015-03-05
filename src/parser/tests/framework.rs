@@ -1,24 +1,36 @@
+/* This mod provides a framework for concisely expression parser tests.
+ * There are two utilities:
+ *
+ * - The test_parse_expectations! macro expands to separate test functions
+ *   for each compactly specified case.
+ * - The [dqp]gram*, query, proc, and propitem functions are a DSL for
+ *   concisely specifying ast graphs which are otherwise textually large.
+ */
+
 use std::iter::FromIterator;
 use super::super::super::ast::{
+    DGrammar,
     Expression,
     FuncRule,
     Function,
     Identifier,
+    LeafExpression,
     List,
     Literal,
     Object,
+    PGrammar,
+    Proc,
     Properties,
     PropItem,
-    PureLeafExpression,
+    QGrammar,
     Query,
-    QueryExpression,
 };
 use super::super::{
     parse_expression,
 };
 
 
-pub fn check_parse_expectation(inputs: &[&str], expectation: Option<Expression>) {
+pub fn check_parse_expectation(inputs: &[&str], expectation: Option<DGrammar>) {
     for input in inputs.iter() {
         let result = parse_expression(input);
         assert!(result.as_ref().ok() == expectation.as_ref(),
@@ -42,125 +54,152 @@ macro_rules! test_parse_expectations {
 
 
 // helper fns & a trait for concisely specifying tests:
-pub fn expr<T: IntoExpr>(x: T) -> Expression {
-    IntoExpr::into_expr(x)
+pub fn dgram<T: IntoDGrammar>(x: T) -> DGrammar {
+    x.into_dgram()
 }
 
-pub fn qexpr<T: IntoExpr>(x: T) -> QueryExpression {
-    IntoExpr::into_qexpr(x)
+pub fn qgram<T: IntoQGrammar>(x: T) -> QGrammar {
+    x.into_qgram()
 }
 
-pub fn qapp<T: IntoExpr>(x: T) -> QueryExpression {
-    QueryExpression::QueryApp(Box::new(qexpr(x)))
+pub fn qgram_qapp<T: IntoQGrammar>(x: T) -> QGrammar {
+    QGrammar::QueryApp(Box::new(x.into_qgram()))
 }
 
-pub fn query<T: IntoExpr>(x: T) -> Query {
-    Query(Box::new(qexpr(x)))
+pub fn pgram<T: IntoPGrammar>(x: T) -> PGrammar {
+    x.into_pgram()
 }
 
-pub fn expr_list<T: IntoExpr>(xs: Vec<T>) -> Expression {
-    Expression::LE(
-        List(
-            FromIterator::from_iter(
-                xs.into_iter().map(|x| Box::new(expr(x))))))
+pub fn pgram_qapp<T: IntoPGrammar>(x: T) -> PGrammar {
+    PGrammar::QueryApp(Box::new(x.into_pgram()))
 }
 
-pub fn qexpr_list<T: IntoExpr>(xs: Vec<T>) -> QueryExpression {
-    QueryExpression::LE(
-        List(
-            FromIterator::from_iter(
-                xs.into_iter().map(|x| Box::new(qexpr(x))))))
+pub fn pgram_papp<T: IntoPGrammar>(x: T) -> PGrammar {
+    PGrammar::ProcApp(Box::new(x.into_pgram()))
 }
 
-
-trait IntoExpr {
-    fn into_expr(self) -> Expression;
-    fn into_qexpr(self) -> QueryExpression;
+pub fn query<T: IntoQGrammar>(x: T) -> Query {
+    Query(Box::new(qgram(x)))
 }
 
-impl IntoExpr for PureLeafExpression {
-    fn into_expr(self) -> Expression {
-        Expression::PLE(self)
-    }
-    fn into_qexpr(self) -> QueryExpression {
-        QueryExpression::PLE(self)
-    }
-}
-impl IntoExpr for QueryExpression {
-    fn into_expr(self) -> Expression {
-        expr(Query(Box::new(self)))
-    }
-    fn into_qexpr(self) -> QueryExpression {
-        self
-    }
-}
-impl IntoExpr for Identifier {
-    fn into_expr(self) -> Expression {
-        expr(PureLeafExpression::Dereference(self))
-    }
-    fn into_qexpr(self) -> QueryExpression {
-        qexpr(PureLeafExpression::Dereference(self))
-    }
-}
-impl IntoExpr for &'static str {
-    fn into_expr(self) -> Expression {
-        expr(self.to_string())
-    }
-    fn into_qexpr(self) -> QueryExpression {
-        qexpr(self.to_string())
-    }
-}
-impl IntoExpr for bool {
-    fn into_expr(self) -> Expression {
-        expr(PureLeafExpression::Literal(Literal::Bool(self)))
-    }
-    fn into_qexpr(self) -> QueryExpression {
-        qexpr(PureLeafExpression::Literal(Literal::Bool(self)))
-    }
-}
-impl IntoExpr for Object {
-    fn into_expr(self) -> Expression {
-        expr(PureLeafExpression::Object(self))
-    }
-    fn into_qexpr(self) -> QueryExpression {
-        qexpr(PureLeafExpression::Object(self))
-    }
-}
-impl IntoExpr for Query {
-    fn into_expr(self) -> Expression {
-        expr(Object::from_query(self))
-    }
-    fn into_qexpr(self) -> QueryExpression {
-        qexpr(Object::from_query(self))
-    }
-}
-impl IntoExpr for Function {
-    fn into_expr(self) -> Expression {
-        expr(Object::from_func(self))
-    }
-    fn into_qexpr(self) -> QueryExpression {
-        qexpr(Object::from_func(self))
-    }
-}
-impl IntoExpr for FuncRule {
-    fn into_expr(self) -> Expression {
-        expr(Function(vec![self]))
-    }
-    fn into_qexpr(self) -> QueryExpression {
-        qexpr(Function(vec![self]))
-    }
-}
-impl IntoExpr for Properties {
-    fn into_expr(self) -> Expression {
-        expr(Object::from_properties(self))
-    }
-    fn into_qexpr(self) -> QueryExpression {
-        qexpr(Object::from_properties(self))
-    }
-}
-
-
-// Helpers for PropItems:
-pub fn propitem(id: &str, expr: Expression) -> PropItem {
+pub fn propitem(id: &str, expr: DGrammar) -> PropItem {
     (id.to_string(), Box::new(expr))
+}
+
+
+/* Private and convoluted plumbing below */
+macro_rules! define_into_impls_for_leafs {
+    ( ( $target:ident, $traitname:ident, $methodname:ident ) : [ $( $source:ty ),* ] ) => {
+        $(
+            impl $traitname for $source {
+                fn $methodname(self) -> $target {
+                    self.into_leaf().$methodname()
+                }
+            }
+        )*
+    }
+}
+
+
+macro_rules! define_into_trait_and_impls {
+    ( $target:ident, $traitname:ident, $methodname:ident ) => {
+
+        trait $traitname {
+            fn $methodname(self) -> $target;
+        }
+        impl $traitname for $target {
+            fn $methodname(self) -> $target { self }
+        }
+        impl $traitname for LeafExpression {
+            fn $methodname(self) -> $target {
+                /* Note: This macro requires all consistent
+                 * $target::Expr(Expression<$target>) structure.
+                 */
+                $target::Expr(Expression::Leaf(self))
+            }
+        }
+        impl<T: $traitname> $traitname for Vec<T> {
+            fn $methodname(self) -> $target {
+                $target::Expr(
+                    Expression::List(
+                        List(
+                            FromIterator::from_iter(
+                                self.into_iter().map(
+                                    |x| Box::new(x.$methodname()))))))
+            }
+        }
+
+        define_into_impls_for_leafs! {
+            ( $target, $traitname, $methodname )
+                : [bool,
+                   FuncRule,
+                   Function,
+                   Identifier,
+                   Object,
+                   Proc,
+                   Properties,
+                   Query,
+                   &'static str]
+        }
+    }
+}
+
+
+define_into_trait_and_impls! ( DGrammar, IntoDGrammar, into_dgram );
+define_into_trait_and_impls! ( QGrammar, IntoQGrammar, into_qgram );
+define_into_trait_and_impls! ( PGrammar, IntoPGrammar, into_pgram );
+
+
+
+// Conversion plumbing for leaf expressions:
+trait IntoLeaf {
+    fn into_leaf(self) -> LeafExpression;
+}
+impl IntoLeaf for LeafExpression {
+    fn into_leaf(self) -> LeafExpression { self }
+}
+impl IntoLeaf for Identifier {
+    fn into_leaf(self) -> LeafExpression {
+        LeafExpression::Dereference(self)
+    }
+}
+impl IntoLeaf for &'static str {
+    fn into_leaf(self) -> LeafExpression {
+        self.to_string().into_leaf()
+    }
+}
+impl IntoLeaf for bool {
+    fn into_leaf(self) -> LeafExpression {
+        LeafExpression::Literal(Literal::Bool(self))
+    }
+}
+impl IntoLeaf for Object {
+    fn into_leaf(self) -> LeafExpression {
+        LeafExpression::Object(self)
+    }
+}
+impl IntoLeaf for Proc {
+    fn into_leaf(self) -> LeafExpression {
+        Object::from_proc(self).into_leaf()
+    }
+}
+impl IntoLeaf for Query {
+    fn into_leaf(self) -> LeafExpression {
+        Object::from_query(self).into_leaf()
+    }
+}
+impl IntoLeaf for Function {
+    fn into_leaf(self) -> LeafExpression {
+        Object::from_func(self).into_leaf()
+    }
+}
+impl IntoLeaf for FuncRule {
+    fn into_leaf(self) -> LeafExpression {
+        Function(vec![self]).into_leaf()
+    }
+}
+impl IntoLeaf for Properties {
+    fn into_leaf(self) -> LeafExpression {
+        Object::from_properties(self).into_leaf()
+    }
 }
