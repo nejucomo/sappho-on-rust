@@ -1,5 +1,4 @@
 use super::super::ast::{
-    DGrammar,
     Expression,
     Function,
     Identifier,
@@ -10,114 +9,20 @@ use super::super::ast::{
     Object,
     Pattern,
     PatternItem,
-    PGrammar,
     Proc,
     Properties,
-    QGrammar,
     Query,
     StatementBlock
 };
 
 
 #[pub]
-dgram -> DGrammar
-  = e:dexpr { DGrammar::Expr(e) }
-
-qgram -> QGrammar
-  = e:qexpr          { QGrammar::Expr(e)      }
-  / qa:queryqueryapp { QGrammar::QueryApp(qa) }
-
-pgram -> PGrammar
-  = e:pexpr         { PGrammar::Expr(e)      }
-  / qa:procqueryapp { PGrammar::QueryApp(qa) }
-  / pa:procapp      { PGrammar::ProcApp(pa)  }
-
-
-dexpr -> Expression<DGrammar>
-  = x:leafexpr { Expression::Leaf(x) }
-  / l:dlist    { Expression::List(l) }
-  / l:dlet     { Expression::Let(l)  }
-
-qexpr -> Expression<QGrammar>
-  = x:leafexpr { Expression::Leaf(x) }
-  / l:qlist    { Expression::List(l) }
-  / l:qlet     { Expression::Let(l)  }
-
-pexpr -> Expression<PGrammar>
-  = x:leafexpr { Expression::Leaf(x) }
-  / l:plist    { Expression::List(l) }
-  / l:plet     { Expression::Let(l)  }
-
-
-dlist -> List<DGrammar>
-  = "[" [\n ]* xs:dgram ** commasep [\n ]* "]"
-    { List::from_unboxed_vec(xs) }
-
-qlist -> List<QGrammar>
-  = "[" [\n ]* xs:qgram ** commasep [\n ]* "]"
-    { List::from_unboxed_vec(xs) }
-
-plist -> List<PGrammar>
-  = "[" [\n ]* xs:pgram ** commasep [\n ]* "]"
-    { List::from_unboxed_vec(xs) }
-
-
-dlet -> Let<DGrammar>
-  = "let" [ ]+ xs:dlet_bindings [\n ]+ "in" [ ]+ x:dgram
-    { Let { bindings: xs, expr: Box::new(x) } }
-
-qlet -> Let<QGrammar>
-  = "let" [ ]+ xs:qlet_bindings [\n ]+ "in" [ ]+ x:qgram
-    { Let { bindings: xs, expr: Box::new(x) } }
-
-plet -> Let<PGrammar>
-  = "let" [ ]+ xs:plet_bindings [\n ]+ "in" [ ]+ x:pgram
-    { Let { bindings: xs, expr: Box::new(x) } }
-
-
-dlet_bindings -> Vec<PatternItem<DGrammar>>
-  = "{" [\n ]* xs:dbindpair ** semisep [\n ]* "}"
-    { xs }
-  / x:dbindpair
-    { vec![x] }
-
-qlet_bindings -> Vec<PatternItem<QGrammar>>
-  = "{" [\n ]* xs:qbindpair ** semisep [\n ]* "}"
-    { xs }
-  / x:qbindpair
-    { vec![x] }
-
-plet_bindings -> Vec<PatternItem<PGrammar>>
-  = "{" [\n ]* xs:pbindpair ** semisep [\n ]* "}"
-    { xs }
-  / x:pbindpair
-    { vec![x] }
-
-
-dbindpair -> PatternItem<DGrammar>
-  = p:pattern [ ]+ "=" [\n ]+ x:dgram
-    { PatternItem { pattern: p, expr: Box::new(x) } }
-
-qbindpair -> PatternItem<QGrammar>
-  = p:pattern [ ]+ "=" [\n ]+ x:qgram
-    { PatternItem { pattern: p, expr: Box::new(x) } }
-
-pbindpair -> PatternItem<PGrammar>
-  = p:pattern [ ]+ "=" [\n ]+ x:pgram
-    { PatternItem { pattern: p, expr: Box::new(x) } }
-
-
-queryqueryapp -> Box<QGrammar>
-  = "$" target:qgram
-    { Box::new(target) }
-
-procqueryapp -> Box<PGrammar>
-  = "$" target:pgram
-    { Box::new(target) }
-
-procapp -> Box<PGrammar>
-  = "!" target:pgram
-    { Box::new(target) }
+expr -> Expression
+  = l:leafexpr  { Expression::Leaf(l)      }
+  / pa:procapp  { Expression::ProcApp(pa)  }
+  / qa:queryapp { Expression::QueryApp(qa) }
+  / l:list      { Expression::List(l)      }
+  / l:let       { Expression::Let(l)       }
 
 
 leafexpr -> LeafExpression
@@ -216,12 +121,12 @@ proc -> Proc
     { Proc(sb) }
 
 statementblock -> StatementBlock
-  = "return" [ ]+ pe:pgram
+  = "return" [ ]+ pe:expr
     { StatementBlock::Return(Box::new(pe)) }
 
 
 query -> Query
-  = "query" arrowsep body:qgram
+  = "query" arrowsep body:expr
     { Query(Box::new(body)) }
 
 func -> Function
@@ -230,8 +135,8 @@ func -> Function
   / "func" [ ]+ r:func_rule
     { Function(vec![r]) }
 
-func_rule -> PatternItem<DGrammar>
-  = p:pattern arrowsep b:dgram
+func_rule -> PatternItem
+  = p:pattern arrowsep b:expr
     { PatternItem { pattern: p, expr: Box::new(b) } }
 
 pattern -> Pattern
@@ -243,11 +148,11 @@ properties -> Properties
     { props }
 
 props_from_pattern -> Properties
-  = "(" [\n ]* id:identifier [\n ]* ")" arrowsep b:dgram
+  = "(" [\n ]* id:identifier [\n ]* ")" arrowsep b:expr
     {
       Properties::from_varprop(id, b)
     }
-  / "." id:identifier arrowsep b:dgram props:props_continue
+  / "." id:identifier arrowsep b:expr props:props_continue
     {
       props.plus_item(id, b)
     }
@@ -257,6 +162,38 @@ props_continue -> Properties
     { props }
   / ""
     { Properties::empty() }
+
+
+
+procapp -> Box<Expression>
+  = "!" target:expr
+    { Box::new(target) }
+
+queryapp -> Box<Expression>
+  = "$" target:expr
+    { Box::new(target) }
+
+
+list -> List
+  = "[" [\n ]* xs:expr ** commasep [\n ]* "]"
+    { List::from_unboxed_vec(xs) }
+
+
+let -> Let
+  = "let" [ ]+ xs:let_bindings [\n ]+ "in" [ ]+ x:expr
+    { Let { bindings: xs, expr: Box::new(x) } }
+
+let_bindings -> Vec<PatternItem>
+  = "{" [\n ]* xs:bindpair ** semisep [\n ]* "}"
+    { xs }
+  / x:bindpair
+    { vec![x] }
+
+bindpair -> PatternItem
+  = p:pattern [ ]+ "=" [\n ]+ x:expr
+    { PatternItem { pattern: p, expr: Box::new(x) } }
+
+
 
 
 arrowsep -> ()

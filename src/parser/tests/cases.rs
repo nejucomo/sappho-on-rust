@@ -1,5 +1,4 @@
 use super::super::super::ast::{
-    DGrammar,
     Expression,
     Function,
     Let,
@@ -12,14 +11,11 @@ use super::super::super::ast::{
 };
 use super::framework::{
     // see mod.rs for test_parse_expectations! macro.
-    dgram,
+    expr,
+    papp,
     patitem,
-    pgram,
-    pgram_papp,
-    pgram_qapp,
     propitem,
-    qgram,
-    qgram_qapp,
+    qapp,
     query,
 };
 
@@ -27,15 +23,15 @@ use super::framework::{
 test_parse_expectations! {
     literal_true
         : &["true"]
-        => Some(dgram(true));
+        => Some(expr(true));
 
     literal_false
         : &["false"]
-        => Some(dgram(false));
+        => Some(expr(false));
 
     dereference
         : &["x"]
-        => Some(dgram("x"));
+        => Some(expr("x"));
 
     dangling_keywords
         : &[
@@ -54,7 +50,7 @@ test_parse_expectations! {
         : &["object {}",
             "object { }",
             "object {\n}"]
-        => Some(dgram(Object::empty()));
+        => Some(expr(Object::empty()));
 
     object_braces_malformed
         : &["object\n{}",
@@ -67,36 +63,36 @@ test_parse_expectations! {
             "object {proc {return false}}",
             "proc { return false }"]
         => Some(
-            dgram(
+            expr(
                 Proc(
                     StatementBlock::Return(
                         Box::new(
-                            pgram(false))))));
+                            expr(false))))));
 
     proc_with_specialized_applications
         : &["proc { return [!x, $y, z] }"]
         => Some(
-            dgram(
+            expr(
                 Proc(
                     StatementBlock::Return(
                         Box::new(
-                            pgram(
+                            expr(
                                 vec![
-                                    pgram_papp("x"),
-                                    pgram_qapp("y"),
-                                    pgram("z")]))))));
+                                    papp("x"),
+                                    qapp("y"),
+                                    expr("z")]))))));
 
     query_to_false
         : &["object { query -> false }",
             "object {\n query ->\n  false\n}",
             "query -> false"]
-        => Some(dgram(query(false)));
+        => Some(expr(query(false)));
 
     query_to_qqapp
         : &["object { query -> $x }",
             "object {\n query ->\n  $x\n}",
             "query -> $x"]
-        => Some(dgram(query(qgram_qapp("x"))));
+        => Some(expr(query(qapp("x"))));
 
     empty_func
         : &["object { func { } }",
@@ -109,7 +105,7 @@ test_parse_expectations! {
             "func { }",
             "func {}",
             "func {\n}"]
-        => Some(dgram(Function::empty()));
+        => Some(expr(Function::empty()));
 
     identity_func
         : &["object { func { x -> x } }",
@@ -126,10 +122,10 @@ test_parse_expectations! {
             "func x -> x",
             "func x ->\n  x"]
         => Some(
-            dgram(
+            expr(
                 patitem(
                     Pattern::Bind("x".to_string()),
-                    dgram("x"))));
+                    expr("x"))));
 
     func_braces_malformed
         : &["object {func{}}",
@@ -141,67 +137,67 @@ test_parse_expectations! {
     properties
         : &["object { prop .t -> true; prop .f -> false; prop (x) -> x }"]
         => Some(
-            dgram(
+            expr(
                 Properties::from_items(
                     vec![
-                        propitem("t", dgram(true)),
-                        propitem("f", dgram(false)),
+                        propitem("t", expr(true)),
+                        propitem("f", expr(false)),
                         ],
-                    Some(propitem("x", dgram("x"))))));
+                    Some(propitem("x", expr("x"))))));
 
     concrete_properties
         : &["object { prop .t -> true; prop .f -> false }",
             "object {\n prop .t ->\n  true;\n prop .f ->\n  false\n}"]
         => Some(
-            dgram(
+            expr(
                 Properties::from_items(
                     vec![
-                        propitem("t", dgram(true)),
-                        propitem("f", dgram(false)),
+                        propitem("t", expr(true)),
+                        propitem("f", expr(false)),
                         ],
                     None)));
 
     query_and_func
         : &["object { query -> $x; func x -> x }"]
         => Some(
-            dgram(
+            expr(
                 Object {
                     proc_: None,
-                    query: Some(query(qgram_qapp("x"))),
+                    query: Some(query(qapp("x"))),
                     func: Function(
                         vec![
                             patitem(
                                 Pattern::Bind("x".to_string()),
-                                dgram("x"))]),
+                                expr("x"))]),
                     props: Properties::empty(),
                 }));
 
     query_and_props_with_var_prop
         : &["object { query -> $x; prop .t -> true; prop (x) -> x }"]
         => Some(
-            dgram(
+            expr(
                 Object {
                     proc_: None,
-                    query: Some(query(qgram_qapp("x"))),
+                    query: Some(query(qapp("x"))),
                     func: Function::empty(),
                     props: Properties::from_items(
                         vec![
-                            propitem("t", dgram(true)),
+                            propitem("t", expr(true)),
                             ],
-                        Some(propitem("x", dgram("x"))))
+                        Some(propitem("x", expr("x"))))
                 }));
 
     query_and_props_without_var_prop
         : &["object { query -> $x; prop .t -> true }"]
         => Some(
-            dgram(
+            expr(
                 Object {
                     proc_: None,
-                    query: Some(query(qgram_qapp("x"))),
+                    query: Some(query(qapp("x"))),
                     func: Function::empty(),
                     props: Properties::from_items(
                         vec![
-                            propitem("t", dgram(true)),
+                            propitem("t", expr(true)),
                             ],
                         None)
                 }));
@@ -209,7 +205,7 @@ test_parse_expectations! {
     func_and_props_with_varprop
         : &["object { func x -> x; prop .t -> true; prop (x) -> x }"]
         => Some(
-            dgram(
+            expr(
                 Object {
                     proc_: None,
                     query: None,
@@ -217,18 +213,18 @@ test_parse_expectations! {
                         vec![
                             patitem(
                                 Pattern::Bind("x".to_string()),
-                                dgram("x"))]),
+                                expr("x"))]),
                     props: Properties::from_items(
                         vec![
-                            propitem("t", dgram(true)),
+                            propitem("t", expr(true)),
                             ],
-                        Some(propitem("x", dgram("x")))),
+                        Some(propitem("x", expr("x")))),
                 }));
 
     func_and_props_without_varprop
         : &["object { func x -> x; prop .t -> true }"]
         => Some(
-            dgram(
+            expr(
                 Object {
                     proc_: None,
                     query: None,
@@ -236,10 +232,10 @@ test_parse_expectations! {
                         vec![
                             patitem(
                                 Pattern::Bind("x".to_string()),
-                                dgram("x"))]),
+                                expr("x"))]),
                     props: Properties::from_items(
                         vec![
-                            propitem("t", dgram(true)),
+                            propitem("t", expr(true)),
                             ],
                         None),
                 }));
@@ -247,24 +243,24 @@ test_parse_expectations! {
     full_object
         : &["object { proc { return !x }; query -> $x; func x -> x; prop .t -> true; prop (x) -> x }"]
         => Some(
-            dgram(
+            expr(
                 Object {
                     proc_: Some(
                         Proc(
                             StatementBlock::Return(
                                 Box::new(
-                                    pgram_papp("x"))))),
-                    query: Some(query(qgram_qapp("x"))),
+                                    papp("x"))))),
+                    query: Some(query(qapp("x"))),
                     func: Function(
                         vec![
                             patitem(
                                 Pattern::Bind("x".to_string()),
-                                dgram("x"))]),
+                                expr("x"))]),
                     props: Properties::from_items(
                         vec![
-                            propitem("t", dgram(true)),
+                            propitem("t", expr(true)),
                             ],
-                        Some(propitem("x", dgram("x")))),
+                        Some(propitem("x", expr("x")))),
                 }));
 
     bad_arrows
@@ -279,107 +275,107 @@ test_parse_expectations! {
 
     list_expression_empty
         : &["[]", "[ ]", "[\n]"]
-        => Some(DGrammar::Expr(Expression::List(List(vec![]))));
+        => Some(Expression::List(List(vec![])));
 
     list_expression_single
         : &["[false]", "[ false ]", "[\n false\n]"]
-        => Some(dgram(vec![false]));
+        => Some(expr(vec![false]));
 
     list_expression_pair
         : &["[false,true]",
             "[false, true]",
             "[ false, true ]",
             "[\n  false,\n  true\n]"]
-        => Some(dgram(vec![false, true]));
+        => Some(expr(vec![false, true]));
 
     query_list_expression_single
         : &["query -> [$x]"]
-        => Some(dgram(query(vec![qgram_qapp("x")])));
+        => Some(expr(query(vec![qapp("x")])));
 
     query_list_expression_pair
         : &["query -> [$x, y]"]
-        => Some(dgram(query(vec![qgram_qapp("x"), qgram("y")])));
+        => Some(expr(query(vec![qapp("x"), expr("y")])));
 
-    dgram_let
+    expr_let_dctx
         : &["let { f = false; t = true } in [f, t]",
             "let {\n  f = false;\n  t = true\n}\nin [f, t]"]
         => Some(
-            dgram(
+            expr(
                 Let {
                     bindings: vec![
                         patitem(
                             Pattern::Bind("f".to_string()),
-                            dgram(false)),
+                            expr(false)),
                         patitem(
                             Pattern::Bind("t".to_string()),
-                            dgram(true)),
+                            expr(true)),
                         ],
-                    expr: Box::new(dgram(vec!["f", "t"])),
+                    expr: Box::new(expr(vec!["f", "t"])),
                 }));
 
-    dgram_let_singleton
+    expr_let_singleton
         : &["let { f = false } in f",
             "let {\n  f = false\n}\nin f",
             "let f = false in f"]
         => Some(
-            dgram(
+            expr(
                 Let {
                     bindings: vec![
                         patitem(
                             Pattern::Bind("f".to_string()),
-                            dgram(false)),
+                            expr(false)),
                         ],
-                    expr: Box::new(dgram("f")),
+                    expr: Box::new(expr("f")),
                 }));
 
-    qgram_let
+    expr_let_qctx
         : &["query -> let { x = a; y = $b } in [x, $y]"]
         => Some(
-            dgram(
+            expr(
                 query(
                     Let {
                         bindings: vec![
                             patitem(
                                 Pattern::Bind("x".to_string()),
-                                qgram("a")),
+                                expr("a")),
                             patitem(
                                 Pattern::Bind("y".to_string()),
-                                qgram_qapp("b")),
+                                qapp("b")),
                             ],
                         expr: Box::new(
-                            qgram(
+                            expr(
                                 vec![
-                                    qgram("x"),
-                                    qgram_qapp("y"),
+                                    expr("x"),
+                                    qapp("y"),
                                     ])),
                     })));
 
-    pgram_let
+    expr_let_pctx
         : &["proc { return let { x = a; y = $b; z = !c } in [x, $y, !z] }"]
         => Some(
-            dgram(
+            expr(
                 Proc(
                     StatementBlock::Return(
                         Box::new(
-                            pgram(
+                            expr(
                                 Let {
                                     bindings: vec![
                                         patitem(
                                             Pattern::Bind("x".to_string()),
-                                            pgram("a")),
+                                            expr("a")),
                                         patitem(
                                             Pattern::Bind("y".to_string()),
-                                            pgram_qapp("b")),
+                                            qapp("b")),
                                         patitem(
                                             Pattern::Bind("z".to_string()),
-                                            pgram_papp("c")),
+                                            papp("c")),
                                         ],
                                     expr: Box::new(
-                                        pgram(
+                                        expr(
                                             vec![
-                                                pgram("x"),
-                                                pgram_qapp("y"),
-                                                pgram_papp("z"),
+                                                expr("x"),
+                                                qapp("y"),
+                                                papp("z"),
                                                 ])),
                                 }))))))
 }

@@ -5,10 +5,10 @@ use super::ast;
 
 // The main top-level interface to the parser:
 pub fn parse_expression(source: &str) -> ParseResult {
-    peg::dgram(source)
+    peg::expr(source)
 }
 
-type ParseResult = Result<ast::DGrammar, String>;
+type ParseResult = Result<ast::Expression, String>;
 
 
 // Private implementation innards below:

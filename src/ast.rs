@@ -7,6 +7,12 @@
  * Someday there may be a different structure for representing the result
  * of translations and optimizations.
  *
+ * Note: This grammar does not distinguish between, D/Q/P (deterministic,
+ * query, proc) subgrammars.  This simplifies the AST and parsing
+ * productions, but requires a subsequent validity check on the resulting
+ * AST (and subtly also changes violations from a syntax error to a
+ * different static verification error).
+ *
  **/
 
 use std::iter::FromIterator;
@@ -24,42 +30,12 @@ pub type Identifier = String;
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub enum DGrammar {
-    Expr(Expression<DGrammar>),
-}
-
-
-/* The Query expression grammar (QGrammar) allows queries of mutable
- * state.
- */
-#[derive(Eq)]
-#[derive(PartialEq)]
-#[derive(Debug)]
-pub enum QGrammar {
-    Expr(Expression<QGrammar>),
-    QueryApp(Box<QGrammar>),
-}
-
-
-/* PGrammar, the Proc grammar, allows mutations and i/o. */
-#[derive(Eq)]
-#[derive(PartialEq)]
-#[derive(Debug)]
-pub enum PGrammar {
-    Expr(Expression<PGrammar>),
-    QueryApp(Box<PGrammar>),
-    ProcApp(Box<PGrammar>),
-}
-
-
-/* All grammars share a common expression syntax: */
-#[derive(Eq)]
-#[derive(PartialEq)]
-#[derive(Debug)]
-pub enum Expression<T> {
+pub enum Expression {
     Leaf(LeafExpression),
-    List(List<T>),
-    Let(Let<T>),
+    QueryApp(Box<Expression>),
+    ProcApp(Box<Expression>),
+    List(List),
+    Let(Let),
 }
 
 
@@ -144,20 +120,20 @@ pub struct Proc(pub StatementBlock);
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum StatementBlock {
-    Return(Box<PGrammar>),
+    Return(Box<Expression>),
 }
 
 
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub struct Query(pub Box<QGrammar>);
+pub struct Query(pub Box<Expression>);
 
 
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub struct Function(pub Vec<PatternItem<DGrammar>>);
+pub struct Function(pub Vec<PatternItem>);
 
 impl Function {
     pub fn empty() -> Function {
@@ -178,11 +154,11 @@ pub enum Pattern {
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Properties {
-    pub map: HashMap<Identifier, Box<DGrammar>>,
+    pub map: HashMap<Identifier, Box<Expression>>,
     pub varprop: Option<PropItem>,
 }
 
-pub type PropItem = (Identifier, Box<DGrammar>);
+pub type PropItem = (Identifier, Box<Expression>);
 
 
 impl Properties {
@@ -193,7 +169,7 @@ impl Properties {
         }
     }
 
-    pub fn from_varprop(id: Identifier, expr: DGrammar) -> Properties {
+    pub fn from_varprop(id: Identifier, expr: Expression) -> Properties {
         Properties::from_items(vec![], Some((id, Box::new(expr))))
     }
 
@@ -210,7 +186,7 @@ impl Properties {
         Properties { map: m, varprop: vp }
     }
 
-    pub fn plus_item(mut self, id: Identifier, expr: DGrammar) -> Properties {
+    pub fn plus_item(mut self, id: Identifier, expr: Expression) -> Properties {
         self.map.insert(id, Box::new(expr));
 
         self
@@ -223,11 +199,11 @@ impl Properties {
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub struct List<T>(pub Vec<Box<T>>);
+pub struct List(pub Vec<Box<Expression>>);
 
 
-impl<T> List<T> {
-    pub fn from_unboxed_vec(xs: Vec<T>) -> List<T> {
+impl List {
+    pub fn from_unboxed_vec(xs: Vec<Expression>) -> List {
         List(
             FromIterator::from_iter(
                 xs.into_iter().map(
@@ -239,16 +215,16 @@ impl<T> List<T> {
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub struct Let<T> {
-    pub bindings: Vec<PatternItem<T>>,
-    pub expr: Box<T>,
+pub struct Let {
+    pub bindings: Vec<PatternItem>,
+    pub expr: Box<Expression>,
 }
 
 
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub struct PatternItem<T> {
+pub struct PatternItem {
     pub pattern: Pattern,
-    pub expr: Box<T>
+    pub expr: Box<Expression>,
 }

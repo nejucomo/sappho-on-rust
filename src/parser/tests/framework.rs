@@ -9,7 +9,6 @@
 
 use std::iter::FromIterator;
 use super::super::super::ast::{
-    DGrammar,
     Expression,
     Function,
     Identifier,
@@ -20,11 +19,9 @@ use super::super::super::ast::{
     Object,
     Pattern,
     PatternItem,
-    PGrammar,
     Proc,
     Properties,
     PropItem,
-    QGrammar,
     Query,
 };
 use super::super::{
@@ -32,7 +29,7 @@ use super::super::{
 };
 
 
-pub fn check_parse_expectation(inputs: &[&str], expectation: Option<DGrammar>) {
+pub fn check_parse_expectation(inputs: &[&str], expectation: Option<Expression>) {
     for input in inputs.iter() {
         let result = parse_expression(input);
         assert!(result.as_ref().ok() == expectation.as_ref(),
@@ -56,50 +53,66 @@ macro_rules! test_parse_expectations {
 
 
 // helper fns & a trait for concisely specifying tests:
-pub fn dgram<T: IntoDGrammar>(x: T) -> DGrammar {
-    x.into_dgram()
+pub fn expr<T: IntoExpression>(x: T) -> Expression {
+    x.into_expr()
 }
 
-pub fn qgram<T: IntoQGrammar>(x: T) -> QGrammar {
-    x.into_qgram()
+pub fn qapp<T: IntoExpression>(x: T) -> Expression {
+    Expression::QueryApp(Box::new(x.into_expr()))
 }
 
-pub fn qgram_qapp<T: IntoQGrammar>(x: T) -> QGrammar {
-    QGrammar::QueryApp(Box::new(x.into_qgram()))
+pub fn papp<T: IntoExpression>(x: T) -> Expression {
+    Expression::ProcApp(Box::new(x.into_expr()))
 }
 
-pub fn pgram<T: IntoPGrammar>(x: T) -> PGrammar {
-    x.into_pgram()
+pub fn query<T: IntoExpression>(x: T) -> Query {
+    Query(Box::new(x.into_expr()))
 }
 
-pub fn pgram_qapp<T: IntoPGrammar>(x: T) -> PGrammar {
-    PGrammar::QueryApp(Box::new(x.into_pgram()))
+pub fn patitem<T: IntoExpression>(p: Pattern, x: T) -> PatternItem {
+    PatternItem { pattern: p, expr: Box::new(x.into_expr()) }
 }
 
-pub fn pgram_papp<T: IntoPGrammar>(x: T) -> PGrammar {
-    PGrammar::ProcApp(Box::new(x.into_pgram()))
-}
-
-pub fn query<T: IntoQGrammar>(x: T) -> Query {
-    Query(Box::new(qgram(x)))
-}
-
-pub fn patitem<T>(p: Pattern, x: T) -> PatternItem<T> {
-    PatternItem { pattern: p, expr: Box::new(x) }
-}
-
-pub fn propitem(id: &str, expr: DGrammar) -> PropItem {
+pub fn propitem(id: &str, expr: Expression) -> PropItem {
     (id.to_string(), Box::new(expr))
 }
 
 
-/* Private and convoluted plumbing below */
+/* Private plumbing below */
+trait IntoExpression {
+    fn into_expr(self) -> Expression;
+}
+
+impl IntoExpression for Expression {
+    fn into_expr(self) -> Expression { self }
+}
+impl IntoExpression for LeafExpression {
+    fn into_expr(self) -> Expression {
+        Expression::Leaf(self)
+    }
+}
+impl<T: IntoExpression> IntoExpression for Vec<T> {
+    fn into_expr(self) -> Expression {
+        Expression::List(
+            List(
+                FromIterator::from_iter(
+                    self.into_iter().map(
+                        |x| Box::new(x.into_expr())))))
+    }
+}
+impl IntoExpression for Let {
+    fn into_expr(self) -> Expression {
+        Expression::Let(self)
+    }
+}
+
+
 macro_rules! define_into_impls_for_leafs {
-    ( ( $target:ident, $traitname:ident, $methodname:ident ) : [ $( $source:ty ),* ] ) => {
+    ( $( $source:ty ),* ) => {
         $(
-            impl $traitname for $source {
-                fn $methodname(self) -> $target {
-                    self.into_leaf().$methodname()
+            impl IntoExpression for $source {
+                fn into_expr(self) -> Expression {
+                    self.into_leaf().into_expr()
                 }
             }
         )*
@@ -107,59 +120,17 @@ macro_rules! define_into_impls_for_leafs {
 }
 
 
-macro_rules! define_into_trait_and_impls {
-    ( $target:ident, $traitname:ident, $methodname:ident ) => {
-
-        trait $traitname {
-            fn $methodname(self) -> $target;
-        }
-        impl $traitname for $target {
-            fn $methodname(self) -> $target { self }
-        }
-        impl $traitname for LeafExpression {
-            fn $methodname(self) -> $target {
-                /* Note: This macro requires all consistent
-                 * $target::Expr(Expression<$target>) structure.
-                 */
-                $target::Expr(Expression::Leaf(self))
-            }
-        }
-        impl<T: $traitname> $traitname for Vec<T> {
-            fn $methodname(self) -> $target {
-                $target::Expr(
-                    Expression::List(
-                        List(
-                            FromIterator::from_iter(
-                                self.into_iter().map(
-                                    |x| Box::new(x.$methodname()))))))
-            }
-        }
-        impl $traitname for Let<$target> {
-            fn $methodname(self) -> $target {
-                $target::Expr(Expression::Let(self))
-            }
-        }
-
-        define_into_impls_for_leafs! {
-            ( $target, $traitname, $methodname )
-                : [bool,
-                   PatternItem<DGrammar>,
-                   Function,
-                   Identifier,
-                   Object,
-                   Proc,
-                   Properties,
-                   Query,
-                   &'static str]
-        }
-    }
+define_into_impls_for_leafs! {
+    bool,
+    PatternItem,
+    Function,
+    Identifier,
+    Object,
+    Proc,
+    Properties,
+    Query,
+    &'static str
 }
-
-
-define_into_trait_and_impls! ( DGrammar, IntoDGrammar, into_dgram );
-define_into_trait_and_impls! ( QGrammar, IntoQGrammar, into_qgram );
-define_into_trait_and_impls! ( PGrammar, IntoPGrammar, into_pgram );
-
 
 
 // Conversion plumbing for leaf expressions:
@@ -204,7 +175,7 @@ impl IntoLeaf for Function {
         Object::from_func(self).into_leaf()
     }
 }
-impl IntoLeaf for PatternItem<DGrammar> {
+impl IntoLeaf for PatternItem {
     fn into_leaf(self) -> LeafExpression {
         Function(vec![self]).into_leaf()
     }
