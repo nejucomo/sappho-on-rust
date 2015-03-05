@@ -1,3 +1,14 @@
+/** A parse-layer AST
+ *
+ * "parse-layer" means the parser is able to produce this AST structure
+ * with minimal contortions, and thus this AST resembles the surfact
+ * syntax closely.
+ *
+ * Someday there may be a different structure for representing the result
+ * of translations and optimizations.
+ *
+ **/
+
 use std::iter::FromIterator;
 use std::collections::HashMap;
 
