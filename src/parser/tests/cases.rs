@@ -11,7 +11,9 @@ use super::super::super::ast::{
 };
 use super::framework::{
     // see mod.rs for test_parse_expectations! macro.
+    dispatch,
     expr,
+    lookup,
     papp,
     patitem,
     propitem,
@@ -44,6 +46,18 @@ test_parse_expectations! {
             "query",
             "return",
             ]
+        => None;
+
+    prop_lookup
+        : &["a.b", "a .b"]
+        => Some(lookup("a", "b"));
+
+    prop_dispatch
+        : &["a.(b)", "a .(b)"]
+        => Some(dispatch("a", "b"));
+
+    bad_prop_apps
+        : &["a. (b)", "a. b", "a\n.b"]
         => None;
 
     empty_object

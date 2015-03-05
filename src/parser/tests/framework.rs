@@ -20,6 +20,7 @@ use super::super::super::ast::{
     Pattern,
     PatternItem,
     Proc,
+    PropApplication,
     Properties,
     PropItem,
     Query,
@@ -77,6 +78,23 @@ pub fn propitem(id: &str, expr: Expression) -> PropItem {
     (id.to_string(), Box::new(expr))
 }
 
+pub fn lookup<T: IntoExpression>(target: T, propname: &str) -> Expression {
+    PropApplication::Lookup(
+        Box::new(target.into_expr()),
+        propname.to_string(),
+        ).into_expr()
+}
+
+pub fn dispatch<T: IntoExpression, U: IntoExpression>
+    (target: T, proparg: U)
+     -> Expression
+{
+    PropApplication::Dispatch(
+        Box::new(target.into_expr()),
+        Box::new(proparg.into_expr()),
+        ).into_expr()
+}
+
 
 /* Private plumbing below */
 trait IntoExpression {
@@ -89,6 +107,11 @@ impl IntoExpression for Expression {
 impl IntoExpression for LeafExpression {
     fn into_expr(self) -> Expression {
         Expression::Leaf(self)
+    }
+}
+impl IntoExpression for PropApplication {
+    fn into_expr(self) -> Expression {
+        Expression::PropApp(self)
     }
 }
 impl<T: IntoExpression> IntoExpression for Vec<T> {

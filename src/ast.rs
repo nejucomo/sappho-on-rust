@@ -32,8 +32,9 @@ pub type Identifier = String;
 #[derive(Debug)]
 pub enum Expression {
     Leaf(LeafExpression),
-    QueryApp(Box<Expression>),
     ProcApp(Box<Expression>),
+    QueryApp(Box<Expression>),
+    PropApp(PropApplication),
     List(List),
     Let(Let),
 }
@@ -195,6 +196,14 @@ impl Properties {
 
 
 /** Common Compound Expressions **/
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub enum PropApplication {
+    Lookup(Box<Expression>, Identifier),
+    Dispatch(Box<Expression>, Box<Expression>),
+}
+
 
 #[derive(Eq)]
 #[derive(PartialEq)]
