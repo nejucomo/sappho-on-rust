@@ -11,13 +11,14 @@ use std::iter::FromIterator;
 use super::super::super::ast::{
     DGrammar,
     Expression,
-    FuncRule,
     Function,
     Identifier,
     LeafExpression,
     List,
     Literal,
     Object,
+    Pattern,
+    PatternItem,
     PGrammar,
     Proc,
     Properties,
@@ -56,6 +57,10 @@ macro_rules! test_parse_expectations {
 // helper fns & a trait for concisely specifying tests:
 pub fn dgram<T: IntoDGrammar>(x: T) -> DGrammar {
     x.into_dgram()
+}
+
+pub fn dgram_patitem<T: IntoDGrammar>(p: Pattern, x: T) -> PatternItem<DGrammar> {
+    PatternItem { pattern: p, expr: Box::new(dgram(x)) }
 }
 
 pub fn qgram<T: IntoQGrammar>(x: T) -> QGrammar {
@@ -132,7 +137,7 @@ macro_rules! define_into_trait_and_impls {
         define_into_impls_for_leafs! {
             ( $target, $traitname, $methodname )
                 : [bool,
-                   FuncRule,
+                   PatternItem<DGrammar>,
                    Function,
                    Identifier,
                    Object,
@@ -193,7 +198,7 @@ impl IntoLeaf for Function {
         Object::from_func(self).into_leaf()
     }
 }
-impl IntoLeaf for FuncRule {
+impl IntoLeaf for PatternItem<DGrammar> {
     fn into_leaf(self) -> LeafExpression {
         Function(vec![self]).into_leaf()
     }

@@ -1,7 +1,6 @@
 use super::super::super::ast::{
     DGrammar,
     Expression,
-    FuncRule,
     Function,
     List,
     Object,
@@ -13,6 +12,7 @@ use super::super::super::ast::{
 use super::framework::{
     // see mod.rs for test_parse_expectations! macro.
     dgram,
+    dgram_patitem,
     pgram,
     pgram_papp,
     pgram_qapp,
@@ -124,10 +124,9 @@ test_parse_expectations! {
             "func x ->\n  x"]
         => Some(
             dgram(
-                FuncRule {
-                    pattern: Pattern::Bind("x".to_string()),
-                    body: dgram("x"),
-                }));
+                dgram_patitem(
+                    Pattern::Bind("x".to_string()),
+                    "x")));
 
     func_braces_malformed
         : &["object {func{}}",
@@ -168,10 +167,9 @@ test_parse_expectations! {
                     query: Some(query(qgram_qapp("x"))),
                     func: Function(
                         vec![
-                            FuncRule {
-                                pattern: Pattern::Bind("x".to_string()),
-                                body: dgram("x"),
-                            }]),
+                            dgram_patitem(
+                                Pattern::Bind("x".to_string()),
+                                "x")]),
                     props: Properties::empty(),
                 }));
 
@@ -214,10 +212,9 @@ test_parse_expectations! {
                     query: None,
                     func: Function(
                         vec![
-                            FuncRule {
-                                pattern: Pattern::Bind("x".to_string()),
-                                body: dgram("x"),
-                            }]),
+                            dgram_patitem(
+                                Pattern::Bind("x".to_string()),
+                                "x")]),
                     props: Properties::from_items(
                         vec![
                             propitem("t", dgram(true)),
@@ -234,10 +231,9 @@ test_parse_expectations! {
                     query: None,
                     func: Function(
                         vec![
-                            FuncRule {
-                                pattern: Pattern::Bind("x".to_string()),
-                                body: dgram("x"),
-                            }]),
+                            dgram_patitem(
+                                Pattern::Bind("x".to_string()),
+                                "x")]),
                     props: Properties::from_items(
                         vec![
                             propitem("t", dgram(true)),
@@ -258,10 +254,9 @@ test_parse_expectations! {
                     query: Some(query(qgram_qapp("x"))),
                     func: Function(
                         vec![
-                            FuncRule {
-                                pattern: Pattern::Bind("x".to_string()),
-                                body: dgram("x"),
-                            }]),
+                            dgram_patitem(
+                                Pattern::Bind("x".to_string()),
+                                "x")]),
                     props: Properties::from_items(
                         vec![
                             propitem("t", dgram(true)),

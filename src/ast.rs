@@ -48,6 +48,7 @@ pub enum PGrammar {
 pub enum Expression<T> {
     Leaf(LeafExpression),
     List(List<T>),
+    Let(Let<T>),
 }
 
 
@@ -145,21 +146,12 @@ pub struct Query(pub Box<QGrammar>);
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub struct Function(pub Vec<FuncRule>);
+pub struct Function(pub Vec<PatternItem<DGrammar>>);
 
 impl Function {
     pub fn empty() -> Function {
         Function(vec![])
     }
-}
-
-
-#[derive(Eq)]
-#[derive(PartialEq)]
-#[derive(Debug)]
-pub struct FuncRule {
-    pub pattern: Pattern,
-    pub body: DGrammar,
 }
 
 
@@ -215,7 +207,8 @@ impl Properties {
 }
 
 
-/** List Expressions **/
+/** Common Compound Expressions **/
+
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
@@ -229,4 +222,22 @@ impl<T> List<T> {
                 xs.into_iter().map(
                     |x| Box::new(x))))
     }
+}
+
+
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub struct Let<T> {
+    bindings: Vec<PatternItem<T>>,
+    expr: Box<T>,
+}
+
+
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub struct PatternItem<T> {
+    pub pattern: Pattern,
+    pub expr: Box<T>
 }

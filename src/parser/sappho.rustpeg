@@ -1,7 +1,6 @@
 use super::super::ast::{
     DGrammar,
     Expression,
-    FuncRule,
     Function,
     Identifier,
     LeafExpression,
@@ -9,6 +8,7 @@ use super::super::ast::{
     Literal,
     Object,
     Pattern,
+    PatternItem,
     PGrammar,
     Proc,
     Properties,
@@ -179,13 +179,13 @@ func -> Function
   / "func" [ ]+ r:func_rule
     { Function(vec![r]) }
 
-func_rules -> Vec<FuncRule>
+func_rules -> Vec<PatternItem<DGrammar>>
   = rs:func_rule ** semisep
     { rs }
 
-func_rule -> FuncRule
+func_rule -> PatternItem<DGrammar>
   = p:pattern arrowsep b:dgram
-    { FuncRule { pattern: p, body: b } }
+    { PatternItem { pattern: p, expr: Box::new(b) } }
 
 pattern -> Pattern
   = i:identifier
