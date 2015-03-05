@@ -229,8 +229,8 @@ impl<T> List<T> {
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Let<T> {
-    bindings: Vec<PatternItem<T>>,
-    expr: Box<T>,
+    pub bindings: Vec<PatternItem<T>>,
+    pub expr: Box<T>,
 }
 
 

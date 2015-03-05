@@ -14,6 +14,7 @@ use super::super::super::ast::{
     Function,
     Identifier,
     LeafExpression,
+    Let,
     List,
     Literal,
     Object,
@@ -59,10 +60,6 @@ pub fn dgram<T: IntoDGrammar>(x: T) -> DGrammar {
     x.into_dgram()
 }
 
-pub fn dgram_patitem<T: IntoDGrammar>(p: Pattern, x: T) -> PatternItem<DGrammar> {
-    PatternItem { pattern: p, expr: Box::new(dgram(x)) }
-}
-
 pub fn qgram<T: IntoQGrammar>(x: T) -> QGrammar {
     x.into_qgram()
 }
@@ -85,6 +82,10 @@ pub fn pgram_papp<T: IntoPGrammar>(x: T) -> PGrammar {
 
 pub fn query<T: IntoQGrammar>(x: T) -> Query {
     Query(Box::new(qgram(x)))
+}
+
+pub fn patitem<T>(p: Pattern, x: T) -> PatternItem<T> {
+    PatternItem { pattern: p, expr: Box::new(x) }
 }
 
 pub fn propitem(id: &str, expr: DGrammar) -> PropItem {
@@ -131,6 +132,11 @@ macro_rules! define_into_trait_and_impls {
                             FromIterator::from_iter(
                                 self.into_iter().map(
                                     |x| Box::new(x.$methodname()))))))
+            }
+        }
+        impl $traitname for Let<$target> {
+            fn $methodname(self) -> $target {
+                $target::Expr(Expression::Let(self))
             }
         }
 

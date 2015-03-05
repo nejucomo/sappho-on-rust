@@ -2,6 +2,7 @@ use super::super::super::ast::{
     DGrammar,
     Expression,
     Function,
+    Let,
     List,
     Object,
     Pattern,
@@ -12,7 +13,7 @@ use super::super::super::ast::{
 use super::framework::{
     // see mod.rs for test_parse_expectations! macro.
     dgram,
-    dgram_patitem,
+    patitem,
     pgram,
     pgram_papp,
     pgram_qapp,
@@ -39,6 +40,7 @@ test_parse_expectations! {
     dangling_keywords
         : &[
             "func",
+            "let",
             "object",
             "proc",
             "prop",
@@ -124,9 +126,9 @@ test_parse_expectations! {
             "func x ->\n  x"]
         => Some(
             dgram(
-                dgram_patitem(
+                patitem(
                     Pattern::Bind("x".to_string()),
-                    "x")));
+                    dgram("x"))));
 
     func_braces_malformed
         : &["object {func{}}",
@@ -167,9 +169,9 @@ test_parse_expectations! {
                     query: Some(query(qgram_qapp("x"))),
                     func: Function(
                         vec![
-                            dgram_patitem(
+                            patitem(
                                 Pattern::Bind("x".to_string()),
-                                "x")]),
+                                dgram("x"))]),
                     props: Properties::empty(),
                 }));
 
@@ -212,9 +214,9 @@ test_parse_expectations! {
                     query: None,
                     func: Function(
                         vec![
-                            dgram_patitem(
+                            patitem(
                                 Pattern::Bind("x".to_string()),
-                                "x")]),
+                                dgram("x"))]),
                     props: Properties::from_items(
                         vec![
                             propitem("t", dgram(true)),
@@ -231,9 +233,9 @@ test_parse_expectations! {
                     query: None,
                     func: Function(
                         vec![
-                            dgram_patitem(
+                            patitem(
                                 Pattern::Bind("x".to_string()),
-                                "x")]),
+                                dgram("x"))]),
                     props: Properties::from_items(
                         vec![
                             propitem("t", dgram(true)),
@@ -254,9 +256,9 @@ test_parse_expectations! {
                     query: Some(query(qgram_qapp("x"))),
                     func: Function(
                         vec![
-                            dgram_patitem(
+                            patitem(
                                 Pattern::Bind("x".to_string()),
-                                "x")]),
+                                dgram("x"))]),
                     props: Properties::from_items(
                         vec![
                             propitem("t", dgram(true)),
@@ -295,5 +297,88 @@ test_parse_expectations! {
 
     query_list_expression_pair
         : &["query -> [$x, y]"]
-        => Some(dgram(query(vec![qgram_qapp("x"), qgram("y")])))
+        => Some(dgram(query(vec![qgram_qapp("x"), qgram("y")])));
+
+    dgram_let
+        : &["let { f = false; t = true } in [f, t]",
+            "let {\n  f = false;\n  t = true\n}\nin [f, t]"]
+        => Some(
+            dgram(
+                Let {
+                    bindings: vec![
+                        patitem(
+                            Pattern::Bind("f".to_string()),
+                            dgram(false)),
+                        patitem(
+                            Pattern::Bind("t".to_string()),
+                            dgram(true)),
+                        ],
+                    expr: Box::new(dgram(vec!["f", "t"])),
+                }));
+
+    dgram_let_singleton
+        : &["let { f = false } in f",
+            "let {\n  f = false\n}\nin f",
+            "let f = false in f"]
+        => Some(
+            dgram(
+                Let {
+                    bindings: vec![
+                        patitem(
+                            Pattern::Bind("f".to_string()),
+                            dgram(false)),
+                        ],
+                    expr: Box::new(dgram("f")),
+                }));
+
+    qgram_let
+        : &["query -> let { x = a; y = $b } in [x, $y]"]
+        => Some(
+            dgram(
+                query(
+                    Let {
+                        bindings: vec![
+                            patitem(
+                                Pattern::Bind("x".to_string()),
+                                qgram("a")),
+                            patitem(
+                                Pattern::Bind("y".to_string()),
+                                qgram_qapp("b")),
+                            ],
+                        expr: Box::new(
+                            qgram(
+                                vec![
+                                    qgram("x"),
+                                    qgram_qapp("y"),
+                                    ])),
+                    })));
+
+    pgram_let
+        : &["proc { return let { x = a; y = $b; z =!c } in [x, $y, !z] }"]
+        => Some(
+            dgram(
+                Proc(
+                    StatementBlock::Return(
+                        Box::new(
+                            pgram(
+                                Let {
+                                    bindings: vec![
+                                        patitem(
+                                            Pattern::Bind("x".to_string()),
+                                            pgram("a")),
+                                        patitem(
+                                            Pattern::Bind("y".to_string()),
+                                            pgram_qapp("b")),
+                                        patitem(
+                                            Pattern::Bind("z".to_string()),
+                                            pgram_papp("c")),
+                                        ],
+                                    expr: Box::new(
+                                        pgram(
+                                            vec![
+                                                pgram("x"),
+                                                pgram_qapp("y"),
+                                                pgram_papp("z"),
+                                                ])),
+                                }))))))
 }
