@@ -58,6 +58,10 @@ test_parse_expectations! {
         : &["a. (b)", "a. b"]
         => None;
 
+    bad_uncallable_apps
+        : &["object {}.prop", "$func x -> x", "!let x = 42 in x"]
+        => None;
+
     empty_object
         : &["object {}",
             "object { }",
