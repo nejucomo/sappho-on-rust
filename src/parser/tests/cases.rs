@@ -310,6 +310,20 @@ test_parse_expectations! {
         : &["query -> [$x, y]"]
         => Some(expr(query(vec![qapp("x"), expr("y")])));
 
+    qapp_versus_propapp_precedence
+        : &["query -> $x.p"]
+        => Some(expr(query(lookup(qapp("x"), "p"))));
+
+    papp_versus_propapp_precedence
+        : &["proc { return !x.p }"]
+        => Some(
+            expr(
+                Proc(
+                    StatementBlock::Return(
+                        Box::new(
+                            expr(
+                                lookup(papp("x"), "p")))))));
+
     expr_let_dctx
         : &["let { f = false; t = true } in [f, t]",
             "let {\n  f = false;\n  t = true\n}\nin [f, t]"]
