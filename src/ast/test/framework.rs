@@ -21,10 +21,10 @@ use super::super::types::{
     Pattern,
     PatternItem,
     Proc,
-    Properties,
     PropItem,
-    StatementBlock,
+    Properties,
     Query,
+    StatementBlock,
     Uncallable,
 };
 

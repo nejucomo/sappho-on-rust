@@ -22,10 +22,10 @@ pub use self::types::{
     Pattern,
     PatternItem,
     Proc,
-    Properties,
     PropItem,
-    StatementBlock,
+    Properties,
     Query,
+    StatementBlock,
     Uncallable,
 };
 
