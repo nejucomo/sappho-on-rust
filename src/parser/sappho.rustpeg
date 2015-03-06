@@ -38,8 +38,8 @@ application -> Application
   = "." d:dotapp { d }
 
 dotapp -> Application
-  = id:identifier  { Application::Lookup(id)            }
-  / "(" x:expr ")" { Application::Dispatch(Box::new(x)) }
+  = id:identifier                { Application::Lookup(id)            }
+  / "(" [\n ]* x:expr [\n ]* ")" { Application::Dispatch(Box::new(x)) }
 
 uncallable -> Uncallable
   = o:object     { Uncallable::Object(o) }
