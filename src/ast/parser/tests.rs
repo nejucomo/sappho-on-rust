@@ -1,11 +1,11 @@
-use super::super::super::types::{
+use super::super::types::{
     Function,
     Let,
     Object,
     Pattern,
     Properties,
 };
-use super::framework::{
+use super::super::test::framework::{
     // see mod.rs for test_parse_expectations! macro.
     apps,
     dispatch,

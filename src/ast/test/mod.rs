@@ -1,4 +1,4 @@
 #[macro_use]
-mod framework;
+pub mod framework;
 
 mod cases;

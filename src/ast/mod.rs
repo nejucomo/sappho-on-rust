@@ -1,3 +1,8 @@
+#[cfg(test)]
+#[macro_use]
+mod test; // This must occur first for test macros use in other sub-mods.
+
+
 mod parser;
 mod types;
 
@@ -5,17 +10,27 @@ mod types;
 pub use self::parser::ParseResult;
 
 pub use self::types::{
-    Expression,
+    Application,
     Callable,
+    Expression,
+    Function,
+    Identifier,
+    Let,
+    List,
     Literal,
+    Object,
+    Pattern,
+    PatternItem,
+    Proc,
+    Properties,
+    PropItem,
+    StatementBlock,
+    Query,
+    Uncallable,
 };
 
 
 pub fn parse_expression(source: &str) -> ParseResult {
     parser::parse_expression(source)
 }
-
-
-#[cfg(test)]
-mod tests;
 

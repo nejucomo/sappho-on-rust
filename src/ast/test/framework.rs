@@ -8,7 +8,7 @@
  */
 
 use std::iter::FromIterator;
-use super::super::super::types::{
+use super::super::types::{
     Application,
     Callable,
     Expression,
@@ -48,7 +48,7 @@ macro_rules! test_parse_expectations {
         $(
             #[test]
             fn $name () {
-                $crate::ast::parser::tests::framework::check_parse_expectation( $inputs, $expectation )
+                $crate::ast::test::framework::check_parse_expectation( $inputs, $expectation )
             }
         )*
     }
