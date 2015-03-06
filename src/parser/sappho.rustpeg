@@ -27,6 +27,7 @@ callable -> Callable
   = id:identifier { Callable::Dereference(id) }
   / l:list        { Callable::List(l)         }
   / l:literal     { Callable::Literal(l)      }
+  / pe:parensexpr { Callable::Parens(pe)      }
   / pa:procapp    { Callable::ProcApp(pa)     }
   / qa:queryapp   { Callable::QueryApp(qa)    }
 
@@ -60,6 +61,9 @@ identifier -> String
 literal -> Literal
   = "true"  { Literal::Bool(true)  }
   / "false" { Literal::Bool(false) }
+
+parensexpr -> Box<Expression>
+  = "(" [\n ]* x:expr [\n ]* ")" { Box::new(x) }
 
 
 object -> Object
