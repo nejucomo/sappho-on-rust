@@ -23,10 +23,6 @@ pub type Identifier = String;
 
 
 /** Top-Level Expressions **/
-
-/* The top level expression grammar is deterministic and excludes query
- * and proc applications (which are not deterministic).
- */
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
