@@ -3,9 +3,7 @@ use super::super::super::ast::{
     Let,
     Object,
     Pattern,
-    Proc,
     Properties,
-    StatementBlock,
 };
 use super::framework::{
     // see mod.rs for test_parse_expectations! macro.
@@ -15,6 +13,7 @@ use super::framework::{
     lookup,
     papp,
     patitem,
+    proc_return,
     propitem,
     qapp,
     query,
@@ -91,25 +90,17 @@ test_parse_expectations! {
         : &["object { proc { return false } }",
             "object {proc {return false}}",
             "proc { return false }"]
-        => Some(
-            expr(
-                Proc(
-                    StatementBlock::Return(
-                        Box::new(
-                            expr(false))))));
+        => Some(expr(proc_return(false)));
 
     proc_with_specialized_applications
         : &["proc { return [!x, $y, z] }"]
         => Some(
             expr(
-                Proc(
-                    StatementBlock::Return(
-                        Box::new(
-                            expr(
-                                vec![
-                                    expr(papp("x")),
-                                    expr(qapp("y")),
-                                    expr("z")]))))));
+                proc_return(
+                    vec![
+                        expr(papp("x")),
+                        expr(qapp("y")),
+                        expr("z")])));
 
     query_to_false
         : &["object { query -> false }",
@@ -274,11 +265,7 @@ test_parse_expectations! {
         => Some(
             expr(
                 Object {
-                    proc_: Some(
-                        Proc(
-                            StatementBlock::Return(
-                                Box::new(
-                                    expr(papp("x")))))),
+                    proc_: Some(proc_return(papp("x"))),
                     query: Some(query(qapp("x"))),
                     func: Function(
                         vec![
@@ -333,12 +320,10 @@ test_parse_expectations! {
         : &["proc { return !x.p }"]
         => Some(
             expr(
-                Proc(
-                    StatementBlock::Return(
-                        Box::new(
-                            expr(
-                                apps(papp("x"),
-                                     vec![lookup("p")])))))));
+                proc_return(
+                    apps(
+                        papp("x"),
+                        vec![lookup("p")]))));
 
     expr_let_dctx
         : &["let { f = false; t = true } in [f, t]",
@@ -398,28 +383,25 @@ test_parse_expectations! {
         : &["proc { return let { x = a; y = $b; z = !c } in [x, $y, !z] }"]
         => Some(
             expr(
-                Proc(
-                    StatementBlock::Return(
-                        Box::new(
+                proc_return(
+                    Let {
+                        bindings: vec![
+                            patitem(
+                                Pattern::Bind("x".to_string()),
+                                expr("a")),
+                            patitem(
+                                Pattern::Bind("y".to_string()),
+                                qapp("b")),
+                            patitem(
+                                Pattern::Bind("z".to_string()),
+                                papp("c")),
+                            ],
+                        expr: Box::new(
                             expr(
-                                Let {
-                                    bindings: vec![
-                                        patitem(
-                                            Pattern::Bind("x".to_string()),
-                                            expr("a")),
-                                        patitem(
-                                            Pattern::Bind("y".to_string()),
-                                            qapp("b")),
-                                        patitem(
-                                            Pattern::Bind("z".to_string()),
-                                            papp("c")),
-                                        ],
-                                    expr: Box::new(
-                                        expr(
-                                            vec![
-                                                expr("x"),
-                                                expr(qapp("y")),
-                                                expr(papp("z")),
-                                                ])),
-                                }))))))
+                                vec![
+                                    expr("x"),
+                                    expr(qapp("y")),
+                                    expr(papp("z")),
+                                    ])),
+                    })))
 }

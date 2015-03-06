@@ -23,6 +23,7 @@ use super::super::super::ast::{
     Proc,
     Properties,
     PropItem,
+    StatementBlock,
     Query,
     Uncallable,
 };
@@ -71,6 +72,10 @@ pub fn papp<T: IntoCallable>(x: T) -> Callable {
 
 pub fn query<T: IntoExpression>(x: T) -> Query {
     Query(Box::new(x.into_expr()))
+}
+
+pub fn proc_return<T: IntoExpression>(x: T) -> Proc {
+    Proc(StatementBlock::Return(Box::new(x.into_expr())))
 }
 
 pub fn patitem<T: IntoExpression>(p: Pattern, x: T) -> PatternItem {
