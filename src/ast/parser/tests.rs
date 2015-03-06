@@ -1,3 +1,5 @@
+use super::parse_expression;
+
 use super::super::types::{
     Function,
     Let,
@@ -5,8 +7,9 @@ use super::super::types::{
     Pattern,
     Properties,
 };
+
 use super::super::test::framework::{
-    // see mod.rs for test_parse_expectations! macro.
+    // see $crate::ast::test::framework for test_parse_expectations! macro.
     apps,
     dispatch,
     expr,
@@ -19,8 +22,11 @@ use super::super::test::framework::{
     query,
 };
 
+
 // Test cases:
 test_parse_expectations! {
+    [parse_expression];
+
     literal_true
         : &["true"]
         => Some(expr(true));

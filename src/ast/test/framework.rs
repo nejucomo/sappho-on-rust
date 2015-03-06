@@ -27,28 +27,25 @@ use super::super::types::{
     Query,
     Uncallable,
 };
-use super::super::{
-    parse_expression,
-};
-
-
-pub fn check_parse_expectation(inputs: &[&str], expectation: Option<Expression>) {
-    for input in inputs.iter() {
-        let result = parse_expression(input);
-        assert!(result.as_ref().ok() == expectation.as_ref(),
-                "Parse expectation failure:\nInput: {:?}\nExpectation: {:?}\nResult: {:?}\n",
-                input, expectation, result);
-    }
-}
 
 
 #[macro_export]
 macro_rules! test_parse_expectations {
-    ( $( $name:ident : $inputs:expr => $expectation:expr );* ) => {
+    ( [ $parse_expression:ident ];
+       $( $name:ident : $inputs:expr => $expectation:expr );*
+    ) => {
         $(
             #[test]
             fn $name () {
-                $crate::ast::test::framework::check_parse_expectation( $inputs, $expectation )
+                let inputs = $inputs;
+                let expectation = $expectation;
+
+                for input in inputs.iter() {
+                    let result = $parse_expression(input);
+                    assert!(result.as_ref().ok() == expectation.as_ref(),
+                            "Parse expectation failure:\nInput: {:?}\nExpectation: {:?}\nResult: {:?}\n",
+                            input, expectation, result);
+                }
             }
         )*
     }
