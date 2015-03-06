@@ -160,6 +160,11 @@ trait IntoCallable {
 impl IntoCallable for Callable {
     fn into_callable(self) -> Callable { self }
 }
+impl IntoCallable for Expression {
+    fn into_callable(self) -> Callable {
+        Callable::Parens(Box::new(self))
+    }
+}
 
 impl<T: IntoExpression> IntoCallable for Vec<T> {
     fn into_callable(self) -> Callable {

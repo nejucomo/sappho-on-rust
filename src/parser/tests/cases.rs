@@ -62,6 +62,14 @@ test_parse_expectations! {
         : &["object {}.prop", "$func x -> x", "!let x = 42 in x"]
         => None;
 
+    parens_prop_lookup
+        : &["(a).b", "(a) .b", "(\na\n)\n.b"]
+        => Some(lookup(expr("a"), "b"));
+
+    parens_uncallable_lookup
+        : &["(object {}).b"]
+        => Some(lookup(expr(Object::empty()), "b"));
+
     empty_object
         : &["object {}",
             "object { }",

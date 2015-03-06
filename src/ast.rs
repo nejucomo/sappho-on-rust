@@ -39,6 +39,7 @@ pub enum Callable {
     Dereference(Identifier),
     List(List),
     Literal(Literal),
+    Parens(Box<Expression>),
     ProcApp(Box<Callable>),
     QueryApp(Box<Callable>),
 }
