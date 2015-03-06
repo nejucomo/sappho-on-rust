@@ -54,7 +54,9 @@ macro_rules! test_parse_expectations {
 }
 
 
-// helper fns & a trait for concisely specifying tests:
+/* helper fns, macros, & private trait plumbing for concisely specifying
+ * tests:
+ */
 pub fn expr<T: IntoExpression>(x: T) -> Expression {
     x.into_expr()
 }
@@ -79,23 +81,16 @@ pub fn propitem(id: &str, expr: Expression) -> PropItem {
     (id.to_string(), Box::new(expr))
 }
 
-pub fn lookup<T: IntoCallable>(target: T, propname: &str) -> Expression {
-    Expression::Apps(
-        target.into_callable(),
-        vec![
-            Application::Lookup(propname.to_string()),
-            ])
+pub fn apps<T: IntoCallable>(target: T, apps: Vec<Application>) -> Expression {
+    Expression::Apps(target.into_callable(), apps)
 }
 
-pub fn dispatch<T: IntoCallable, U: IntoExpression>
-    (target: T, proparg: U)
-     -> Expression
-{
-    Expression::Apps(
-        target.into_callable(),
-        vec![
-            Application::Dispatch(Box::new(proparg.into_expr())),
-            ])
+pub fn lookup(propname: &str) -> Application {
+    Application::Lookup(propname.to_string())
+}
+
+pub fn dispatch<T: IntoExpression>(proparg: T) -> Application {
+    Application::Dispatch(Box::new(proparg.into_expr()))
 }
 
 

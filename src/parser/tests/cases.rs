@@ -9,6 +9,7 @@ use super::super::super::ast::{
 };
 use super::framework::{
     // see mod.rs for test_parse_expectations! macro.
+    apps,
     dispatch,
     expr,
     lookup,
@@ -48,11 +49,11 @@ test_parse_expectations! {
 
     prop_lookup
         : &["a.b", "a .b", "a\n.b"]
-        => Some(lookup("a", "b"));
+        => Some(apps("a", vec![lookup("b")]));
 
     prop_dispatch
-        : &["a.(b)", "a .(b)", "a\n.(b)"]
-        => Some(dispatch("a", "b"));
+        : &["a.(b)", "a .(b)", "a\n.(b)", "a.(\n  b\n)"]
+        => Some(apps("a", vec![dispatch("b")]));
 
     bad_prop_apps
         : &["a. (b)", "a. b"]
@@ -64,11 +65,15 @@ test_parse_expectations! {
 
     parens_prop_lookup
         : &["(a).b", "(a) .b", "(\na\n)\n.b"]
-        => Some(lookup(expr("a"), "b"));
+        => Some(apps(expr("a"), vec![lookup("b")]));
 
     parens_uncallable_lookup
         : &["(object {}).b"]
-        => Some(lookup(expr(Object::empty()), "b"));
+        => Some(apps(expr(Object::empty()), vec![lookup("b")]));
+
+    multiple_apps
+        : &["a.b.(c)", "a .b.(c)"]
+        => Some(apps("a", vec![lookup("b"), dispatch("c")]));
 
     empty_object
         : &["object {}",
@@ -322,7 +327,7 @@ test_parse_expectations! {
 
     qapp_versus_propapp_precedence
         : &["query -> $x.p"]
-        => Some(expr(query(lookup(qapp("x"), "p"))));
+        => Some(expr(query(apps(qapp("x"), vec![lookup("p")]))));
 
     papp_versus_propapp_precedence
         : &["proc { return !x.p }"]
@@ -332,7 +337,8 @@ test_parse_expectations! {
                     StatementBlock::Return(
                         Box::new(
                             expr(
-                                lookup(papp("x"), "p")))))));
+                                apps(papp("x"),
+                                     vec![lookup("p")])))))));
 
     expr_let_dctx
         : &["let { f = false; t = true } in [f, t]",
