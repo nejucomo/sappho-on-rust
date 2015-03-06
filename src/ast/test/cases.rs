@@ -1,4 +1,4 @@
-use super::super::parse_expression;
+use super::super::parse_verified_expression;
 
 use super::framework::{
     // see $crate::ast::test::framework for test_parse_expectations! macro.
@@ -8,7 +8,7 @@ use super::framework::{
 
 // Test cases:
 test_parse_expectations! {
-    [parse_expression];
+    [parse_verified_expression];
 
     smokecheck
         : &["true"]
