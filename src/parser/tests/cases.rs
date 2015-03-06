@@ -47,15 +47,15 @@ test_parse_expectations! {
         => None;
 
     prop_lookup
-        : &["a.b", "a .b"]
+        : &["a.b", "a .b", "a\n.b"]
         => Some(lookup("a", "b"));
 
     prop_dispatch
-        : &["a.(b)", "a .(b)"]
+        : &["a.(b)", "a .(b)", "a\n.(b)"]
         => Some(dispatch("a", "b"));
 
     bad_prop_apps
-        : &["a. (b)", "a. b", "a\n.b"]
+        : &["a. (b)", "a. b"]
         => None;
 
     empty_object
