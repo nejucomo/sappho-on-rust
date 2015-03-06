@@ -27,22 +27,38 @@ pub type Identifier = String;
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum Expression {
-    Leaf(LeafExpression),
-    ProcApp(Box<Expression>),
-    QueryApp(Box<Expression>),
-    PropApp(PropApplication),
-    List(List),
-    Let(Let),
+    Apps(Callable, Vec<Application>),
+    Uncallable(Uncallable),
 }
 
 
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub enum LeafExpression {
+pub enum Callable {
     Dereference(Identifier),
+    List(List),
     Literal(Literal),
+    ProcApp(Box<Callable>),
+    QueryApp(Box<Callable>),
+}
+
+
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub enum Application {
+    Lookup(Identifier),
+    Dispatch(Box<Expression>),
+}
+
+
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Debug)]
+pub enum Uncallable {
     Object(Object),
+    Let(Let),
 }
 
 
@@ -192,15 +208,6 @@ impl Properties {
 
 
 /** Common Compound Expressions **/
-#[derive(Eq)]
-#[derive(PartialEq)]
-#[derive(Debug)]
-pub enum PropApplication {
-    Lookup(Box<Expression>, Identifier),
-    Dispatch(Box<Expression>, Box<Expression>),
-}
-
-
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Debug)]

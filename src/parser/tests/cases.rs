@@ -1,8 +1,6 @@
 use super::super::super::ast::{
-    Expression,
     Function,
     Let,
-    List,
     Object,
     Pattern,
     Proc,
@@ -92,8 +90,8 @@ test_parse_expectations! {
                         Box::new(
                             expr(
                                 vec![
-                                    papp("x"),
-                                    qapp("y"),
+                                    expr(papp("x")),
+                                    expr(qapp("y")),
                                     expr("z")]))))));
 
     query_to_false
@@ -263,7 +261,7 @@ test_parse_expectations! {
                         Proc(
                             StatementBlock::Return(
                                 Box::new(
-                                    papp("x"))))),
+                                    expr(papp("x")))))),
                     query: Some(query(qapp("x"))),
                     func: Function(
                         vec![
@@ -289,7 +287,7 @@ test_parse_expectations! {
 
     list_expression_empty
         : &["[]", "[ ]", "[\n]"]
-        => Some(Expression::List(List(vec![])));
+        => Some(expr(()));
 
     list_expression_single
         : &["[false]", "[ false ]", "[\n false\n]"]
@@ -308,7 +306,7 @@ test_parse_expectations! {
 
     query_list_expression_pair
         : &["query -> [$x, y]"]
-        => Some(expr(query(vec![qapp("x"), expr("y")])));
+        => Some(expr(query(vec![expr(qapp("x")), expr("y")])));
 
     qapp_versus_propapp_precedence
         : &["query -> $x.p"]
@@ -374,7 +372,7 @@ test_parse_expectations! {
                             expr(
                                 vec![
                                     expr("x"),
-                                    qapp("y"),
+                                    expr(qapp("y")),
                                     ])),
                     })));
 
@@ -402,8 +400,8 @@ test_parse_expectations! {
                                         expr(
                                             vec![
                                                 expr("x"),
-                                                qapp("y"),
-                                                papp("z"),
+                                                expr(qapp("y")),
+                                                expr(papp("z")),
                                                 ])),
                                 }))))))
 }

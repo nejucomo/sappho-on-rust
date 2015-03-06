@@ -9,10 +9,11 @@
 
 use std::iter::FromIterator;
 use super::super::super::ast::{
+    Application,
+    Callable,
     Expression,
     Function,
     Identifier,
-    LeafExpression,
     Let,
     List,
     Literal,
@@ -20,10 +21,10 @@ use super::super::super::ast::{
     Pattern,
     PatternItem,
     Proc,
-    PropApplication,
     Properties,
     PropItem,
     Query,
+    Uncallable,
 };
 use super::super::{
     parse_expression,
@@ -58,12 +59,12 @@ pub fn expr<T: IntoExpression>(x: T) -> Expression {
     x.into_expr()
 }
 
-pub fn qapp<T: IntoExpression>(x: T) -> Expression {
-    Expression::QueryApp(Box::new(x.into_expr()))
+pub fn qapp<T: IntoCallable>(x: T) -> Callable {
+    Callable::QueryApp(Box::new(x.into_callable()))
 }
 
-pub fn papp<T: IntoExpression>(x: T) -> Expression {
-    Expression::ProcApp(Box::new(x.into_expr()))
+pub fn papp<T: IntoCallable>(x: T) -> Callable {
+    Callable::ProcApp(Box::new(x.into_callable()))
 }
 
 pub fn query<T: IntoExpression>(x: T) -> Query {
@@ -78,21 +79,23 @@ pub fn propitem(id: &str, expr: Expression) -> PropItem {
     (id.to_string(), Box::new(expr))
 }
 
-pub fn lookup<T: IntoExpression>(target: T, propname: &str) -> Expression {
-    PropApplication::Lookup(
-        Box::new(target.into_expr()),
-        propname.to_string(),
-        ).into_expr()
+pub fn lookup<T: IntoCallable>(target: T, propname: &str) -> Expression {
+    Expression::Apps(
+        target.into_callable(),
+        vec![
+            Application::Lookup(propname.to_string()),
+            ])
 }
 
-pub fn dispatch<T: IntoExpression, U: IntoExpression>
+pub fn dispatch<T: IntoCallable, U: IntoExpression>
     (target: T, proparg: U)
      -> Expression
 {
-    PropApplication::Dispatch(
-        Box::new(target.into_expr()),
-        Box::new(proparg.into_expr()),
-        ).into_expr()
+    Expression::Apps(
+        target.into_callable(),
+        vec![
+            Application::Dispatch(Box::new(proparg.into_expr())),
+            ])
 }
 
 
@@ -104,107 +107,111 @@ trait IntoExpression {
 impl IntoExpression for Expression {
     fn into_expr(self) -> Expression { self }
 }
-impl IntoExpression for LeafExpression {
+impl IntoExpression for Callable {
+    fn into_expr(self) -> Expression { Expression::Apps(self, vec![]) }
+}
+
+impl IntoExpression for Uncallable {
     fn into_expr(self) -> Expression {
-        Expression::Leaf(self)
+        Expression::Uncallable(self)
     }
 }
-impl IntoExpression for PropApplication {
+impl IntoExpression for Object {
     fn into_expr(self) -> Expression {
-        Expression::PropApp(self)
-    }
-}
-impl<T: IntoExpression> IntoExpression for Vec<T> {
-    fn into_expr(self) -> Expression {
-        Expression::List(
-            List(
-                FromIterator::from_iter(
-                    self.into_iter().map(
-                        |x| Box::new(x.into_expr())))))
+        Uncallable::Object(self).into_expr()
     }
 }
 impl IntoExpression for Let {
     fn into_expr(self) -> Expression {
-        Expression::Let(self)
+        Uncallable::Let(self).into_expr()
+    }
+}
+
+impl IntoExpression for Proc {
+    fn into_expr(self) -> Expression {
+        Object::from_proc(self).into_expr()
+    }
+}
+impl IntoExpression for Query {
+    fn into_expr(self) -> Expression {
+        Object::from_query(self).into_expr()
+    }
+}
+impl IntoExpression for Function {
+    fn into_expr(self) -> Expression {
+        Object::from_func(self).into_expr()
+    }
+}
+impl IntoExpression for PatternItem {
+    fn into_expr(self) -> Expression {
+        Function(vec![self]).into_expr()
+    }
+}
+impl IntoExpression for Properties {
+    fn into_expr(self) -> Expression {
+        Object::from_properties(self).into_expr()
     }
 }
 
 
-macro_rules! define_into_impls_for_leafs {
-    ( $( $source:ty ),* ) => {
-        $(
-            impl IntoExpression for $source {
-                fn into_expr(self) -> Expression {
-                    self.into_leaf().into_expr()
-                }
+trait IntoCallable {
+    fn into_callable(self) -> Callable;
+}
+impl IntoCallable for Callable {
+    fn into_callable(self) -> Callable { self }
+}
+
+impl<T: IntoExpression> IntoCallable for Vec<T> {
+    fn into_callable(self) -> Callable {
+        Callable::List(
+            List(
+                FromIterator::from_iter(
+                    self.into_iter().map(
+                        |x| Box::new(
+                            x.into_expr())))))
+    }
+}
+impl<T: IntoExpression> IntoExpression for Vec<T> {
+    fn into_expr(self) -> Expression {
+        self.into_callable().into_expr()
+    }
+}
+
+
+macro_rules! into_expression_via_callable {
+    ( $t:ty ) => {
+        impl IntoExpression for $t {
+            fn into_expr(self) -> Expression {
+                self.into_callable().into_expr()
             }
-        )*
+        }
     }
 }
 
-
-define_into_impls_for_leafs! {
-    bool,
-    PatternItem,
-    Function,
-    Identifier,
-    Object,
-    Proc,
-    Properties,
-    Query,
-    &'static str
+into_expression_via_callable! { () }
+impl IntoCallable for () {
+    fn into_callable(self) -> Callable {
+        Callable::List(List(vec![]))
+    }
 }
 
+into_expression_via_callable! { Identifier }
+impl IntoCallable for Identifier {
+    fn into_callable(self) -> Callable {
+        Callable::Dereference(self)
+    }
+}
 
-// Conversion plumbing for leaf expressions:
-trait IntoLeaf {
-    fn into_leaf(self) -> LeafExpression;
-}
-impl IntoLeaf for LeafExpression {
-    fn into_leaf(self) -> LeafExpression { self }
-}
-impl IntoLeaf for Identifier {
-    fn into_leaf(self) -> LeafExpression {
-        LeafExpression::Dereference(self)
+into_expression_via_callable! { &'static str }
+impl IntoCallable for &'static str {
+    fn into_callable(self) -> Callable {
+        self.to_string().into_callable()
     }
 }
-impl IntoLeaf for &'static str {
-    fn into_leaf(self) -> LeafExpression {
-        self.to_string().into_leaf()
-    }
-}
-impl IntoLeaf for bool {
-    fn into_leaf(self) -> LeafExpression {
-        LeafExpression::Literal(Literal::Bool(self))
-    }
-}
-impl IntoLeaf for Object {
-    fn into_leaf(self) -> LeafExpression {
-        LeafExpression::Object(self)
-    }
-}
-impl IntoLeaf for Proc {
-    fn into_leaf(self) -> LeafExpression {
-        Object::from_proc(self).into_leaf()
-    }
-}
-impl IntoLeaf for Query {
-    fn into_leaf(self) -> LeafExpression {
-        Object::from_query(self).into_leaf()
-    }
-}
-impl IntoLeaf for Function {
-    fn into_leaf(self) -> LeafExpression {
-        Object::from_func(self).into_leaf()
-    }
-}
-impl IntoLeaf for PatternItem {
-    fn into_leaf(self) -> LeafExpression {
-        Function(vec![self]).into_leaf()
-    }
-}
-impl IntoLeaf for Properties {
-    fn into_leaf(self) -> LeafExpression {
-        Object::from_properties(self).into_leaf()
+
+into_expression_via_callable! { bool }
+impl IntoCallable for bool {
+    fn into_callable(self) -> Callable {
+        Callable::Literal(Literal::Bool(self))
     }
 }

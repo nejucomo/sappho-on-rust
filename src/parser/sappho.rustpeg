@@ -1,8 +1,9 @@
 use super::super::ast::{
+    Application,
+    Callable,
     Expression,
     Function,
     Identifier,
-    LeafExpression,
     Let,
     List,
     Literal,
@@ -12,23 +13,33 @@ use super::super::ast::{
     Proc,
     Properties,
     Query,
-    StatementBlock
+    StatementBlock,
+    Uncallable
 };
 
 
 #[pub]
 expr -> Expression
-  = l:leafexpr  { Expression::Leaf(l)      }
-  / pa:procapp  { Expression::ProcApp(pa)  }
-  / qa:queryapp { Expression::QueryApp(qa) }
-  / l:list      { Expression::List(l)      }
-  / l:let       { Expression::Let(l)       }
+  = c:callable apps:application* { Expression::Apps(c, apps) }
+  / u:uncallable                 { Expression::Uncallable(u) }
 
+callable -> Callable
+  = id:identifier { Callable::Dereference(id) }
+  / l:list        { Callable::List(l)         }
+  / l:literal     { Callable::Literal(l)      }
+  / pa:procapp    { Callable::ProcApp(pa)     }
+  / qa:queryapp   { Callable::QueryApp(qa)    }
 
-leafexpr -> LeafExpression
-  = i:identifier { LeafExpression::Dereference(i) }
-  / l:literal    { LeafExpression::Literal(l)     }
-  / o:object     { LeafExpression::Object(o)      }
+application -> Application
+  = "." d:dotapp { d }
+
+dotapp -> Application
+  = id:identifier  { Application::Lookup(id)            }
+  / "(" x:expr ")" { Application::Dispatch(Box::new(x)) }
+
+uncallable -> Uncallable
+  = o:object     { Uncallable::Object(o) }
+  / l:let        { Uncallable::Let(l)    }
 
 identifier -> String
   = ! "false"
@@ -164,14 +175,11 @@ props_continue -> Properties
     { Properties::empty() }
 
 
+procapp -> Box<Callable>
+  = "!" target:callable { Box::new(target) }
 
-procapp -> Box<Expression>
-  = "!" target:expr
-    { Box::new(target) }
-
-queryapp -> Box<Expression>
-  = "$" target:expr
-    { Box::new(target) }
+queryapp -> Box<Callable>
+  = "$" target:callable { Box::new(target) }
 
 
 list -> List
