@@ -1,4 +1,4 @@
-use super::super::ast::{
+use super::super::types::{
     Application,
     Callable,
     Expression,

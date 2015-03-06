@@ -1,14 +1,14 @@
 use collections::string::String;
 
-use super::ast;
+use super::types::{Expression};
 
 
-// The main top-level interface to the parser:
+pub type ParseResult = Result<Expression, String>;
+
+
 pub fn parse_expression(source: &str) -> ParseResult {
     peg::expr(source)
 }
-
-type ParseResult = Result<ast::Expression, String>;
 
 
 // Private implementation innards below:

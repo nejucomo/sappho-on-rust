@@ -12,4 +12,3 @@
 extern crate collections;
 
 mod ast;
-mod parser;
