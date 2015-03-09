@@ -75,7 +75,7 @@ pub enum Literal {
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Object {
-    pub proc_:  Option<Proc>,
+    pub proc_: Option<Proc>,
     pub query: Option<Query>,
     pub func:  Function,
     pub props: Properties,
