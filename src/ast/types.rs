@@ -51,6 +51,7 @@ pub enum Callable {
 pub enum Application {
     Lookup(Identifier),
     Dispatch(Box<Expression>),
+    ListApp(List),
 }
 
 

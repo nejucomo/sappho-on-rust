@@ -95,8 +95,20 @@ pub fn dispatch<T: IntoExpression>(proparg: T) -> Application {
     Application::Dispatch(Box::new(proparg.into_expr()))
 }
 
+pub fn listapp(args: Vec<Expression>) -> Application {
+    Application::ListApp(list(args))
+}
+
 
 /* Private plumbing below */
+fn list<T: IntoExpression>(xs: Vec<T>) -> List {
+    List(
+        FromIterator::from_iter(
+            xs.into_iter().map(
+                |x| Box::new(
+                    x.into_expr()))))
+}
+
 trait IntoExpression {
     fn into_expr(self) -> Expression;
 }
@@ -165,12 +177,7 @@ impl IntoCallable for Expression {
 
 impl<T: IntoExpression> IntoCallable for Vec<T> {
     fn into_callable(self) -> Callable {
-        Callable::List(
-            List(
-                FromIterator::from_iter(
-                    self.into_iter().map(
-                        |x| Box::new(
-                            x.into_expr())))))
+        Callable::List(list(self))
     }
 }
 impl<T: IntoExpression> IntoExpression for Vec<T> {

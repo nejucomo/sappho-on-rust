@@ -13,6 +13,7 @@ use super::super::test::framework::{
     apps,
     dispatch,
     expr,
+    listapp,
     lookup,
     papp,
     patitem,
@@ -76,9 +77,22 @@ test_parse_expectations! {
         : &["(object {}).b"]
         => Some(apps(expr(Object::empty()), vec![lookup("b")]));
 
+    list_application
+        : &["f[]", "f []", "f [\n]"]
+        => Some(apps("f", vec![listapp(vec![])]));
+
+    list_pair_application
+        : &["f[a,b]", "f [a, b]", "f [\n  a,\n  b,\n]"]
+        => Some(apps("f", vec![listapp(vec![expr("a"), expr("b")])]));
+
     multiple_apps
-        : &["a.b.(c)", "a .b.(c)"]
-        => Some(apps("a", vec![lookup("b"), dispatch("c")]));
+        : &["a.b.(c)[d]", "a .b.(c) [ d ]"]
+        => Some(
+            apps("a",
+                 vec![
+                     lookup("b"),
+                     dispatch("c"),
+                     listapp(vec![expr("d")])]));
 
     empty_object
         : &["object {}",

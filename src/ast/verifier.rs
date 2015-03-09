@@ -99,6 +99,7 @@ impl Verifiable for Application {
         match *self {
             Application::Lookup(_)       => None,
             Application::Dispatch(ref a) => { vseq! [ ctx => a ] },
+            Application::ListApp(ref a)  => { vseq! [ ctx => a ] },
         }
     }
 }
