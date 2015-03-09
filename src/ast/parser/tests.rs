@@ -409,5 +409,24 @@ test_parse_expectations! {
                                     expr(qapp("y")),
                                     expr(papp("z")),
                                     ])),
-                    })))
+                    })));
+
+    /* D/Q/P Violations:
+     *
+     * These determinism violating expressions are not caught by the
+     * syntax/parser, but a higher layer, so they should parse here.
+     */
+
+    parseable_yet_invalid_procapp_in_deterministic_context
+        : &["!true"]
+        => Some(expr(papp(true)));
+
+    parseable_yet_invalid_queryapp_in_deterministic_context
+        : &["$true"]
+        => Some(expr(qapp(true)));
+
+    parseable_yet_invalid_procapp_in_query_context
+        : &["query -> !true"]
+        => Some(expr(query(papp(true))))
+
 }
