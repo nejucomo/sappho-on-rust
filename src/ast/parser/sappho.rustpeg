@@ -32,10 +32,11 @@ callable -> Callable
   / qa:queryapp   { Callable::QueryApp(qa)    }
 
 wsapplication -> Application
-  = [\n ]* a:application { a }
+  = [ ]* a:application { a }
 
 application -> Application
-  = "." d:dotapp { d }
+  = [\n ]* "." d:dotapp { d                       }
+  / l:list              { Application::ListApp(l) }
 
 dotapp -> Application
   = id:identifier                { Application::Lookup(id)            }

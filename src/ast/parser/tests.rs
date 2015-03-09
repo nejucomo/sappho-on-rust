@@ -82,7 +82,7 @@ test_parse_expectations! {
         => Some(apps("f", vec![listapp(vec![])]));
 
     list_pair_application
-        : &["f[a,b]", "f [a, b]", "f [\n  a,\n  b,\n]"]
+        : &["f[a,b]", "f [a, b]", "f [\n  a,\n  b\n]"]
         => Some(apps("f", vec![listapp(vec![expr("a"), expr("b")])]));
 
     bad_ws_list_applications
