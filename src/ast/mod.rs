@@ -8,7 +8,11 @@ mod types;
 mod verifier;
 
 
-pub use self::parser::ParseResult;
+pub use self::parser::ParseError;
+pub use self::verifier::{
+    VerifyError,
+    VerifyResult,
+};
 
 pub use self::types::{
     Application,
@@ -31,7 +35,9 @@ pub use self::types::{
 };
 
 
-pub fn parse_verified_expression(source: &str) -> ParseResult {
-    parser::parse_expression(source).and_then(verifier::verify_expression)
+pub fn parse_verified_expression(source: &str) -> VerifyResult {
+    parser::parse_expression(source)
+        .map_err(|perr| VerifyError::Parse(perr))
+        .and_then(verifier::verify_expression)
 }
 

@@ -3,7 +3,8 @@ use collections::string::String;
 use super::types::{Expression};
 
 
-pub type ParseResult = Result<Expression, String>;
+pub type ParseError = peg::ParseError;
+pub type ParseResult = Result<Expression, ParseError>;
 
 
 pub fn parse_expression(source: &str) -> ParseResult {

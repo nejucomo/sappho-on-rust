@@ -10,24 +10,40 @@ use super::{
     Let,
     List,
     Object,
-    ParseResult,
+    ParseError,
     PatternItem,
     Proc,
-    PropItem,
     Properties,
+    PropItem,
     Query,
     StatementBlock,
     Uncallable,
 };
 
 
-pub fn verify_expression(x: Expression) -> ParseResult {
-    x.verify(&Context::D).map_or(Ok(x), |errmsg| Err(errmsg))
+pub type VerifyResult = Result<Expression, VerifyError>;
+
+#[derive(Debug)]
+pub enum VerifyError {
+    Parse(ParseError),
+    Determinism(DeterminismViolation),
+}
+
+#[derive(Debug)]
+pub enum DeterminismViolation {
+    MutationInDeterministicContext,
+    MutationInQueryContext,
+    QueryInDeterministicContext,
+}
+
+
+pub fn verify_expression(x: Expression) -> VerifyResult {
+    x.verify(&Context::D).map_or(Ok(x), |detv| Err(VerifyError::Determinism(detv)))
 }
 
 
 // "Internal Verify Result":
-type IVR = Option<String>;
+type IVR = Option<DeterminismViolation>;
 
 
 #[derive(Eq)]
@@ -76,14 +92,14 @@ impl Verifiable for Callable {
             Callable::Parens(ref a)   => { vseq! [ ctx => a ] },
             Callable::ProcApp(ref a)  => {
                 match *ctx {
-                    D => Some("! in deterministic context.".to_string()),
-                    Q => Some("! in query context.".to_string()),
+                    D => Some(DeterminismViolation::MutationInDeterministicContext),
+                    Q => Some(DeterminismViolation::MutationInQueryContext),
                     P => vseq! [ ctx => a ],
                 }
             },
             Callable::QueryApp(ref a) => {
                 match *ctx {
-                    D => Some("$ in deterministic context.".to_string()),
+                    D => Some(DeterminismViolation::QueryInDeterministicContext),
                     _  => vseq! [ ctx => a ],
                 }
             },
