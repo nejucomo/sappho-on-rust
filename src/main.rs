@@ -2,12 +2,8 @@
 #![plugin(peg_syntax_ext)]
 
 #![feature(collections)]
+#![feature(str_char)] // Disable this if/when peg is upgraded.
 
-/* I'm not sure why this is necessary to silence "naming is uncertain
- * with container conventions" warnings. Hypothesis is that peg parser
- * expansion uses some unstable API.
- */
-#![feature(core)]
 
 extern crate collections;
 
