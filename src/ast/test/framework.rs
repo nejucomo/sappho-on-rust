@@ -109,7 +109,7 @@ fn list<T: IntoExpression>(xs: Vec<T>) -> List {
                     x.into_expr()))))
 }
 
-trait IntoExpression {
+pub trait IntoExpression {
     fn into_expr(self) -> Expression;
 }
 
@@ -163,7 +163,7 @@ impl IntoExpression for Properties {
 }
 
 
-trait IntoCallable {
+pub trait IntoCallable {
     fn into_callable(self) -> Callable;
 }
 impl IntoCallable for Callable {
