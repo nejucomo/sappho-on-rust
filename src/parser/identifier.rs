@@ -22,8 +22,17 @@ mod tests {
     #[test]
     fn test_identifier() {
         use combine::{Parser, parser};
-        assert_eq!(
-            parser(identifier).parse("foo42"),
-            Ok(("foo42".to_string(), "")));
+
+        let cases = vec![
+            "x",
+            "foo",
+            "foo42",
+            ];
+
+        for s in cases {
+            assert_eq!(
+                parser(identifier).parse(s),
+                Ok((s.to_string(), "")));
+        }
     }
 }
