@@ -23,17 +23,32 @@ mod tests {
     fn test_identifier() {
         use combine::{Parser, parser};
 
-        let cases = vec![
+        let pos_cases = vec![
             "x",
             "foo",
             "foo42",
             "foo_bar",
+            "_blah",
+            "x__y",
             ];
 
-        for s in cases {
+        for s in pos_cases {
             assert_eq!(
                 parser(identifier).parse(s),
                 Ok((s.to_string(), "")));
+        }
+
+        let neg_cases = vec![
+            "4",
+            "42x",
+            "x y",
+            ];
+
+        for s in neg_cases {
+            assert!(
+                parser(identifier).parse(s).is_err(),
+                "invalidly parsed {:?} as identifier",
+                s);
         }
     }
 }
