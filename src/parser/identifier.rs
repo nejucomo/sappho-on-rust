@@ -27,6 +27,7 @@ mod tests {
             "x",
             "foo",
             "foo42",
+            "foo_bar",
             ];
 
         for s in cases {
