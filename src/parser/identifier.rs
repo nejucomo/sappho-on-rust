@@ -8,7 +8,7 @@ pub fn identifier<I>(input: I) -> ParseResult<String, I>
     use combine::char::{alpha_num, char, letter};
     use combine::combinator::many;
 
-    let tail = alpha_num(); //.or(char('_'));
+    let tail = alpha_num().or(char('_'));
 
     many(tail)
         .parse_state(input)
