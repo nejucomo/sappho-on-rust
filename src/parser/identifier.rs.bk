@@ -1,0 +1,10 @@
+use combine::{Stream, ParseExt, ParseResult};
+
+
+fn identifier<I>(input: I) -> ParseResult<String, I>
+    where I: Stream<Item=char>
+{
+    use combine::char::letter;
+
+    letter().parse_state(input)
+}
