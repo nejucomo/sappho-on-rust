@@ -41,6 +41,7 @@ mod tests {
         }
 
         let neg_cases = vec![
+            "",
             "4",
             "42x",
             "x y",
