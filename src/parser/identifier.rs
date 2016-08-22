@@ -19,13 +19,13 @@ pub fn identifier<I>(input: I) -> ParseResult<String, I>
 
 #[cfg(test)]
 mod tests {
-    use combine::{ParseResult, Parser, Stream};
-    use combine::combinator::{Eof, FnParser, Map};
     use super::identifier;
 
     #[test]
     fn test_identifier() {
-        use combine::{Parser, parser};
+        use combine::{Parser, ParserExt, eof, parser};
+
+        let parser_only = |f| (parser(f), eof()).map(|t| t.0);
 
         let pos_cases = vec![
             "x",
@@ -55,15 +55,5 @@ mod tests {
                 "invalidly parsed {:?} as identifier",
                 s);
         }
-    }
-
-    fn parser_only<I, A, B, F, G>(f: F) -> Map<(FnParser<I, F>, Eof<I>), G>
-        where I: Stream,
-              F: FnMut(I) -> ParseResult<A, I>,
-              G: FnMut(A) -> B
-    {
-        use combine::{ParserExt, eof, parser};
-
-        (parser(f), eof()).map(|t| t.0)
     }
 }
