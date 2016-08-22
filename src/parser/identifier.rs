@@ -19,6 +19,8 @@ pub fn identifier<I>(input: I) -> ParseResult<String, I>
 
 #[cfg(test)]
 mod tests {
+    use combine::{ParseResult, Parser, Stream};
+    use combine::combinator::{Eof, FnParser, Map};
     use super::identifier;
 
     #[test]
@@ -36,7 +38,7 @@ mod tests {
 
         for s in pos_cases {
             assert_eq!(
-                parser(identifier).parse(s),
+                parser_only(identifier).parse(s),
                 Ok((s.to_string(), "")));
         }
 
@@ -49,9 +51,19 @@ mod tests {
 
         for s in neg_cases {
             assert!(
-                parser(identifier).parse(s).is_err(),
+                parser_only(identifier).parse(s).is_err(),
                 "invalidly parsed {:?} as identifier",
                 s);
         }
+    }
+
+    fn parser_only<I, A, B, F, G>(f: F) -> Map<(FnParser<I, F>, Eof<I>), G>
+        where I: Stream,
+              F: FnMut(I) -> ParseResult<A, I>,
+              G: FnMut(A) -> B
+    {
+        use combine::{ParserExt, eof, parser};
+
+        (parser(f), eof()).map(|t| t.0)
     }
 }
