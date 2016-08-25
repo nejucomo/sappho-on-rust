@@ -54,17 +54,17 @@ mod tests {
             }
         }
 
-        let parser_only = |f| (parser(f), eof()).map(|t| t.0);
+        let parse_only = |f, s| parser(f).skip(eof()).parse(s);
 
         for s in include_cases!("test-vectors/identifier.accept") {
             assert_eq!(
-                parser_only(identifier).parse(s),
+                parse_only(identifier, s),
                 Ok((s.to_string(), "")));
         }
 
         for s in include_cases!("test-vectors/identifier.reject") {
             assert!(
-                parser_only(identifier).parse(s).is_err(),
+                parse_only(identifier, s).is_err(),
                 "invalidly parsed {:?} as identifier",
                 s);
         }
