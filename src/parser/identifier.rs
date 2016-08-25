@@ -25,31 +25,25 @@ mod tests {
     fn test_identifier() {
         use combine::{Parser, ParserExt, eof, parser};
 
+        macro_rules! include_cases {
+            ($p:expr) => {
+                {
+                    let src = include_str!($p);
+                    assert_eq!('\n', src.chars().rev().next().unwrap());
+                    src[0..src.len()-1].split("\n")
+                }
+            }
+        }
+
         let parser_only = |f| (parser(f), eof()).map(|t| t.0);
 
-        let pos_cases = vec![
-            "x",
-            "foo",
-            "foo42",
-            "foo_bar",
-            "_blah",
-            "x__y",
-            ];
-
-        for s in pos_cases {
+        for s in include_cases!("test-vectors/identifier.accept") {
             assert_eq!(
                 parser_only(identifier).parse(s),
                 Ok((s.to_string(), "")));
         }
 
-        let neg_cases = vec![
-            "",
-            "4",
-            "42x",
-            "x y",
-            ];
-
-        for s in neg_cases {
+        for s in include_cases!("test-vectors/identifier.reject") {
             assert!(
                 parser_only(identifier).parse(s).is_err(),
                 "invalidly parsed {:?} as identifier",
