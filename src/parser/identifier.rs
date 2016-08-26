@@ -11,7 +11,7 @@ pub fn identifier(input: &str) -> ParseResult<String, &str>
     let head = letter().or(char('_'));
     let tail = alpha_num().or(char('_'));
 
-    (head, many(tail))
+    head.and(many(tail))
         .map(|t: (char, String)| t.0.to_string() + &t.1)
         .then(|id| parser(move |input| {
             use combine::primitives::{Consumed, Error, ParseError, StreamOnce};
