@@ -17,7 +17,7 @@ pub fn keyword(kw: &'static str) -> Box<Parser<Input=&str, Output=()>>
 {
     use combine::{ParserExt, string, value};
 
-    assert!(KEYWORDS.contains(&kw));
+    assert!(KEYWORDS.contains(&kw), "Unknown keyword: {:?}", kw);
 
     Box::new(string(kw).with(value(())))
 }
