@@ -36,9 +36,18 @@ pub fn identifier(input: &str) -> ParseResult<String, &str>
 }
 
 
+pub fn symbol(input: &str) -> ParseResult<String, &str>
+{
+    use combine::{Parser, ParserExt, parser};
+    use combine::char::char;
+
+    char('.').with(parser(identifier)).parse_state(input)
+}
+
+
 #[cfg(test)]
 mod tests {
-    use super::identifier;
+    use super::{identifier, symbol};
 
     #[test]
     fn test_identifier() {
@@ -66,6 +75,36 @@ mod tests {
             assert!(
                 parse_only(identifier, s).is_err(),
                 "invalidly parsed {:?} as identifier",
+                s);
+        }
+    }
+
+    #[test]
+    fn test_symbol() {
+        use combine::{Parser, ParserExt, eof, parser};
+
+        macro_rules! include_cases {
+            ($p:expr) => {
+                {
+                    let src = include_str!($p);
+                    assert_eq!('\n', src.chars().rev().next().unwrap());
+                    src[0..src.len()-1].split("\n")
+                }
+            }
+        }
+
+        let parse_only = |f, s| parser(f).skip(eof()).parse(s);
+
+        for s in include_cases!("test-vectors/symbol.accept") {
+            assert_eq!(
+                parse_only(symbol, s),
+                Ok((s[1..].to_string(), "")));
+        }
+
+        for s in include_cases!("test-vectors/symbol.reject") {
+            assert!(
+                parse_only(symbol, s).is_err(),
+                "invalidly parsed {:?} as symbol",
                 s);
         }
     }
