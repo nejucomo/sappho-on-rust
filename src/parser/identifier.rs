@@ -49,63 +49,49 @@ pub fn symbol(input: &str) -> ParseResult<String, &str>
 mod tests {
     use super::{identifier, symbol};
 
-    #[test]
-    fn test_identifier() {
-        use combine::{Parser, ParserExt, eof, parser};
-
-        macro_rules! include_cases {
-            ($p:expr) => {
-                {
-                    let src = include_str!($p);
-                    assert_eq!('\n', src.chars().rev().next().unwrap());
-                    src[0..src.len()-1].split("\n")
-                }
+    macro_rules! include_cases {
+        ($p:expr) => {
+            {
+                let src = include_str!($p);
+                assert_eq!('\n', src.chars().rev().next().unwrap());
+                src[0..src.len()-1].split("\n")
             }
-        }
-
-        let parse_only = |f, s| parser(f).skip(eof()).parse(s);
-
-        for s in include_cases!("test-vectors/identifier.accept") {
-            assert_eq!(
-                parse_only(identifier, s),
-                Ok((s.to_string(), "")));
-        }
-
-        for s in include_cases!("test-vectors/identifier.reject") {
-            assert!(
-                parse_only(identifier, s).is_err(),
-                "invalidly parsed {:?} as identifier",
-                s);
         }
     }
 
-    #[test]
-    fn test_symbol() {
-        use combine::{Parser, ParserExt, eof, parser};
+    macro_rules! include_parser_test_vector {
+        ($name:expr, accept) => {
+            include_cases!(concat!("test-vectors/", stringify!($name), ".accept"));
+        };
 
-        macro_rules! include_cases {
-            ($p:expr) => {
-                {
-                    let src = include_str!($p);
-                    assert_eq!('\n', src.chars().rev().next().unwrap());
-                    src[0..src.len()-1].split("\n")
+        ($name:expr, reject) => {
+            include_cases!(concat!("test-vectors/", stringify!($name), ".reject"));
+        }
+    }
+
+    macro_rules! simple_parser_test_case {
+        ($test_name:ident, $name:ident, $make_result:expr) => {
+            #[test]
+            fn $test_name() {
+                use combine::{Parser, ParserExt, eof, parser};
+
+                for s in include_parser_test_vector!($name, accept) {
+                    assert_eq!(
+                        parser($name).skip(eof()).parse(s),
+                        Ok(($make_result(s), "")));
+                }
+
+                for s in include_parser_test_vector!($name, reject) {
+                    assert!(
+                        parser($name).skip(eof()).parse(s).is_err(),
+                        "invalidly parsed {:?} as {}",
+                        s,
+                        stringify!($name));
                 }
             }
         }
-
-        let parse_only = |f, s| parser(f).skip(eof()).parse(s);
-
-        for s in include_cases!("test-vectors/symbol.accept") {
-            assert_eq!(
-                parse_only(symbol, s),
-                Ok((s[1..].to_string(), "")));
-        }
-
-        for s in include_cases!("test-vectors/symbol.reject") {
-            assert!(
-                parse_only(symbol, s).is_err(),
-                "invalidly parsed {:?} as symbol",
-                s);
-        }
     }
+
+    simple_parser_test_case!(test_identifier, identifier, |s: &str| s.to_string());
+    simple_parser_test_case!(test_symbol, symbol, |s: &str| s[1..].to_string());
 }
