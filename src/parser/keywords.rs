@@ -1,60 +1,37 @@
-use combine::Parser;
+use combine::{ParseResult, Parser};
 
 
-pub const KEYWORDS: [&'static str; 8] = [
-    "𝜆",
-    "\\",
-    "proc",
-    "query",
-    "let",
-    "in",
-    "from",
-    "bind",
-    ];
+macro_rules! define_keyword_parsers {
+    ( $( ($name:ident, $testname:ident, $text:expr) ),* ) => {
 
+        pub const KEYWORDS: [&'static str; 7] = [
+            $( $text ),*
+            ];
 
-pub fn keyword(kw: &'static str) -> Box<Parser<Input=&str, Output=()>>
-{
-    use combine::{ParserExt, string, value};
+        $(
+            fn $name(input: &str) -> ParseResult<(), &str> {
+                use combine::{ParserExt, string, value};
 
-    assert!(KEYWORDS.contains(&kw), "Unknown keyword: {:?}", kw);
-
-    Box::new(string(kw).with(value(())))
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::keyword;
-
-    #[test]
-    fn test_identifier() {
-        use combine::{Parser, ParserExt, eof};
-
-        macro_rules! include_cases {
-            ($p:expr) => {
-                {
-                    let src = include_str!($p);
-                    assert_eq!('\n', src.chars().rev().next().unwrap());
-                    src[0..src.len()-1].split("\n")
-                }
+                string($text)
+                    .with(value(()))
+                    .parse_state(input)
             }
-        }
 
-        // let parse_only = |p, s| p.skip(eof()).parse(s);
-
-        for s in include_cases!("test-vectors/keyword.accept") {
-            assert_eq!(
-                keyword(s).skip(eof()).parse(s),
-                Ok(((), "")));
-        }
-
-        for s in include_cases!("test-vectors/keyword.reject") {
-            assert!(
-                // parse_only(keyword("proc"), s).is_err(),
-                keyword("proc").skip(eof()).parse(s).is_err(),
-                "invalidly parsed {:?} as keyword",
-                s);
-        }
+            test_case_simple_parser!(
+                $testname,
+                $name,
+                |_| ());
+        )*
     }
 }
+
+
+define_keyword_parsers!(
+    (kw_lambda, test_kw_lambda, "𝜆"),
+    (kw_proc,   test_kw_proc,   "proc"),
+    (kw_query,  test_kw_query,  "query"),
+    (kw_let,    test_kw_let,    "let"),
+    (kw_in,     test_kw_in,     "in"),
+    (kw_from,   test_kw_from,   "from"),
+    (kw_bind,   test_kw_bind,   "bind")
+);
