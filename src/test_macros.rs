@@ -2,8 +2,12 @@ macro_rules! include_cases {
     ($p:expr) => {
         {
             let src = include_str!($p);
-            assert_eq!('\n', src.chars().rev().next().unwrap());
-            src[0..src.len()-1].split("\n")
+            if src.len() == 0 {
+                "".split("\n")
+            } else {
+                assert_eq!('\n', src.chars().rev().next().unwrap());
+                src[0..src.len()-1].split("\n")
+            }
         }
     }
 }
