@@ -106,18 +106,24 @@ fn parse_escape<I>(delim: char, input: I) -> ParseResult<char, I>
 mod tests {
     use super::{character, string};
 
-    test_case_string_parser!(test_character_backslash, character, "backslash");
-    test_case_string_parser!(test_character_doublequote, character, "doublequote");
-    test_case_string_parser!(test_character_greek_lambda, character, "greek_lambda");
-    test_case_string_parser!(test_character_lambda, character, "lambda");
-    test_case_string_parser!(test_character_newline, character, "newline");
-    test_case_string_parser!(test_character_x, character, "x");
+    test_cases_string_parser!(
+        character,
+        [(test_character_backslash, "backslash"),
+         (test_character_doublequote, "doublequote"),
+         (test_character_greek_lambda, "greek_lambda"),
+         (test_character_lambda, "lambda"),
+         (test_character_newline, "newline"),
+         (test_character_singlequote, "singlequote"),
+         (test_character_x, "x")]);
 
-    test_case_string_parser!(test_string_backslash, string, "backslash");
-    test_case_string_parser!(test_string_singlequote, string, "singlequote");
-    test_case_string_parser!(test_string_foo_bar, string, "foo_bar");
-    test_case_string_parser!(test_string_greek_lambda, string, "greek_lambda");
-    test_case_string_parser!(test_string_lambda, string, "lambda");
-    test_case_string_parser!(test_string_newline, string, "newline");
-    test_case_string_parser!(test_string_x, string, "x");
+    test_cases_string_parser!(
+        string,
+        [(test_string_backslash, "backslash"),
+         (test_string_doublequote, "doublequote"),
+         (test_string_foo_bar, "foo_bar"),
+         (test_string_greek_lambda, "greek_lambda"),
+         (test_string_lambda, "lambda"),
+         (test_string_newline, "newline"),
+         (test_string_singlequote, "singlequote"),
+         (test_string_x, "x")]);
 }
