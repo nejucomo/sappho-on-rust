@@ -44,12 +44,20 @@ impl<I> Parser for CharLit<I>
 
     fn parse_state(&mut self, input: Self::Input) -> ParseResult<char, Self::Input>
     {
-        use combine::primitives::{Consumed, ParseError};
+        use combine::primitives::{Consumed, Error, Info, ParseError};
 
         let mut next = input.clone();
         match next.uncons() {
             Ok(c) => match c {
+                _ if c == self.delim =>
+                    Err(
+                        Consumed::Empty(
+                            ParseError::new(
+                                input.position(),
+                                Error::Unexpected(Info::from(c))))),
+
                 '\\' => parse_escape(self.delim, next),
+
                 _ => Ok((c, Consumed::Consumed(next))),
             },
             Err(e) => Err(Consumed::Empty(ParseError::new(input.position(), e))),
@@ -86,28 +94,6 @@ fn parse_escape<I>(delim: char, input: I) -> ParseResult<char, I>
         },
         Err(e) => Err(Consumed::Empty(ParseError::new(input.position(), e))),
     }
-
-/*
-            if c == 'u' {
-                Box::new(
-                    parser(
-                        |input| {
-                            between(char('{'), char('}'), many1(hex_digit()))
-                                .and_then(|esc: String| {
-                                    use std::char::from_u32;
-                                    
-                                    u32::from_str_radix(esc.as_str(), 16)
-                                        .map(from_u32)
-                                })
-                                .parse_state(input)
-                        }))
-            } else {
-                Box::new(
-                    match c {
-                    })
-            }
-        })
-*/
 }
 
 
@@ -115,11 +101,18 @@ fn parse_escape<I>(delim: char, input: I) -> ParseResult<char, I>
 mod tests {
     use super::{character, string};
 
-    test_case_simple_parser!(
-        test_character, character,
-        |s: &str| s.chars().nth(1).unwrap());
+    test_case_string_parser!(test_character_backslash, character, "backslash");
+    test_case_string_parser!(test_character_doublequote, character, "doublequote");
+    test_case_string_parser!(test_character_greek_lambda, character, "greek_lambda");
+    test_case_string_parser!(test_character_lambda, character, "lambda");
+    test_case_string_parser!(test_character_newline, character, "newline");
+    test_case_string_parser!(test_character_x, character, "x");
 
-    test_case_simple_parser!(
-        test_string, string,
-        |s: &str| s.to_string());
+    test_case_string_parser!(test_string_backslash, string, "backslash");
+    test_case_string_parser!(test_string_singlequote, string, "singlequote");
+    test_case_string_parser!(test_string_foo_bar, string, "foo_bar");
+    test_case_string_parser!(test_string_greek_lambda, string, "greek_lambda");
+    test_case_string_parser!(test_string_lambda, string, "lambda");
+    test_case_string_parser!(test_string_newline, string, "newline");
+    test_case_string_parser!(test_string_x, string, "x");
 }
