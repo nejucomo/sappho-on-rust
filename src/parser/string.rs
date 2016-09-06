@@ -4,9 +4,14 @@ use combine::{ParseResult, Parser, Stream};
 
 pub fn character(input: &str) -> ParseResult<char, &str>
 {
-    use combine::{Parser, between, char};
+    use combine::{Parser, ParserExt, between, char};
 
-    between(char('\''), char('\''), char_lit('\''))
+    char('c')
+        .with(
+            between(
+                char('\''),
+                char('\''),
+                char_lit('\'')))
         .parse_state(input)
 }
 
