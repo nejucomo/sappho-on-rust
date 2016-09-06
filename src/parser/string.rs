@@ -9,18 +9,18 @@ pub fn character(input: &str) -> ParseResult<char, &str>
     char('c')
         .with(
             between(
-                char('\''),
-                char('\''),
-                char_lit('\'')))
+                char('\''), char('\''), char_lit('\''))
+                .or(between(char('"'), char('"'), char_lit('"'))))
         .parse_state(input)
 }
 
 
 pub fn string(input: &str) -> ParseResult<String, &str>
 {
-    use combine::{Parser, between, char, many};
+    use combine::{Parser, ParserExt, between, char, many};
 
     between(char('"'), char('"'), many(char_lit('"')))
+        .or(between(char('\''), char('\''), many(char_lit('\''))))
         .parse_state(input)
 }
 

@@ -73,15 +73,18 @@ macro_rules! test_case_string_parser {
         fn $test_name() {
             use combine::{Parser, ParserExt, eof, parser};
 
-            let input  = include_io!($name, $case_name, "input");
-            let output = include_io!($name, $case_name, "output");
+            let inputsq = include_io!($name, $case_name, "input.sq");
+            let inputdq = include_io!($name, $case_name, "input.dq");
+            let output  = include_io!($name, $case_name, "output");
 
-            assert_eq!(
-                parser($name)
-                    .skip(eof())
-                    .parse(input)
-                    .map(|(res, rem)| (res.to_string(), rem)),
-                Ok((output.to_string(), "")));
+            for input in &[inputsq, inputdq] {
+                assert_eq!(
+                    parser($name)
+                        .skip(eof())
+                        .parse(input)
+                        .map(|(res, rem)| (res.to_string(), rem)),
+                    Ok((output.to_string(), "")));
+            }
         }
     }
 }
