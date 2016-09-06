@@ -32,7 +32,7 @@ macro_rules! include_parser_test_vector {
 }
 
 macro_rules! test_case_simple_parser {
-    ($test_name:ident, $name:ident, $make_result:expr) => {
+    ($name:ident, $test_name:ident, $make_result:expr) => {
         #[test]
         fn $test_name() {
             use combine::{Parser, ParserExt, eof, parser};

@@ -50,10 +50,10 @@ mod tests {
     use super::{identifier, symbol};
 
     test_case_simple_parser!(
-        test_identifier, identifier,
+        identifier, test_identifier,
         |s: &str| s.to_string());
 
     test_case_simple_parser!(
-        test_symbol, symbol,
+        symbol, test_symbol,
         |s: &str| s[1..].to_string());
 }

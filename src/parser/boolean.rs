@@ -16,7 +16,7 @@ mod tests {
     use super::boolean;
 
     test_case_simple_parser!(
-        test_boolean, boolean,
+        boolean, test_boolean,
         |s: &str| {
             match s {
                 "true" => true,

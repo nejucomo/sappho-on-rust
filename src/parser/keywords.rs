@@ -2,7 +2,7 @@ use combine::{ParseResult, Parser};
 
 
 macro_rules! define_keyword_parsers {
-    ( $( ($name:ident, $testname:ident, $text:expr) ),* ) => {
+    ( $( ($testname:ident, $name:ident, $text:expr) ),* ) => {
 
         pub const KEYWORDS: [&'static str; 7] = [
             $( $text ),*
@@ -18,8 +18,8 @@ macro_rules! define_keyword_parsers {
             }
 
             test_case_simple_parser!(
-                $testname,
                 $name,
+                $testname,
                 |_| ());
         )*
     }
@@ -27,11 +27,11 @@ macro_rules! define_keyword_parsers {
 
 
 define_keyword_parsers!(
-    (kw_lambda, test_kw_lambda, "𝜆"),
-    (kw_proc,   test_kw_proc,   "proc"),
-    (kw_query,  test_kw_query,  "query"),
-    (kw_let,    test_kw_let,    "let"),
-    (kw_in,     test_kw_in,     "in"),
-    (kw_from,   test_kw_from,   "from"),
-    (kw_bind,   test_kw_bind,   "bind")
+    (test_kw_lambda, kw_lambda, "𝜆"),
+    (test_kw_proc,   kw_proc,   "proc"),
+    (test_kw_query,  kw_query,  "query"),
+    (test_kw_let,    kw_let,    "let"),
+    (test_kw_in,     kw_in,     "in"),
+    (test_kw_from,   kw_from,   "from"),
+    (test_kw_bind,   kw_bind,   "bind")
 );
