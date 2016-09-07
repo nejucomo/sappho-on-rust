@@ -5,3 +5,4 @@ authors = ["Nathan Wilcox <nejucomo@gmail.com>"]
 
 [dependencies]
 combine = "2.0.0-beta"
+num = "0.1.*"
