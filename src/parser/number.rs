@@ -115,9 +115,14 @@ mod tests {
 
                     for i in 0..inputs.len() {
                         for j in (i+1)..inputs.len() {
-                            let a = test_parse_number(inputs[i]);
-                            let b = test_parse_number(inputs[j]);
-                            assert_eq!(a, b);
+                            let ina = inputs[i];
+                            let inb = inputs[j];
+                            let a = test_parse_number(ina);
+                            let b = test_parse_number(inb);
+                            assert!(
+                                a == b,
+                                "Equality failed for: {:?} parsed from {:?} != {:?} parsed from {:?}",
+                                a, ina, b, inb);
                         }
                     }
                 }
