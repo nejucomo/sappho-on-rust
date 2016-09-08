@@ -71,7 +71,7 @@ pub fn decimal_number(input: &str) -> ParseResult<BigRational, &str>
                         dec.len()
                     }
                 };
-                let exp = optexp.map(|s| s.parse::<usize>().unwrap()).unwrap_or(1);
+                let exp = optexp.map(|s| s.parse::<usize>().unwrap()).unwrap_or(0);
                 let places = decplaces + exp;
                 let ten = BigInt::from_u64(10).unwrap();
                 let denom = pow(BigRational::from_integer(ten), places);
