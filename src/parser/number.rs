@@ -125,7 +125,9 @@ mod tests {
         }
     }
 
-    test_cases_number_parser!(zero);
+    test_cases_number_parser!(
+        zero,
+        one);
 
     fn test_parse_number(input: &str) -> Number {
         use combine::{Parser, ParserExt, eof, parser};
