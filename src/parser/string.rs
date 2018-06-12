@@ -118,4 +118,24 @@ mod tests {
                                (test_string_newline, "newline"),
                                (test_string_singlequote, "singlequote"),
                                (test_string_x, "x")]);
+
+    #[test]
+    fn string_reject() {
+        use combine::{Parser, ParserExt, eof, parser};
+
+        for input in include_cases!("test-vectors/string/reject") {
+            let res = parser(string).skip(eof()).parse(input);
+            assert!(res.is_err(), "Incorrectly parsed as string: {:?}", input);
+        }
+    }
+
+    #[test]
+    fn character_reject() {
+        use combine::{Parser, ParserExt, eof, parser};
+
+        for input in include_cases!("test-vectors/character/reject") {
+            let res = parser(character).skip(eof()).parse(input);
+            assert!(res.is_err(), "Incorrectly parsed as character: {:?}", input);
+        }
+    }
 }

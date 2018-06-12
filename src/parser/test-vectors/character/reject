@@ -1,9 +1,16 @@
 x
 'x'
 
+''
+""
 '
 c'
 c''
+c""
 "x"
+c'too long'
+c"too long"
+c'x"
+c"x'
 banana
 
