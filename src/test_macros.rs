@@ -67,7 +67,7 @@ macro_rules! include_io {
     }
 }
 
-macro_rules! test_case_string_parser {
+macro_rules! test_case_text_parser {
     ($name:ident, $test_name:ident, $case_name:expr) => {
         #[test]
         fn $test_name() {
@@ -89,10 +89,10 @@ macro_rules! test_case_string_parser {
     }
 }
 
-macro_rules! test_cases_string_parser {
+macro_rules! test_cases_text_parser {
     ($name:ident, [ $( ( $test_name:ident, $case_name:expr ) ),* ] ) => {
         $(
-            test_case_string_parser!($name, $test_name, $case_name);
+            test_case_text_parser!($name, $test_name, $case_name);
         )*
     }
 }

@@ -12,7 +12,7 @@ pub fn character(input: &str) -> ParseResult<char, &str> {
 }
 
 
-pub fn string(input: &str) -> ParseResult<String, &str> {
+pub fn text(input: &str) -> ParseResult<String, &str> {
     use combine::{Parser, ParserExt, between, char, many};
 
     between(char('"'), char('"'), many(char_lit('"')))
@@ -98,34 +98,34 @@ fn parse_escape<I>(delim: char, input: I) -> ParseResult<char, I>
 
 #[cfg(test)]
 mod tests {
-    use super::{character, string};
+    use super::{character, text};
 
-    test_cases_string_parser!(character,
-                              [(test_character_backslash, "backslash"),
-                               (test_character_doublequote, "doublequote"),
-                               (test_character_greek_lambda, "greek_lambda"),
-                               (test_character_lambda, "lambda"),
-                               (test_character_newline, "newline"),
-                               (test_character_singlequote, "singlequote"),
-                               (test_character_x, "x")]);
+    test_cases_text_parser!(character,
+                            [(test_character_backslash, "backslash"),
+                             (test_character_doublequote, "doublequote"),
+                             (test_character_greek_lambda, "greek_lambda"),
+                             (test_character_lambda, "lambda"),
+                             (test_character_newline, "newline"),
+                             (test_character_singlequote, "singlequote"),
+                             (test_character_x, "x")]);
 
-    test_cases_string_parser!(string,
-                              [(test_string_backslash, "backslash"),
-                               (test_string_doublequote, "doublequote"),
-                               (test_string_foo_bar, "foo_bar"),
-                               (test_string_greek_lambda, "greek_lambda"),
-                               (test_string_lambda, "lambda"),
-                               (test_string_newline, "newline"),
-                               (test_string_singlequote, "singlequote"),
-                               (test_string_x, "x")]);
+    test_cases_text_parser!(text,
+                            [(test_text_backslash, "backslash"),
+                             (test_text_doublequote, "doublequote"),
+                             (test_text_foo_bar, "foo_bar"),
+                             (test_text_greek_lambda, "greek_lambda"),
+                             (test_text_lambda, "lambda"),
+                             (test_text_newline, "newline"),
+                             (test_text_singlequote, "singlequote"),
+                             (test_text_x, "x")]);
 
     #[test]
-    fn string_reject() {
+    fn text_reject() {
         use combine::{Parser, ParserExt, eof, parser};
 
-        for input in include_cases!("test-vectors/string/reject") {
-            let res = parser(string).skip(eof()).parse(input);
-            assert!(res.is_err(), "Incorrectly parsed as string: {:?}", input);
+        for input in include_cases!("test-vectors/text/reject") {
+            let res = parser(text).skip(eof()).parse(input);
+            assert!(res.is_err(), "Incorrectly parsed as text: {:?}", input);
         }
     }
 
