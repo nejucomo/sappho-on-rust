@@ -26,12 +26,10 @@ macro_rules! define_keyword_parsers {
 }
 
 
-define_keyword_parsers!(
-    (test_kw_lambda, kw_lambda, "𝜆"),
-    (test_kw_proc,   kw_proc,   "proc"),
-    (test_kw_query,  kw_query,  "query"),
-    (test_kw_let,    kw_let,    "let"),
-    (test_kw_in,     kw_in,     "in"),
-    (test_kw_from,   kw_from,   "from"),
-    (test_kw_bind,   kw_bind,   "bind")
-);
+define_keyword_parsers!((test_kw_lambda, kw_lambda, "𝜆"),
+                        (test_kw_proc, kw_proc, "proc"),
+                        (test_kw_query, kw_query, "query"),
+                        (test_kw_let, kw_let, "let"),
+                        (test_kw_in, kw_in, "in"),
+                        (test_kw_from, kw_from, "from"),
+                        (test_kw_bind, kw_bind, "bind"));
