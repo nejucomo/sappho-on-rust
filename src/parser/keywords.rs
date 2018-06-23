@@ -17,6 +17,7 @@ macro_rules! define_keyword_parsers {
                     .parse_state(input)
             }
 
+            #[cfg(test)]
             test_case_simple_parser!(
                 $name,
                 $testname,
