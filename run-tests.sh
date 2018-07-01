@@ -22,6 +22,13 @@ function main
     run-phase test
     run-phase doc
 
+    if [ "$FAILURECOUNT" -eq 0 ]
+    then
+        echo '... No failures.'
+    else
+        echo "... $FAILURECOUNT failures."
+    fi
+
     exit "$FAILURECOUNT"
 }
 
@@ -38,8 +45,15 @@ function init-githook
 
 function run-phase
 {
-    echo "=== cargo $1 ==="
-    cargo "$1" || FAILURECOUNT="$(expr "$FAILURECOUNT" + 1)"
+    echo "=== $1 ==="
+    if cargo "$1"
+    then
+        echo "--- $1: pass ---"
+    else
+        echo "--- $1: fail ---"
+        FAILURECOUNT="$(expr "$FAILURECOUNT" + 1)"
+    fi
+    echo
 }
 
 
