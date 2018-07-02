@@ -60,9 +60,7 @@ function parse-arguments
 
 function check-msg-directives
 {
-    grep -q "^\[" "$MSGPATH" || return 0
-
-    for word in $(sed 's/^\[SKIP //; s/\].*$//' "$MSGPATH")
+    for word in $(sed 's/^[^\[].*$//; s/^\[SKIP //; s/\].*$//' "$MSGPATH")
     do
         case $word
         in
