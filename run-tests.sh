@@ -17,9 +17,9 @@ function main
     parse-arguments "$@"
     check-msg-directives "$MSGPATH"
 
-    run-phase build
     run-phase test
     run-phase doc
+    run-phase build
 
     exit-report
 }
