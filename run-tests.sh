@@ -4,6 +4,8 @@ set -efuo pipefail
 SELF="$(readlink -f "$0")"
 GITHOOK='.git/hooks/commit-msg'
 FAILURECOUNT=0
+ALL=0
+
 
 
 function main
@@ -11,6 +13,12 @@ function main
     cd "$(dirname "$SELF")"
 
     init-githook
+
+    if [ "$#" -gt 0 ] && [ "$1" = '--all' ]
+    then
+        shift
+        ALL=1
+    fi
 
     # Allow opt-out commits:
     if [ "$#" -gt 0 ] && grep -q '^\[SKIP-TESTS\]' "$1"
@@ -22,14 +30,7 @@ function main
     run-phase test
     run-phase doc
 
-    if [ "$FAILURECOUNT" -eq 0 ]
-    then
-        echo '... No failures.'
-    else
-        echo "... $FAILURECOUNT failures."
-    fi
-
-    exit "$FAILURECOUNT"
+    exit-report
 }
 
 
@@ -52,8 +53,22 @@ function run-phase
     else
         echo "--- $1: fail ---"
         FAILURECOUNT="$(expr "$FAILURECOUNT" + 1)"
+        [ "$ALL" -eq 1 ] || exit-report
     fi
     echo
+}
+
+
+function exit-report
+{
+    if [ "$FAILURECOUNT" -eq 0 ]
+    then
+        echo '... No failures.'
+    else
+        echo "... $FAILURECOUNT failures."
+    fi
+
+    exit "$FAILURECOUNT"
 }
 
 
