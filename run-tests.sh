@@ -3,6 +3,7 @@ set -efuo pipefail
 
 SELF="$(readlink -f "$0")"
 GITHOOK='.git/hooks/commit-msg'
+MSGPATH='/dev/null'
 FAILURECOUNT=0
 ALL=0
 
@@ -13,18 +14,8 @@ function main
     cd "$(dirname "$SELF")"
 
     init-githook
-
-    if [ "$#" -gt 0 ] && [ "$1" = '--all' ]
-    then
-        shift
-        ALL=1
-    fi
-
-    # Allow opt-out commits:
-    if [ "$#" -gt 0 ] && grep -q '^\[SKIP-TESTS\]' "$1"
-    then
-        exit 0
-    fi
+    parse-arguments "$@"
+    check-msg-directives "$MSGPATH"
 
     run-phase build
     run-phase test
@@ -44,14 +35,67 @@ function init-githook
 }
 
 
+function parse-arguments
+{
+    if [ "$#" -gt 0 ] && [ "$1" = '--all' ]
+    then
+        shift
+        ALL=1
+    fi
+
+    if [ "$#" -gt 0 ]
+    then
+        MSGPATH="$1"
+        shift
+    fi
+
+    if [ "$#" -gt 0 ]
+    then
+        echo 'Too many arguments.'
+        exit -1
+    fi
+
+}
+
+
+function check-msg-directives
+{
+    grep -q "^\[" "$MSGPATH" || return 0
+
+    for word in $(sed 's/^\[SKIP //; s/\].*$//' "$MSGPATH")
+    do
+        case $word
+        in
+            (build|test|doc)
+                continue
+                ;;
+
+            (*)
+                echo "Unknown SKIP directive \"$word\" in $MSGPATH"
+                exit -2;
+                ;;
+        esac
+    done
+}
+
+
 function run-phase
 {
-    echo "=== $1 ==="
-    if cargo "$1"
+    local PHASE="$1"
+
+    # Explicit opt-out:
+    if grep -q "^\[SKIP [a-z ]*${PHASE}[a-z ]*\]" "$MSGPATH"
     then
-        echo "--- $1: pass ---"
+        echo -e "[SKIP ${PHASE}]\n"
+        return 0
+    fi
+
+    echo "=== ${PHASE} phase ==="
+    if cargo "${PHASE}"
+    then
+        echo "--- ${PHASE} phase: pass ---"
     else
-        echo "--- $1: fail ---"
+        echo "--- ${PHASE} phase: fail ---"
         FAILURECOUNT="$(expr "$FAILURECOUNT" + 1)"
         [ "$ALL" -eq 1 ] || exit-report
     fi
