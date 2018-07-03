@@ -1,10 +1,9 @@
 use combine::ParseResult;
 
-
 pub fn identifier(input: &str) -> ParseResult<String, &str> {
-    use combine::{Parser, ParserExt, parser};
     use combine::char::{alpha_num, char, letter};
     use combine::combinator::many;
+    use combine::{parser, Parser, ParserExt};
     use parser::keywords::KEYWORDS;
 
     let head = letter().or(char('_'));
@@ -22,11 +21,16 @@ pub fn identifier(input: &str) -> ParseResult<String, &str> {
                     Ok((id.clone(), Consumed::Empty(input)))
                 } else {
                     let position = input.position();
-                    let err = ParseError::new(position,
-                                              Error::Message(format!("expected identifer, \
-                                                                      found keyword {:?}",
-                                                                     id)
-                                                  .into()));
+                    let err = ParseError::new(
+                        position,
+                        Error::Message(
+                            format!(
+                                "expected identifer, \
+                                 found keyword {:?}",
+                                id
+                            ).into(),
+                        ),
+                    );
                     Err((Consumed::Empty(err)))
                 }
             })
@@ -34,14 +38,12 @@ pub fn identifier(input: &str) -> ParseResult<String, &str> {
         .parse_state(input)
 }
 
-
 pub fn symbol(input: &str) -> ParseResult<String, &str> {
-    use combine::{Parser, ParserExt, parser};
     use combine::char::char;
+    use combine::{parser, Parser, ParserExt};
 
     char('.').with(parser(identifier)).parse_state(input)
 }
-
 
 #[cfg(test)]
 mod tests {

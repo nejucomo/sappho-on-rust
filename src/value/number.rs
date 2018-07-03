@@ -1,13 +1,11 @@
-use std::ops::Neg;
-use std::fmt::{Debug, Display, Formatter, Error};
 use num::{BigInt, FromPrimitive, Zero};
-
+use std::fmt::{Debug, Display, Error, Formatter};
+use std::ops::Neg;
 
 pub struct Number {
     i: BigInt,
     point: i32,
 }
-
 
 impl Number {
     pub fn new(mut i: BigInt, mut point: i32) -> Number {
@@ -34,10 +32,7 @@ impl Number {
                 point += 1;
             }
         }
-        Number {
-            i: i,
-            point: point,
-        }
+        Number { i: i, point: point }
     }
 
     pub fn from_bigint(i: BigInt) -> Number {
@@ -45,13 +40,11 @@ impl Number {
     }
 }
 
-
 impl PartialEq<Number> for Number {
     fn eq(&self, other: &Number) -> bool {
         self.point == other.point && self.i == other.i
     }
 }
-
 
 // impl Add<Number> for Number {
 // }
@@ -62,7 +55,6 @@ impl PartialEq<Number> for Number {
 // }
 //
 
-
 impl Neg for Number {
     type Output = Number;
 
@@ -71,13 +63,11 @@ impl Neg for Number {
     }
 }
 
-
 impl Debug for Number {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         write!(f, "Number {}", self)
     }
 }
-
 
 impl Display for Number {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
@@ -119,7 +109,6 @@ impl Display for Number {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::Number;
@@ -141,18 +130,18 @@ mod tests {
         }
     }
 
-    display_tests!((test_display_pos_pt_0, 3, 0, "3"),
-                   (test_display_pos_pt_pos, 3, 2, "300"),
-                   (test_display_pos_pt_negmid, 54321, -2, "543.21"),
-                   (test_display_pos_pt_negbig, 54321, -7, "0.0054321"),
-
-                   (test_display_neg_pt_0, -3, 0, "-3"),
-                   (test_display_neg_pt_pos, -3, 2, "-300"),
-                   (test_display_neg_pt_negmid, -54321, -2, "-543.21"),
-                   (test_display_neg_pt_negbig, -54321, -7, "-0.0054321"),
-
-                   (test_display_0_pt_0, 0, 0, "0"),
-                   (test_display_0_pt_pos, 0, 2, "0"),
-                   (test_display_0_pt_negmid, 0, -2, "0"),
-                   (test_display_0_pt_negbig, 0, -7, "0"));
+    display_tests!(
+        (test_display_pos_pt_0, 3, 0, "3"),
+        (test_display_pos_pt_pos, 3, 2, "300"),
+        (test_display_pos_pt_negmid, 54321, -2, "543.21"),
+        (test_display_pos_pt_negbig, 54321, -7, "0.0054321"),
+        (test_display_neg_pt_0, -3, 0, "-3"),
+        (test_display_neg_pt_pos, -3, 2, "-300"),
+        (test_display_neg_pt_negmid, -54321, -2, "-543.21"),
+        (test_display_neg_pt_negbig, -54321, -7, "-0.0054321"),
+        (test_display_0_pt_0, 0, 0, "0"),
+        (test_display_0_pt_pos, 0, 2, "0"),
+        (test_display_0_pt_negmid, 0, -2, "0"),
+        (test_display_0_pt_negbig, 0, -7, "0")
+    );
 }

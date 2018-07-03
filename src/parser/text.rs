@@ -1,28 +1,29 @@
-use std::marker::PhantomData;
 use combine::{ParseResult, Parser, Stream};
-
+use std::marker::PhantomData;
 
 pub fn character(input: &str) -> ParseResult<char, &str> {
-    use combine::{Parser, ParserExt, between, char};
+    use combine::{between, char, Parser, ParserExt};
 
     char('c')
-        .with(between(char('\''), char('\''), char_lit('\''))
-            .or(between(char('"'), char('"'), char_lit('"'))))
+        .with(between(char('\''), char('\''), char_lit('\'')).or(between(
+            char('"'),
+            char('"'),
+            char_lit('"'),
+        )))
         .parse_state(input)
 }
 
-
 pub fn text(input: &str) -> ParseResult<String, &str> {
-    use combine::{Parser, ParserExt, between, char, many};
+    use combine::{between, char, many, Parser, ParserExt};
 
     between(char('"'), char('"'), many(char_lit('"')))
         .or(between(char('\''), char('\''), many(char_lit('\''))))
         .parse_state(input)
 }
 
-
 fn char_lit<I>(delim: char) -> CharLit<I>
-    where I: Stream<Item = char>
+where
+    I: Stream<Item = char>,
 {
     CharLit {
         delim: delim,
@@ -30,15 +31,14 @@ fn char_lit<I>(delim: char) -> CharLit<I>
     }
 }
 
-
 struct CharLit<I> {
     delim: char,
     _marker: PhantomData<I>,
 }
 
-
 impl<I> Parser for CharLit<I>
-    where I: Stream<Item = char>
+where
+    I: Stream<Item = char>,
 {
     type Input = I;
     type Output = char;
@@ -48,26 +48,24 @@ impl<I> Parser for CharLit<I>
 
         let mut next = input.clone();
         match next.uncons() {
-            Ok(c) => {
-                match c {
-                    _ if c == self.delim => {
-                        Err(Consumed::Empty(ParseError::new(input.position(),
-                                                            Error::Unexpected(Info::from(c)))))
-                    }
+            Ok(c) => match c {
+                _ if c == self.delim => Err(Consumed::Empty(ParseError::new(
+                    input.position(),
+                    Error::Unexpected(Info::from(c)),
+                ))),
 
-                    '\\' => parse_escape(self.delim, next),
+                '\\' => parse_escape(self.delim, next),
 
-                    _ => Ok((c, Consumed::Consumed(next))),
-                }
-            }
+                _ => Ok((c, Consumed::Consumed(next))),
+            },
             Err(e) => Err(Consumed::Empty(ParseError::new(input.position(), e))),
         }
     }
 }
 
-
 fn parse_escape<I>(delim: char, input: I) -> ParseResult<char, I>
-    where I: Stream<Item = char>
+where
+    I: Stream<Item = char>,
 {
     use combine::primitives::{Consumed, Error, Info, ParseError};
 
@@ -85,43 +83,50 @@ fn parse_escape<I>(delim: char, input: I) -> ParseResult<char, I>
                 'r' => ok('\r'),
                 't' => ok('\t'),
                 c if c == delim => ok(c),
-                _ => {
-                    Err(Consumed::Consumed(ParseError::new(input.position(),
-                                                           Error::Unexpected(Info::from(c)))))
-                }
+                _ => Err(Consumed::Consumed(ParseError::new(
+                    input.position(),
+                    Error::Unexpected(Info::from(c)),
+                ))),
             }
         }
         Err(e) => Err(Consumed::Empty(ParseError::new(input.position(), e))),
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::{character, text};
 
-    test_cases_text_parser!(character,
-                            [(test_character_backslash, "backslash"),
-                             (test_character_doublequote, "doublequote"),
-                             (test_character_greek_lambda, "greek_lambda"),
-                             (test_character_lambda, "lambda"),
-                             (test_character_newline, "newline"),
-                             (test_character_singlequote, "singlequote"),
-                             (test_character_x, "x")]);
+    test_cases_text_parser!(
+        character,
+        [
+            (test_character_backslash, "backslash"),
+            (test_character_doublequote, "doublequote"),
+            (test_character_greek_lambda, "greek_lambda"),
+            (test_character_lambda, "lambda"),
+            (test_character_newline, "newline"),
+            (test_character_singlequote, "singlequote"),
+            (test_character_x, "x")
+        ]
+    );
 
-    test_cases_text_parser!(text,
-                            [(test_text_backslash, "backslash"),
-                             (test_text_doublequote, "doublequote"),
-                             (test_text_foo_bar, "foo_bar"),
-                             (test_text_greek_lambda, "greek_lambda"),
-                             (test_text_lambda, "lambda"),
-                             (test_text_newline, "newline"),
-                             (test_text_singlequote, "singlequote"),
-                             (test_text_x, "x")]);
+    test_cases_text_parser!(
+        text,
+        [
+            (test_text_backslash, "backslash"),
+            (test_text_doublequote, "doublequote"),
+            (test_text_foo_bar, "foo_bar"),
+            (test_text_greek_lambda, "greek_lambda"),
+            (test_text_lambda, "lambda"),
+            (test_text_newline, "newline"),
+            (test_text_singlequote, "singlequote"),
+            (test_text_x, "x")
+        ]
+    );
 
     #[test]
     fn text_reject() {
-        use combine::{Parser, ParserExt, eof, parser};
+        use combine::{eof, parser, Parser, ParserExt};
 
         for input in include_cases!("test-vectors/text/reject") {
             let res = parser(text).skip(eof()).parse(input);
@@ -131,7 +136,7 @@ mod tests {
 
     #[test]
     fn character_reject() {
-        use combine::{Parser, ParserExt, eof, parser};
+        use combine::{eof, parser, Parser, ParserExt};
 
         for input in include_cases!("test-vectors/character/reject") {
             let res = parser(character).skip(eof()).parse(input);

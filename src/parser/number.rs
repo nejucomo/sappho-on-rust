@@ -1,85 +1,77 @@
 use combine::ParseResult;
 use value::Number;
 
-
 macro_rules! from_radix {
     ($t:ty, $radix:expr) => {
         |s: String| <$t>::from_str_radix(s.as_str(), $radix)
-    }
+    };
 }
-
 
 macro_rules! signed {
-    ($p:expr) => {
-        {
-            use combine::{ParserExt, char};
+    ($p:expr) => {{
+        use combine::{char, ParserExt};
 
-            char('+')
-                .with($p)
-                .or(char('-')
-                    .with($p)
-                    .map(|n| -n))
-                .or($p)
-        }
-    }
+        char('+').with($p).or(char('-').with($p).map(|n| -n)).or($p)
+    }};
 }
 
-
 pub fn number(input: &str) -> ParseResult<Number, &str> {
-    use combine::{Parser, parser};
+    use combine::{parser, Parser};
 
     signed!(parser(signless_number)).parse_state(input)
 }
 
-
 pub fn signless_number(input: &str) -> ParseResult<Number, &str> {
-    use combine::{Parser, ParserExt, try, parser};
+    use combine::{parser, try, Parser, ParserExt};
 
     try(parser(zero_or_hexbin_number))
         .or(parser(decimal_number))
         .parse_state(input)
 }
 
-
 pub fn zero_or_hexbin_number(input: &str) -> ParseResult<Number, &str> {
-    use combine::{Parser, ParserExt, char, hex_digit, many1, satisfy};
+    use combine::{char, hex_digit, many1, satisfy, Parser, ParserExt};
     use num::{BigInt, Num};
 
     char('0')
-        .with(char('x')
-            .with(many1(hex_digit()).and_then(from_radix!(BigInt, 16)))
-            .or(char('b')
-                .with(many1(satisfy(|c| c == '0' || c == '1')).and_then(from_radix!(BigInt, 2)))))
+        .with(
+            char('x')
+                .with(many1(hex_digit()).and_then(from_radix!(BigInt, 16)))
+                .or(char('b').with(
+                    many1(satisfy(|c| c == '0' || c == '1')).and_then(from_radix!(BigInt, 2)),
+                )),
+        )
         .map(Number::from_bigint)
         .parse_state(input)
 }
 
 pub fn decimal_number(input: &str) -> ParseResult<Number, &str> {
-    use combine::{Parser, ParserExt, char, digit, optional, many1};
+    use combine::{char, digit, many1, optional, Parser, ParserExt};
     many1(digit())
         .and(optional(char('.').with(many1(digit()))))
-        .and(optional(char('e')
-            .or(char('E'))
-            .with(signed!(many1(digit()).and_then(from_radix!(i32, 10))))))
-        .and_then(|((mut digs, optdec), optexp): ((String, Option<String>), Option<i32>)| {
-            use num::{BigInt, Num};
+        .and(optional(char('e').or(char('E')).with(signed!(
+            many1(digit()).and_then(from_radix!(i32, 10))
+        ))))
+        .and_then(
+            |((mut digs, optdec), optexp): ((String, Option<String>), Option<i32>)| {
+                use num::{BigInt, Num};
 
-            let decplaces = match optdec {
-                None => 0i32,
+                let decplaces = match optdec {
+                    None => 0i32,
 
-                Some(dec) => {
-                    digs.push_str(dec.as_str());
-                    -(dec.len() as i32)
-                }
-            };
-            let exp = optexp.unwrap_or(0);
-            let places = decplaces + exp;
+                    Some(dec) => {
+                        digs.push_str(dec.as_str());
+                        -(dec.len() as i32)
+                    }
+                };
+                let exp = optexp.unwrap_or(0);
+                let places = decplaces + exp;
 
-            BigInt::from_str_radix(digs.as_str(), 10).map(|i| Number::new(i, places))
-        })
+                BigInt::from_str_radix(digs.as_str(), 10).map(|i| Number::new(i, places))
+            },
+        )
         .parse_state(input)
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -88,14 +80,13 @@ mod tests {
 
     #[test]
     fn reject() {
-        use combine::{Parser, ParserExt, eof, parser};
+        use combine::{eof, parser, Parser, ParserExt};
 
         for input in include_cases!("test-vectors/number/reject") {
             let res = parser(number).skip(eof()).parse(input);
             assert!(res.is_err(), "Incorrectly parsed as number: {:?}", input);
         }
     }
-
 
     macro_rules! test_cases_number_parser {
         ( $( $case_name:ident ),* ) => {
@@ -131,7 +122,7 @@ mod tests {
     test_cases_number_parser!(zero, one);
 
     fn test_parse_number(input: &str) -> Number {
-        use combine::{Parser, ParserExt, eof, parser};
+        use combine::{eof, parser, Parser, ParserExt};
 
         let res = parser(number).skip(eof()).parse(input);
         assert!(res.is_ok(), "Failed to parse: {:?}", input);
