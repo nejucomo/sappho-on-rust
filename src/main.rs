@@ -7,6 +7,7 @@ extern crate num;
 #[macro_use]
 mod test_macros;
 
+mod ast;
 mod parser;
 mod value;
 
