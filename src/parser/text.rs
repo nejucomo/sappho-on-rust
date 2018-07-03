@@ -2,7 +2,8 @@ use combine::{ParseResult, Parser, Stream};
 use std::marker::PhantomData;
 
 pub fn character(input: &str) -> ParseResult<char, &str> {
-    use combine::{between, char, Parser, ParserExt};
+    use combine::char::char;
+    use combine::{between, Parser};
 
     char('c')
         .with(between(char('\''), char('\''), char_lit('\'')).or(between(
@@ -10,15 +11,16 @@ pub fn character(input: &str) -> ParseResult<char, &str> {
             char('"'),
             char_lit('"'),
         )))
-        .parse_state(input)
+        .parse_stream(input)
 }
 
 pub fn text(input: &str) -> ParseResult<String, &str> {
-    use combine::{between, char, many, Parser, ParserExt};
+    use combine::char::char;
+    use combine::{between, many, Parser};
 
     between(char('"'), char('"'), many(char_lit('"')))
         .or(between(char('\''), char('\''), many(char_lit('\''))))
-        .parse_state(input)
+        .parse_stream(input)
 }
 
 fn char_lit<I>(delim: char) -> CharLit<I>
@@ -43,7 +45,7 @@ where
     type Input = I;
     type Output = char;
 
-    fn parse_state(&mut self, input: Self::Input) -> ParseResult<char, Self::Input> {
+    fn parse_stream(&mut self, input: Self::Input) -> ParseResult<char, Self::Input> {
         use combine::primitives::{Consumed, Error, Info, ParseError};
 
         let mut next = input.clone();
@@ -126,7 +128,7 @@ mod tests {
 
     #[test]
     fn text_reject() {
-        use combine::{eof, parser, Parser, ParserExt};
+        use combine::{eof, parser, Parser};
 
         for input in include_cases!("test-vectors/text/reject") {
             let res = parser(text).skip(eof()).parse(input);
@@ -136,7 +138,7 @@ mod tests {
 
     #[test]
     fn character_reject() {
-        use combine::{eof, parser, Parser, ParserExt};
+        use combine::{eof, parser, Parser};
 
         for input in include_cases!("test-vectors/character/reject") {
             let res = parser(character).skip(eof()).parse(input);

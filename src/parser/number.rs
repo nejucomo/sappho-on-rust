@@ -9,7 +9,7 @@ macro_rules! from_radix {
 
 macro_rules! signed {
     ($p:expr) => {{
-        use combine::{char, ParserExt};
+        use combine::char::char;
 
         char('+').with($p).or(char('-').with($p).map(|n| -n)).or($p)
     }};
@@ -18,19 +18,20 @@ macro_rules! signed {
 pub fn number(input: &str) -> ParseResult<Number, &str> {
     use combine::{parser, Parser};
 
-    signed!(parser(signless_number)).parse_state(input)
+    signed!(parser(signless_number)).parse_stream(input)
 }
 
 pub fn signless_number(input: &str) -> ParseResult<Number, &str> {
-    use combine::{parser, try, Parser, ParserExt};
+    use combine::{parser, try, Parser};
 
     try(parser(zero_or_hexbin_number))
         .or(parser(decimal_number))
-        .parse_state(input)
+        .parse_stream(input)
 }
 
 pub fn zero_or_hexbin_number(input: &str) -> ParseResult<Number, &str> {
-    use combine::{char, hex_digit, many1, satisfy, Parser, ParserExt};
+    use combine::char::{char, hex_digit};
+    use combine::{many1, satisfy, Parser};
     use num::{BigInt, Num};
 
     char('0')
@@ -42,11 +43,13 @@ pub fn zero_or_hexbin_number(input: &str) -> ParseResult<Number, &str> {
                 )),
         )
         .map(Number::from_bigint)
-        .parse_state(input)
+        .parse_stream(input)
 }
 
 pub fn decimal_number(input: &str) -> ParseResult<Number, &str> {
-    use combine::{char, digit, many1, optional, Parser, ParserExt};
+    use combine::char::{char, digit};
+    use combine::{many1, optional, Parser};
+
     many1(digit())
         .and(optional(char('.').with(many1(digit()))))
         .and(optional(char('e').or(char('E')).with(signed!(
@@ -70,7 +73,7 @@ pub fn decimal_number(input: &str) -> ParseResult<Number, &str> {
                 BigInt::from_str_radix(digs.as_str(), 10).map(|i| Number::new(i, places))
             },
         )
-        .parse_state(input)
+        .parse_stream(input)
 }
 
 #[cfg(test)]
@@ -80,7 +83,7 @@ mod tests {
 
     #[test]
     fn reject() {
-        use combine::{eof, parser, Parser, ParserExt};
+        use combine::{eof, parser, Parser};
 
         for input in include_cases!("test-vectors/number/reject") {
             let res = parser(number).skip(eof()).parse(input);
@@ -122,7 +125,7 @@ mod tests {
     test_cases_number_parser!(zero, one);
 
     fn test_parse_number(input: &str) -> Number {
-        use combine::{eof, parser, Parser, ParserExt};
+        use combine::{eof, parser, Parser};
 
         let res = parser(number).skip(eof()).parse(input);
         assert!(res.is_ok(), "Failed to parse: {:?}", input);

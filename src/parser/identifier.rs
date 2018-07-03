@@ -3,7 +3,7 @@ use combine::ParseResult;
 pub fn identifier(input: &str) -> ParseResult<String, &str> {
     use combine::char::{alpha_num, char, letter};
     use combine::combinator::many;
-    use combine::{parser, Parser, ParserExt};
+    use combine::{parser, Parser};
     use parser::keywords::KEYWORDS;
 
     let head = letter().or(char('_'));
@@ -31,18 +31,18 @@ pub fn identifier(input: &str) -> ParseResult<String, &str> {
                             ).into(),
                         ),
                     );
-                    Err((Consumed::Empty(err)))
+                    Err(Consumed::Empty(err))
                 }
             })
         })
-        .parse_state(input)
+        .parse_stream(input)
 }
 
 pub fn symbol(input: &str) -> ParseResult<String, &str> {
     use combine::char::char;
-    use combine::{parser, Parser, ParserExt};
+    use combine::{parser, Parser};
 
-    char('.').with(parser(identifier)).parse_state(input)
+    char('.').with(parser(identifier)).parse_stream(input)
 }
 
 #[cfg(test)]

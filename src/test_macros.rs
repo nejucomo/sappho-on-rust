@@ -31,7 +31,7 @@ macro_rules! test_case_simple_parser {
     ($name:ident, $test_name:ident, $make_result:expr) => {
         #[test]
         fn $test_name() {
-            use combine::{eof, parser, Parser, ParserExt};
+            use combine::{eof, parser, Parser};
 
             for s in include_parser_test_vector!($name, accept) {
                 assert_eq!(
@@ -69,7 +69,7 @@ macro_rules! test_case_text_parser {
     ($name:ident, $test_name:ident, $case_name:expr) => {
         #[test]
         fn $test_name() {
-            use combine::{eof, parser, Parser, ParserExt};
+            use combine::{eof, parser, Parser};
 
             let inputsq = include_io!($name, $case_name, "input.sq");
             let inputdq = include_io!($name, $case_name, "input.dq");

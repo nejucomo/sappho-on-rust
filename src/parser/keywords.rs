@@ -9,11 +9,12 @@ macro_rules! define_keyword_parsers {
 
         $(
             fn $name(input: &str) -> ParseResult<(), &str> {
-                use combine::{ParserExt, string, value};
+                use combine::char::string;
+                use combine::value;
 
                 string($text)
                     .with(value(()))
-                    .parse_state(input)
+                    .parse_stream(input)
             }
 
             #[cfg(test)]

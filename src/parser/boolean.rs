@@ -1,12 +1,13 @@
 use combine::ParseResult;
 
 pub fn boolean(input: &str) -> ParseResult<bool, &str> {
-    use combine::{string, value, Parser, ParserExt};
+    use combine::char::string;
+    use combine::{value, Parser};
 
     string("true")
         .with(value(true))
         .or(string("false").with(value(false)))
-        .parse_state(input)
+        .parse_stream(input)
 }
 
 #[cfg(test)]
