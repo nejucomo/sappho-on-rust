@@ -1,3 +1,4 @@
+#[cfg(test)]
 use combine::{ParseResult, Parser};
 
 macro_rules! define_keyword_parsers {
@@ -8,6 +9,7 @@ macro_rules! define_keyword_parsers {
             ];
 
         $(
+            #[cfg(test)]
             fn $name(input: &str) -> ParseResult<(), &str> {
                 use combine::char::string;
                 use combine::value;

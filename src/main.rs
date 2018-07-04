@@ -12,5 +12,13 @@ mod parser;
 mod value;
 
 fn main() {
-    unimplemented!();
+    use combine::{eof, parser, Parser};
+    use parser::expr;
+    use std::io::{stdin, Read};
+
+    let mut s = String::new();
+    stdin().read_to_string(&mut s).unwrap();
+    println!("input: {:?}", &s);
+    let result = parser(expr).skip(eof()).parse(&s);
+    println!("result: {:?}", &result);
 }
