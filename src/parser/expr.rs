@@ -4,9 +4,10 @@ use combine::{ParseResult, Parser};
 pub fn expr(input: &str) -> ParseResult<Expr, &str> {
     use combine::char::char;
     use combine::{between, parser, sep_end_by};
-    use parser::atom;
+    use parser::{atom, identifier};
 
     (parser(atom).map(Expr::Atom))
+        .or(parser(identifier).map(Expr::Deref))
         .or(between(char('['), char(']'), sep_end_by(parser(expr), char(','))).map(Expr::List))
         .parse_stream(input)
 }
@@ -24,7 +25,8 @@ mod tests {
             (
                 test_expr_list_zero_trailing_comma,
                 "list_zero_trailing_comma"
-            )
+            ),
+            (test_expr_deref_x, "deref_x")
         ]
     );
 
