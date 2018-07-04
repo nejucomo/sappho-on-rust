@@ -7,3 +7,4 @@ mod text;
 
 pub use self::boolean::boolean;
 pub use self::expr::expr;
+pub use self::number::number;
