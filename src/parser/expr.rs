@@ -3,12 +3,15 @@ use combine::{ParseResult, Parser};
 
 pub fn expr(input: &str) -> ParseResult<Expr, &str> {
     use combine::parser;
-    use parser::{boolean, number};
+    use parser::{boolean, character, number, symbol, text};
     use value::Atom;
 
-    (parser(boolean).map(|b| Atom::Bool(b)))
-        .or(parser(number).map(|n| Atom::Number(n)))
-        .map(|a| Expr::Atom(a))
+    (parser(boolean).map(Atom::Bool))
+        .or(parser(number).map(Atom::Number))
+        .or(parser(character).map(Atom::Char))
+        .or(parser(text).map(Atom::Text))
+        .or(parser(symbol).map(Atom::Symbol))
+        .map(Expr::Atom)
         .parse_stream(input)
 }
 

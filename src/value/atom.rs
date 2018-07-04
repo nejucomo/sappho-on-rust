@@ -4,7 +4,7 @@ use value::number::Number;
 pub enum Atom {
     Bool(bool),
     Number(Number),
-    // Char(char),
-    // Text(String),
-    // Symbol(String),
+    Char(char),
+    Text(String),
+    Symbol(String),
 }
