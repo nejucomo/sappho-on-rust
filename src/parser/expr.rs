@@ -26,7 +26,8 @@ mod tests {
                 test_expr_list_zero_trailing_comma,
                 "list_zero_trailing_comma"
             ),
-            (test_expr_deref_x, "deref_x")
+            (test_expr_deref_x, "deref_x"),
+            (test_expr_deref_fals, "deref_fals")
         ]
     );
 
