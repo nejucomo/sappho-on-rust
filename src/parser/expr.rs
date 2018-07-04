@@ -20,7 +20,22 @@ mod tests {
         [
             (test_expr_false, "false"),
             (test_expr_list_empty, "list_empty"),
-            (test_expr_list_zero, "list_zero")
+            (test_expr_list_zero, "list_zero"),
+            (
+                test_expr_list_zero_trailing_comma,
+                "list_zero_trailing_comma"
+            )
         ]
     );
+
+    #[test]
+    fn expr_reject() {
+        use combine::{eof, parser, Parser};
+
+        for input in include_cases!("test-vectors/expr/reject") {
+            let res = parser(expr).skip(eof()).parse(input);
+            assert!(res.is_err(), "Incorrectly parsed as expr: {:?}", input);
+        }
+    }
+
 }
