@@ -12,3 +12,6 @@ pub use self::expr::expr;
 pub use self::identifier::{identifier, symbol};
 pub use self::number::number;
 pub use self::text::{character, text};
+
+#[cfg(test)]
+mod testutils;
