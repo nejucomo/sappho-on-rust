@@ -5,6 +5,10 @@ extern crate num;
 
 #[cfg(test)]
 #[macro_use]
+extern crate include_dir;
+
+#[cfg(test)]
+#[macro_use]
 mod test_macros;
 
 mod ast;
