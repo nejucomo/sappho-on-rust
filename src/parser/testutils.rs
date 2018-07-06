@@ -1,6 +1,12 @@
 use combine::{ParseError, Parser};
 use include_dir::Dir;
-use std::fmt::Debug;
+use std::fmt::{Debug, Error, Write};
+
+macro_rules! log_failure {
+    ( $caselog:expr, $( $args:expr ),* ) => {
+        write!($caselog, $( $args ),* ).unwrap();
+    }
+}
 
 pub fn run_parser_repr_tests<'a, F, P, O>(makeparser: F, vecdir: Dir<'a>)
 where
@@ -9,7 +15,7 @@ where
     O: Debug,
 {
     use std::fmt::Write;
-    let mut failures = String::new();
+    let mut flog = FailureLog::new();
 
     for casedir in vecdir.dirs() {
         let mut reprbuf = casedir.path().to_path_buf();
@@ -20,7 +26,7 @@ where
         let expected = rawexp.trim_right();
 
         for inentry in casedir.files() {
-            let mut casefailures = String::new();
+            let mut caselog = flog.subcase_log(&inentry.path().file_name().unwrap());
 
             let stem = {
                 use std::os::unix::ffi::OsStrExt;
@@ -47,34 +53,27 @@ where
                 if actualres.is_ok() {
                     let (actualobj, rem) = actualres.unwrap();
                     if rem != "" {
-                        write!(&mut casefailures, "Unparsed input: {:?}\n", rem).unwrap();
+                        log_failure!(&mut caselog, "Unparsed input: {:?}\n", rem);
                     }
                     let actual = format!("{:?}", actualobj);
                     if actual != expected {
-                        write!(
-                            casefailures,
+                        log_failure!(
+                            caselog,
                             "mismatch:\nexpected: {:?}\nactual  : {:?}\n",
-                            expected, actual
-                        ).unwrap();
+                            expected,
+                            actual
+                        );
                     }
                 } else {
-                    write!(casefailures, "Parse failure: {:?}\n", actualres).unwrap();
+                    log_failure!(caselog, "Parse failure: {:?}\n", actualres);
                 }
             }
 
-            if casefailures.len() > 0 {
-                write!(
-                    failures,
-                    "*** Case {:?} {:?} ***\n{}\n",
-                    casedir.path().file_name().unwrap(),
-                    inentry.path().file_name().unwrap(),
-                    casefailures
-                ).unwrap();
-            }
+            caselog.finish();
         }
     }
 
-    assert_eq!(0, failures.len(), "\n\n{}", failures);
+    assert_eq!(0, flog.0.len(), "\n\n{}", flog.0);
 }
 
 pub fn run_parser_reject_tests<'a, F, P, O>(makeparser: F, input: &'a str)
@@ -97,4 +96,35 @@ where
     use combine::{eof, Parser};
 
     p.skip(spaces()).skip(eof()).parse(input)
+}
+
+struct FailureLog(String);
+
+impl FailureLog {
+    fn new() -> FailureLog {
+        FailureLog(String::new())
+    }
+
+    fn subcase_log<'a, D: Debug>(&'a mut self, casename: &D) -> SubcaseLog<'a> {
+        SubcaseLog(self, false, format!("*** Case {:?} ***\n", casename))
+    }
+}
+
+struct SubcaseLog<'a>(&'a mut FailureLog, bool, String);
+
+impl<'a> SubcaseLog<'a> {
+    fn finish(self) {
+        let SubcaseLog(flref, dirty, body) = self;
+
+        if dirty {
+            write!(flref.0, "{}", body).unwrap();
+        }
+    }
+}
+
+impl<'a> Write for SubcaseLog<'a> {
+    fn write_str(&mut self, s: &str) -> Result<(), Error> {
+        self.1 = true;
+        self.2.write_str(s)
+    }
 }
