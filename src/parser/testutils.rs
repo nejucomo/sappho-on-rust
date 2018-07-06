@@ -26,7 +26,11 @@ where
         let expected = rawexp.trim_right();
 
         for inentry in casedir.files() {
-            let mut caselog = flog.subcase_log(&inentry.path().file_name().unwrap());
+            let mut caselog = flog.subcase_log(&format!(
+                "{:?} {:?}",
+                casedir.path().file_name().unwrap(),
+                &inentry.path().file_name().unwrap()
+            ));
 
             let stem = {
                 use std::os::unix::ffi::OsStrExt;
@@ -107,8 +111,8 @@ impl FailureLog {
         FailureLog(String::new())
     }
 
-    fn subcase_log<'a, D: Debug>(&'a mut self, casename: &D) -> SubcaseLog<'a> {
-        SubcaseLog(self, false, format!("*** Case {:?} ***\n", casename))
+    fn subcase_log<'a>(&'a mut self, casename: &str) -> SubcaseLog<'a> {
+        SubcaseLog(self, false, format!("*** Case {} ***\n", casename))
     }
 }
 
