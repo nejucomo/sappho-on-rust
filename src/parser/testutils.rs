@@ -68,8 +68,9 @@ where
             if casefailures.len() > 0 {
                 write!(
                     failures,
-                    "*** Case {:?} ***\n{}\n",
+                    "*** Case {:?} {:?} ***\n{}\n",
                     casedir.path().file_name().unwrap(),
+                    inentry.path().file_name().unwrap(),
                     casefailures
                 ).unwrap();
             }

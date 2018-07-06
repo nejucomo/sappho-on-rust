@@ -74,7 +74,7 @@ where
     let mut next = input.clone();
     match next.uncons() {
         Ok(c) => {
-            let ok = |c| Ok((c, Consumed::Consumed(next)));
+            let ok = |c| Ok((c, Consumed::Consumed(next.clone())));
 
             match c {
                 '\\' => ok('\\'),
@@ -84,6 +84,9 @@ where
                 'n' => ok('\n'),
                 'r' => ok('\r'),
                 't' => ok('\t'),
+                'x' => parse_hex_escape(2, next.clone()),
+                'u' => parse_hex_escape(4, next.clone()),
+                'U' => parse_hex_escape(8, next.clone()),
                 c if c == delim => ok(c),
                 _ => Err(Consumed::Consumed(ParseError::new(
                     input.position(),
@@ -93,6 +96,20 @@ where
         }
         Err(e) => Err(Consumed::Empty(ParseError::new(input.position(), e))),
     }
+}
+
+fn parse_hex_escape<I>(digits: usize, input: I) -> ParseResult<char, I>
+where
+    I: Stream<Item = char>,
+{
+    use combine::char::hex_digit;
+    use combine::count;
+    use std::char;
+    use std::u32;
+
+    count(digits, hex_digit())
+        .map(|digs: String| char::from_u32(u32::from_str_radix(&digs, 16).unwrap()).unwrap())
+        .parse_stream(input)
 }
 
 #[cfg(test)]
