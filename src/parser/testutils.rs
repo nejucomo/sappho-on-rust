@@ -53,19 +53,19 @@ where
                 if actualres.is_ok() {
                     let (actualobj, rem) = actualres.unwrap();
                     if rem != "" {
-                        log_failure!(&mut caselog, "Unparsed input: {:?}\n", rem);
+                        log_failure!(caselog, "Unparsed input: {:?}\n", rem);
                     }
                     let actual = format!("{:?}", actualobj);
                     if actual != expected {
                         log_failure!(
-                            &mut caselog,
+                            caselog,
                             "mismatch:\nexpected: {:?}\nactual  : {:?}\n",
                             expected,
                             actual
                         );
                     }
                 } else {
-                    log_failure!(&mut caselog, "Parse failure: {:?}\n", actualres);
+                    log_failure!(caselog, "Parse failure: {:?}\n", actualres);
                 }
             }
         }
@@ -84,7 +84,7 @@ where
         let mut caselog = flog.subcase_log(&line);
         let res = parse_input(makeparser(), line);
         if res.is_ok() {
-            log_failure!(&mut caselog, "Invalidly parsed to {:?}\n", res);
+            log_failure!(caselog, "Invalidly parsed to {:?}\n", res);
         }
     }
 }
