@@ -103,11 +103,11 @@ where
     I: Stream<Item = char>,
 {
     use combine::char::hex_digit;
-    use combine::count;
+    use combine::count_min_max;
     use std::char;
     use std::u32;
 
-    count(digits, hex_digit())
+    count_min_max(digits, digits, hex_digit())
         .map(|digs: String| char::from_u32(u32::from_str_radix(&digs, 16).unwrap()).unwrap())
         .parse_stream(input)
 }

@@ -27,4 +27,12 @@ mod tests {
             include_dir!("src/parser/test-vectors/atom/"),
         );
     }
+
+    #[test]
+    fn rejects() {
+        use combine::parser;
+        use parser::testutils::run_parser_reject_tests;
+
+        run_parser_reject_tests(|| parser(atom), include_str!("test-vectors/atom/rejects"));
+    }
 }
