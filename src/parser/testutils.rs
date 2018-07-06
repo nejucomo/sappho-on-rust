@@ -58,22 +58,18 @@ where
                     let actual = format!("{:?}", actualobj);
                     if actual != expected {
                         log_failure!(
-                            caselog,
+                            &mut caselog,
                             "mismatch:\nexpected: {:?}\nactual  : {:?}\n",
                             expected,
                             actual
                         );
                     }
                 } else {
-                    log_failure!(caselog, "Parse failure: {:?}\n", actualres);
+                    log_failure!(&mut caselog, "Parse failure: {:?}\n", actualres);
                 }
             }
-
-            caselog.finish();
         }
     }
-
-    assert_eq!(0, flog.0.len(), "\n\n{}", flog.0);
 }
 
 pub fn run_parser_reject_tests<'a, F, P, O>(makeparser: F, input: &'a str)
@@ -82,9 +78,14 @@ where
     P: Parser<Input = &'a str, Output = O>,
     O: Debug,
 {
+    let mut flog = FailureLog::new();
+
     for line in input.trim_right().split("\n") {
+        let mut caselog = flog.subcase_log(&line);
         let res = parse_input(makeparser(), line);
-        assert!(res.is_err(), "Invalidly parsed {:?} to {:?}", line, res);
+        if res.is_ok() {
+            log_failure!(&mut caselog, "Invalidly parsed to {:?}\n", res);
+        }
     }
 }
 
@@ -98,6 +99,7 @@ where
     p.skip(spaces()).skip(eof()).parse(input)
 }
 
+#[derive(Debug)]
 struct FailureLog(String);
 
 impl FailureLog {
@@ -110,14 +112,21 @@ impl FailureLog {
     }
 }
 
+impl Drop for FailureLog {
+    fn drop(&mut self) {
+        assert_eq!(0, self.0.len(), "\n\n{}\n", self.0);
+    }
+}
+
+#[derive(Debug)]
 struct SubcaseLog<'a>(&'a mut FailureLog, bool, String);
 
-impl<'a> SubcaseLog<'a> {
-    fn finish(self) {
-        let SubcaseLog(flref, dirty, body) = self;
+impl<'a> Drop for SubcaseLog<'a> {
+    fn drop(&mut self) {
+        let SubcaseLog(ref mut flref, ref dirty, ref body) = *self;
 
-        if dirty {
-            write!(flref.0, "{}", body).unwrap();
+        if *dirty {
+            write!(flref.0, "{}\n", body).unwrap();
         }
     }
 }
