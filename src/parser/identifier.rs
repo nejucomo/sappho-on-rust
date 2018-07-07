@@ -49,7 +49,9 @@ pub fn symbol(input: &str) -> ParseResult<String, &str> {
 mod tests {
     use super::{identifier, symbol};
 
-    test_case_simple_parser!(identifier, test_identifier, |s: &str| s.to_string());
+    test_case_simple_parser!(identifier, "identifier", test_identifier, |s: &str| {
+        s.to_string()
+    });
 
-    test_case_simple_parser!(symbol, test_symbol, |s: &str| s[1..].to_string());
+    test_case_simple_parser!(symbol, "symbol", test_symbol, |s: &str| s[1..].to_string());
 }
