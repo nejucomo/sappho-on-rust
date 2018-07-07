@@ -47,11 +47,55 @@ pub fn symbol(input: &str) -> ParseResult<String, &str> {
 
 #[cfg(test)]
 mod tests {
-    use super::{identifier, symbol};
+    mod identifier {
+        use parser::identifier;
 
-    test_case_simple_parser!(identifier, "identifier", test_identifier, |s: &str| {
-        s.to_string()
-    });
+        #[test]
+        fn accepts() {
+            use combine::parser;
+            use parser::testutils::run_parser_repr_tests;
 
-    test_case_simple_parser!(symbol, "symbol", test_symbol, |s: &str| s[1..].to_string());
+            run_parser_repr_tests(
+                || parser(identifier),
+                include_dir!("src/parser/test-vectors/identifier/"),
+            );
+        }
+
+        #[test]
+        fn rejects() {
+            use combine::parser;
+            use parser::testutils::run_parser_reject_tests;
+
+            run_parser_reject_tests(
+                || parser(identifier),
+                include_str!("test-vectors/identifier/reject"),
+            );
+        }
+    }
+
+    mod symbol {
+        use parser::symbol;
+
+        #[test]
+        fn accepts() {
+            use combine::parser;
+            use parser::testutils::run_parser_repr_tests;
+
+            run_parser_repr_tests(
+                || parser(symbol),
+                include_dir!("src/parser/test-vectors/symbol/"),
+            );
+        }
+
+        #[test]
+        fn rejects() {
+            use combine::parser;
+            use parser::testutils::run_parser_reject_tests;
+
+            run_parser_reject_tests(
+                || parser(symbol),
+                include_str!("test-vectors/symbol/reject"),
+            );
+        }
+    }
 }
