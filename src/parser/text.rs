@@ -114,52 +114,52 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{character, text};
+    mod text {
+        use parser::text;
 
-    test_cases_text_parser!(
-        character,
-        [
-            (test_character_backslash, "backslash"),
-            (test_character_doublequote, "doublequote"),
-            (test_character_greek_lambda, "greek_lambda"),
-            (test_character_lambda, "lambda"),
-            (test_character_newline, "newline"),
-            (test_character_singlequote, "singlequote"),
-            (test_character_x, "x")
-        ]
-    );
+        #[test]
+        fn accepts() {
+            use combine::parser;
+            use parser::testutils::run_parser_repr_tests;
 
-    test_cases_text_parser!(
-        text,
-        [
-            (test_text_backslash, "backslash"),
-            (test_text_doublequote, "doublequote"),
-            (test_text_foo_bar, "foo_bar"),
-            (test_text_greek_lambda, "greek_lambda"),
-            (test_text_lambda, "lambda"),
-            (test_text_newline, "newline"),
-            (test_text_singlequote, "singlequote"),
-            (test_text_x, "x")
-        ]
-    );
+            run_parser_repr_tests(
+                || parser(text),
+                include_dir!("src/parser/test-vectors/text/"),
+            );
+        }
 
-    #[test]
-    fn text_reject() {
-        use combine::{eof, parser, Parser};
+        #[test]
+        fn rejects() {
+            use combine::parser;
+            use parser::testutils::run_parser_reject_tests;
 
-        for input in include_cases!("test-vectors/text/reject") {
-            let res = parser(text).skip(eof()).parse(input);
-            assert!(res.is_err(), "Incorrectly parsed as text: {:?}", input);
+            run_parser_reject_tests(|| parser(text), include_str!("test-vectors/text/reject"));
         }
     }
 
-    #[test]
-    fn character_reject() {
-        use combine::{eof, parser, Parser};
+    mod character {
+        use parser::character;
 
-        for input in include_cases!("test-vectors/character/reject") {
-            let res = parser(character).skip(eof()).parse(input);
-            assert!(res.is_err(), "Incorrectly parsed as character: {:?}", input);
+        #[test]
+        fn accepts() {
+            use combine::parser;
+            use parser::testutils::run_parser_repr_tests;
+
+            run_parser_repr_tests(
+                || parser(character),
+                include_dir!("src/parser/test-vectors/character/"),
+            );
+        }
+
+        #[test]
+        fn rejects() {
+            use combine::parser;
+            use parser::testutils::run_parser_reject_tests;
+
+            run_parser_reject_tests(
+                || parser(character),
+                include_str!("test-vectors/character/reject"),
+            );
         }
     }
 }
