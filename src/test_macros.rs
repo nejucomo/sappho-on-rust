@@ -95,31 +95,3 @@ macro_rules! test_cases_text_parser {
         )*
     }
 }
-
-macro_rules! test_case_debugrepr_parser {
-    ($name:ident, $test_name:ident, $case_name:expr) => {
-        #[test]
-        fn $test_name() {
-            use combine::{eof, parser, Parser};
-
-            let input = include_io!($name, $case_name, "input");
-            let output = include_io!($name, $case_name, "repr");
-
-            assert_eq!(
-                parser($name)
-                    .skip(eof())
-                    .parse(input)
-                    .map(|(res, rem)| (format!("{:?}", res), rem)),
-                Ok((output.to_string(), ""))
-            );
-        }
-    };
-}
-
-macro_rules! test_cases_debugrepr_parser {
-    ($name:ident, [ $( ( $test_name:ident, $case_name:expr ) ),* ] ) => {
-        $(
-            test_case_debugrepr_parser!($name, $test_name, $case_name);
-        )*
-    }
-}

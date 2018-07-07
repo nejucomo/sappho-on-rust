@@ -28,6 +28,25 @@ mod tests {
     use super::expr;
 
     #[test]
+    fn accepts() {
+        use combine::parser;
+        use parser::testutils::run_parser_repr_tests;
+
+        run_parser_repr_tests(
+            || parser(expr),
+            include_dir!("src/parser/test-vectors/expr/"),
+        );
+    }
+
+    #[test]
+    fn rejects() {
+        use combine::parser;
+        use parser::testutils::run_parser_reject_tests;
+
+        run_parser_reject_tests(|| parser(expr), include_str!("test-vectors/expr/reject"));
+    }
+
+    #[test]
     fn accepts_atom_cases() {
         use ast::Expr;
         use combine::{parser, Parser};
@@ -60,42 +79,4 @@ mod tests {
             include_dir!("src/parser/test-vectors/atom/"),
         );
     }
-
-    /*
-    #[test]
-    fn rejects() {
-        use combine::parser;
-        use parser::testutils::run_parser_reject_tests;
-
-        run_parser_reject_tests(|| parser(expr), include_str!("test-vectors/expr/rejects"));
-    }
-    */
-
-    test_cases_debugrepr_parser!(
-        expr,
-        [
-            (test_expr_false, "false"),
-            (test_expr_list_empty, "list_empty"),
-            (test_expr_list_zero, "list_zero"),
-            (
-                test_expr_list_zero_trailing_comma,
-                "list_zero_trailing_comma"
-            ),
-            (test_expr_deref_x, "deref_x"),
-            (test_expr_deref_fals, "deref_fals"),
-            (test_expr_qapp_x, "qapp_x"),
-            (test_expr_mapp_x, "mapp_x")
-        ]
-    );
-
-    #[test]
-    fn expr_reject() {
-        use combine::{eof, parser, Parser};
-
-        for input in include_cases!("test-vectors/expr/reject") {
-            let res = parser(expr).skip(eof()).parse(input);
-            assert!(res.is_err(), "Incorrectly parsed as expr: {:?}", input);
-        }
-    }
-
 }

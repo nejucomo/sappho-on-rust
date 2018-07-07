@@ -33,6 +33,6 @@ mod tests {
         use combine::parser;
         use parser::testutils::run_parser_reject_tests;
 
-        run_parser_reject_tests(|| parser(atom), include_str!("test-vectors/atom/rejects"));
+        run_parser_reject_tests(|| parser(atom), include_str!("test-vectors/atom/reject"));
     }
 }
