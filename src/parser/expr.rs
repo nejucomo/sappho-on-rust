@@ -3,13 +3,13 @@ use combine::{ParseResult, Parser};
 
 pub fn expr(input: &str) -> ParseResult<Expr, &str> {
     use combine::char::char;
-    use combine::{between, parser, sep_end_by, try};
+    use combine::{between, parser, sep_end_by};
     use parser::{atom, identifier};
 
     (between(char('['), char(']'), sep_end_by(parser(expr), char(','))).map(Expr::List))
         .or(parser(unary_application).map(Expr::UnApp))
-        .or(try(parser(identifier)).map(Expr::Deref))
         .or(parser(atom).map(Expr::Atom))
+        .or(parser(identifier).map(Expr::Deref))
         .parse_stream(input)
 }
 
