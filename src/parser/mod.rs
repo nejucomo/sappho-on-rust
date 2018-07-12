@@ -2,7 +2,7 @@ mod atom;
 mod boolean;
 mod expr;
 mod identifier;
-mod keywords;
+pub mod keywords; // FIXME: Make non-pub after removing `Keyword::all()`.
 mod number;
 mod text;
 
