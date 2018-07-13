@@ -17,7 +17,12 @@ where
     use std::fmt::Write;
     let mut flog = FailureLog::new();
 
-    for casedir in vecdir.dirs() {
+    fn check_nonempty<'a, T>(vd: Dir<'a>, xs: &'a [T], label: &'static str) -> &'a [T] {
+        assert!(xs.len() > 0, "Missing {} in {:?}.", label, vd.path());
+        xs
+    }
+
+    for casedir in check_nonempty(vecdir, vecdir.dirs(), "cases") {
         let mut reprbuf = casedir.path().to_path_buf();
         reprbuf.push("repr");
 
@@ -25,7 +30,7 @@ where
         let rawexp = reprf.contents_utf8().unwrap().to_string();
         let expected = rawexp.trim_right();
 
-        for inentry in casedir.files() {
+        for inentry in check_nonempty(vecdir, casedir.files(), "case inputs") {
             let mut caselog = flog.subcase_log(&format!(
                 "{:?} {:?}",
                 casedir.path().file_name().unwrap(),
