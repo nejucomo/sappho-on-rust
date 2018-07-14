@@ -79,59 +79,26 @@ pub fn decimal_number(input: &str) -> ParseResult<Number, &str> {
 #[cfg(test)]
 mod tests {
     use super::number;
-    use value::Number;
 
     #[test]
-    fn reject() {
-        use combine::{eof, parser, Parser};
+    fn accepts() {
+        use combine::parser;
+        use parser::testutils::run_parser_repr_tests;
 
-        for input in include_cases!("test-vectors/number/reject") {
-            let res = parser(number).skip(eof()).parse(input);
-            assert!(res.is_err(), "Incorrectly parsed as number: {:?}", input);
-        }
+        run_parser_repr_tests(
+            || parser(number),
+            include_dir!("src/parser/test-vectors/number/"),
+        );
     }
 
-    macro_rules! test_cases_number_parser {
-        ( $( $case_name:ident ),* ) => {
-            $(
-                #[test]
-                fn $case_name() {
-                    use std::iter::FromIterator;
+    #[test]
+    fn rejects() {
+        use combine::parser;
+        use parser::testutils::run_parser_reject_tests;
 
-                    let inputs: Vec<&str> = Vec::from_iter(
-                        include_cases!(
-                            concat!(
-                                "test-vectors/number/case.",
-                                stringify!($case_name))));
-
-                    for i in 0..inputs.len() {
-                        for j in (i+1)..inputs.len() {
-                            let ina = inputs[i];
-                            let inb = inputs[j];
-                            let a = test_parse_number(ina);
-                            let b = test_parse_number(inb);
-                            assert!(
-                                a == b,
-                                "Equality failed for: {:?} parsed from {:?} \
-                                 != {:?} parsed from {:?}",
-                                a, ina, b, inb);
-                        }
-                    }
-                }
-            )*
-        }
-    }
-
-    test_cases_number_parser!(zero, one);
-
-    fn test_parse_number(input: &str) -> Number {
-        use combine::{eof, parser, Parser};
-
-        let res = parser(number).skip(eof()).parse(input);
-        assert!(res.is_ok(), "Failed to parse: {:?}", input);
-        let (x, rem) = res.unwrap();
-        assert_eq!(rem, "");
-
-        x
+        run_parser_reject_tests(
+            || parser(number),
+            include_str!("test-vectors/number/reject"),
+        );
     }
 }

@@ -5,7 +5,7 @@ extern crate num;
 
 #[cfg(test)]
 #[macro_use]
-mod test_macros;
+extern crate include_dir;
 
 mod ast;
 mod parser;
@@ -14,7 +14,25 @@ mod value;
 fn main() {
     use combine::{eof, parser, Parser};
     use parser::expr;
+    use parser::keywords::Keyword;
     use std::io::BufRead;
+
+    // Keyword coverage in main:
+    let keywords = Keyword::all();
+    println!("Known keywords: {:?}", keywords);
+    for kw in keywords {
+        let kwstr = kw.as_str();
+        assert_eq!(Ok(((), "")), kw.parser().parse(kwstr));
+    }
+
+    fn prompt() {
+        use std::io::Write;
+        let mut stdout = std::io::stdout();
+        stdout.write_all(b"> ").unwrap();
+        stdout.flush().unwrap();
+    }
+
+    prompt();
 
     let stdin = std::io::stdin();
     for lineres in stdin.lock().lines() {
@@ -22,5 +40,6 @@ fn main() {
         println!("input: {:?}", &line);
         let result = parser(expr).skip(eof()).parse(&line);
         println!("result: {:?}", &result);
+        prompt();
     }
 }

@@ -1,41 +1,125 @@
-#[cfg(test)]
-use combine::{ParseResult, Parser};
+macro_rules! define_keyword {
+    ( $( ($name:ident, $testname:ident, $text:expr) ),* ) => {
 
-macro_rules! define_keyword_parsers {
-    ( $( ($testname:ident, $name:ident, $text:expr) ),* ) => {
+        #[derive(Debug)]
+        pub enum Keyword {
+            $( $name ),*
+        }
+
+        impl Keyword {
+            pub fn as_str(&self) -> &'static str {
+                match *self {
+                    $( Keyword::$name => &($text) ),*
+                }
+            }
+
+            /* Silly method to ensure code coverage in main() */
+            pub fn all() -> Vec<Keyword> {
+                let mut v = Vec::new();
+                $(
+                    v.push(Keyword::$name);
+                )*
+                v
+            }
+        }
 
         pub const KEYWORDS: [&'static str; 9] = [
             $( $text ),*
-            ];
+        ];
 
-        $(
-            #[cfg(test)]
-            fn $name(input: &str) -> ParseResult<(), &str> {
-                use combine::char::string;
-                use combine::value;
+        #[cfg(test)]
+        mod tests {
+            $(
+                mod $testname {
+                    #[test]
+                    fn accepts() {
+                        use parser::testutils::run_parser_repr_tests;
+                        use parser::keywords::Keyword;
 
-                string($text)
-                    .with(value(()))
-                    .parse_stream(input)
-            }
+                        let casename = &stringify!($name).to_lowercase();
 
-            #[cfg(test)]
-            test_case_simple_parser!(
-                $name,
-                $testname,
-                |_| ());
-        )*
+                        run_parser_repr_tests(
+                            || Keyword::$name.parser(),
+                            include_dir!("src/parser/test-vectors/keywords").get_dir(casename).expect(
+                                &format!("src/parser/test-vectors/keywords/{}", casename),
+                            ),
+                        );
+                    }
+
+                    #[test]
+                    fn rejects() {
+                        use parser::testutils::run_parser_reject_tests;
+                        use parser::keywords::Keyword;
+                        use std::path::Path;
+
+                        let casename = stringify!($name).to_lowercase();
+                        let rejectpath = Path::new(&casename).join("reject");
+                        let emsg = &format!("{:?}", rejectpath);
+
+                        run_parser_reject_tests(
+                            || Keyword::$name.parser(),
+                            include_dir!("src/parser/test-vectors/keywords/")
+                                .get_file(rejectpath)
+                                .expect(&format!("{:?} missing reject file", emsg))
+                                .contents_utf8()
+                                .expect(&format!("{:?} bad reject file", emsg)),
+                        );
+                    }
+                }
+            )*
+        }
     }
 }
 
-define_keyword_parsers!(
-    (test_kw_false, kw_false, "false"),
-    (test_kw_true, kw_true, "true"),
-    (test_kw_lambda, kw_lambda, "𝜆"),
-    (test_kw_proc, kw_proc, "proc"),
-    (test_kw_query, kw_query, "query"),
-    (test_kw_let, kw_let, "let"),
-    (test_kw_in, kw_in, "in"),
-    (test_kw_from, kw_from, "from"),
-    (test_kw_bind, kw_bind, "bind")
+define_keyword!(
+    (False, kw_false, "false"),
+    (True, kw_true, "true"),
+    (Lambda, kw_lambda, "𝜆"),
+    (Proc, kw_proc, "proc"),
+    (Query, kw_query, "query"),
+    (Let, kw_let, "let"),
+    (In, kw_in, "in"),
+    (From, kw_from, "from"),
+    (Bind, kw_bind, "bind")
 );
+
+use combine::{ParseResult, Parser, Stream};
+use std::fmt;
+use std::marker::PhantomData;
+
+impl fmt::Display for Keyword {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
+pub struct KeywordParser<I> {
+    keyword: Keyword,
+    _marker: PhantomData<I>,
+}
+
+impl Keyword {
+    pub fn parser<I>(self: Keyword) -> KeywordParser<I> {
+        KeywordParser {
+            keyword: self,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<I> Parser for KeywordParser<I>
+where
+    I: Stream<Item = char>,
+{
+    type Input = I;
+    type Output = ();
+
+    fn parse_stream(&mut self, input: Self::Input) -> ParseResult<(), Self::Input> {
+        use combine::char::string;
+        use combine::value;
+
+        string(self.keyword.as_str())
+            .with(value(()))
+            .parse_stream(input)
+    }
+}

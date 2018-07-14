@@ -2,12 +2,12 @@ use combine::{ParseResult, Parser};
 use value::Atom;
 
 pub fn atom(input: &str) -> ParseResult<Atom, &str> {
-    use combine::parser;
+    use combine::{parser, try};
     use parser::{boolean, character, number, symbol, text};
 
-    (parser(boolean).map(Atom::Bool))
+    (try(parser(boolean)).map(Atom::Bool))
         .or(parser(number).map(Atom::Number))
-        .or(parser(character).map(Atom::Char))
+        .or(try(parser(character)).map(Atom::Char))
         .or(parser(text).map(Atom::Text))
         .or(parser(symbol).map(Atom::Symbol))
         .parse_stream(input)
@@ -17,15 +17,22 @@ pub fn atom(input: &str) -> ParseResult<Atom, &str> {
 mod tests {
     use super::atom;
 
-    test_cases_debugrepr_parser!(
-        atom,
-        [
-            (test_atom_false, "false"),
-            (test_atom_true, "true"),
-            (test_atom_zero, "zero"),
-            (test_atom_char_x, "char_x"),
-            (test_atom_text_foo, "text_foo"),
-            (test_atom_symbol_sym, "symbol_sym")
-        ]
-    );
+    #[test]
+    fn accepts() {
+        use combine::parser;
+        use parser::testutils::run_parser_repr_tests;
+
+        run_parser_repr_tests(
+            || parser(atom),
+            include_dir!("src/parser/test-vectors/atom/"),
+        );
+    }
+
+    #[test]
+    fn rejects() {
+        use combine::parser;
+        use parser::testutils::run_parser_reject_tests;
+
+        run_parser_reject_tests(|| parser(atom), include_str!("test-vectors/atom/reject"));
+    }
 }
