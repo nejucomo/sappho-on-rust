@@ -1,1 +1,1 @@
-Symbol("sym")
+Symbol(Symbol("sym"))

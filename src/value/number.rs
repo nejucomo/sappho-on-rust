@@ -2,6 +2,7 @@ use num::{BigInt, FromPrimitive, Zero};
 use std::fmt::{Debug, Display, Error, Formatter};
 use std::ops::Neg;
 
+#[derive(Clone)]
 pub struct Number {
     i: BigInt,
     point: i32,
