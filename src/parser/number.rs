@@ -48,10 +48,10 @@ pub fn zero_or_hexbin_number(input: &str) -> ParseResult<Number, &str> {
 
 pub fn decimal_number(input: &str) -> ParseResult<Number, &str> {
     use combine::char::{char, digit};
-    use combine::{many1, optional, Parser};
+    use combine::{many1, optional, try, Parser};
 
     many1(digit())
-        .and(optional(char('.').with(many1(digit()))))
+        .and(optional(try(char('.').with(many1(digit())))))
         .and(optional(char('e').or(char('E')).with(signed!(
             many1(digit()).and_then(from_radix!(i32, 10))
         ))))

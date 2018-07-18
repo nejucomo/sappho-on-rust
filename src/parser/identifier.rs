@@ -1,4 +1,5 @@
 use combine::ParseResult;
+use value::Symbol;
 
 pub fn identifier(input: &str) -> ParseResult<String, &str> {
     use combine::char::{alpha_num, char, letter};
@@ -38,11 +39,14 @@ pub fn identifier(input: &str) -> ParseResult<String, &str> {
         .parse_stream(input)
 }
 
-pub fn symbol(input: &str) -> ParseResult<String, &str> {
+pub fn symbol(input: &str) -> ParseResult<Symbol, &str> {
     use combine::char::char;
     use combine::{parser, Parser};
+    use value::Symbol;
 
-    char('.').with(parser(identifier)).parse_stream(input)
+    char('.')
+        .with(parser(identifier).map(Symbol))
+        .parse_stream(input)
 }
 
 #[cfg(test)]

@@ -2,6 +2,27 @@ use ast::{Expr, UnaryApplication, UnaryOperator};
 use combine::{ParseResult, Parser};
 
 pub fn expr(input: &str) -> ParseResult<Expr, &str> {
+    use ast::LookupApplication;
+    use combine::{many, parser};
+    use parser::symbol;
+    use value::Symbol;
+
+    parser(applicand)
+        .then(|app| {
+            // FIXME: Can we make syms an iterator to avoid excessive allocation/copy?
+            many(parser(symbol)).map(move |syms: Vec<Symbol>| {
+                use std::clone::Clone;
+
+                // FIXME: Can we move-capture app so we don't need a clone?
+                syms.into_iter().fold(app.clone(), |x, sym| {
+                    Expr::LookupApp(LookupApplication(Box::new(x), sym))
+                })
+            })
+        })
+        .parse_stream(input)
+}
+
+fn applicand(input: &str) -> ParseResult<Expr, &str> {
     use combine::char::char;
     use combine::{between, parser, sep_end_by};
     use parser::{atom, identifier};
