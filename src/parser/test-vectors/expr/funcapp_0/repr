@@ -1,1 +1,1 @@
-FuncApp(FunctionalApplication(Deref("foo"), Atom(Number(Number 0))))
+FuncApp(Deref("foo"), Atom(Number(Number 0)))

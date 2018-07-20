@@ -1,1 +1,1 @@
-UnApp(UnaryApplication(Query, Deref("x")))
+UnApp(Query, Deref("x"))
