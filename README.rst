@@ -26,3 +26,11 @@ In rust, each test case must be a separately defined function. We can achieve 1 
 
 So far we've been sacrificing 2 by naming each test case file redundantly in macro calls. We intend to transition to sacrifice 3 in favor of 2 by using the `include_dir` crate, and having large "coarse" tests that loop over cases within a single test.
 
+TODO
+====
+
+#. Remove extra AST types such as `LookupApplication`.
+#. Implement binary operators w/ operator precedence.
+#. Create parser abstraction for each layer of binary application, incl. lookup & funcapp.
+#. Create type abstraction over AST to reify Sappho mutation categories into the rust type system.
+
