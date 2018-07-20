@@ -17,6 +17,8 @@ function main
     parse-arguments "$@"
     check-msg-directives "$MSGPATH"
 
+    touch ./src/main.rs
+
     run-phase test
     run-phase doc
     run-phase build
