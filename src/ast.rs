@@ -7,7 +7,7 @@ pub enum Expr {
     List(Vec<Expr>),
     UnApp(UnaryApplication),
     LookupApp(LookupApplication),
-    // FuncApp(FunctionalApplication),
+    FuncApp(FunctionalApplication),
 }
 
 #[derive(Clone, Debug)]
@@ -22,7 +22,5 @@ pub enum UnaryOperator {
 #[derive(Clone, Debug)]
 pub struct LookupApplication(pub Box<Expr>, pub Symbol);
 
-/*
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct FunctionalApplication(pub Box<Expr>, pub Box<Expr>);
-*/

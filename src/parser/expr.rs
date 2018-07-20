@@ -2,20 +2,22 @@ use ast::{Expr, UnaryApplication, UnaryOperator};
 use combine::{ParseResult, Parser};
 
 pub fn expr(input: &str) -> ParseResult<Expr, &str> {
-    use ast::LookupApplication;
+    use super::postapp::ApplicationPostFix::{FuncAPF, LookupAPF};
+    use super::postapp::{app_postfix, ApplicationPostFix};
+    use ast::Expr::{FuncApp, LookupApp};
+    use ast::{FunctionalApplication, LookupApplication};
     use combine::{many, parser};
-    use parser::symbol;
-    use value::Symbol;
 
     parser(applicand)
         .then(|app| {
-            // FIXME: Can we make syms an iterator to avoid excessive allocation/copy?
-            many(parser(symbol)).map(move |syms: Vec<Symbol>| {
+            // FIXME: Can we make apfs an iterator to avoid excessive allocation/copy?
+            many(parser(app_postfix)).map(move |apfs: Vec<ApplicationPostFix>| {
                 use std::clone::Clone;
 
                 // FIXME: Can we move-capture app so we don't need a clone?
-                syms.into_iter().fold(app.clone(), |x, sym| {
-                    Expr::LookupApp(LookupApplication(Box::new(x), sym))
+                apfs.into_iter().fold(app.clone(), |x, apf| match apf {
+                    LookupAPF(sym) => LookupApp(LookupApplication(Box::new(x), sym)),
+                    FuncAPF(apf) => FuncApp(FunctionalApplication(Box::new(x), Box::new(apf))),
                 })
             })
         })
@@ -23,11 +25,11 @@ pub fn expr(input: &str) -> ParseResult<Expr, &str> {
 }
 
 fn applicand(input: &str) -> ParseResult<Expr, &str> {
-    use combine::char::char;
-    use combine::{between, parser, sep_end_by};
+    use combine::parser;
+    use parser::listexpr::listexpr;
     use parser::{atom, identifier};
 
-    (between(char('['), char(']'), sep_end_by(parser(expr), char(','))).map(Expr::List))
+    parser(listexpr)
         .or(parser(unary_application).map(Expr::UnApp))
         .or(parser(atom).map(Expr::Atom))
         .or(parser(identifier).map(Expr::Deref))
