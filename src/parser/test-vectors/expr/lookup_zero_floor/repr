@@ -1,1 +1,1 @@
-LookupApp(LookupApplication(Atom(Number(Number 0)), Symbol("floor")))
+LookupApp(Atom(Number(Number 0)), Symbol("floor"))

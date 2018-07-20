@@ -29,7 +29,6 @@ So far we've been sacrificing 2 by naming each test case file redundantly in mac
 TODO
 ====
 
-#. Remove extra AST types such as `LookupApplication`.
 #. Implement binary operators w/ operator precedence.
 #. Create parser abstraction for each layer of binary application, incl. lookup & funcapp.
 #. Create type abstraction over AST to reify Sappho mutation categories into the rust type system.

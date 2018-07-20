@@ -1,11 +1,10 @@
-use ast::{Expr, UnaryApplication, UnaryOperator};
+use ast::{Expr, UnaryOperator};
 use combine::{ParseResult, Parser};
 
 pub fn expr(input: &str) -> ParseResult<Expr, &str> {
     use super::postapp::ApplicationPostFix::{FuncAPF, LookupAPF};
     use super::postapp::{app_postfix, ApplicationPostFix};
     use ast::Expr::{FuncApp, LookupApp};
-    use ast::{FunctionalApplication, LookupApplication};
     use combine::{many, parser};
 
     parser(applicand)
@@ -16,8 +15,8 @@ pub fn expr(input: &str) -> ParseResult<Expr, &str> {
 
                 // FIXME: Can we move-capture app so we don't need a clone?
                 apfs.into_iter().fold(app.clone(), |x, apf| match apf {
-                    LookupAPF(sym) => LookupApp(LookupApplication(Box::new(x), sym)),
-                    FuncAPF(apf) => FuncApp(FunctionalApplication(Box::new(x), Box::new(apf))),
+                    LookupAPF(sym) => LookupApp(Box::new(x), sym),
+                    FuncAPF(apf) => FuncApp(Box::new(x), Box::new(apf)),
                 })
             })
         })
@@ -30,19 +29,19 @@ fn applicand(input: &str) -> ParseResult<Expr, &str> {
     use parser::{atom, identifier};
 
     parser(listexpr)
-        .or(parser(unary_application).map(Expr::UnApp))
+        .or(parser(unary_application).map(|(op, x)| Expr::UnApp(op, x)))
         .or(parser(atom).map(Expr::Atom))
         .or(parser(identifier).map(Expr::Deref))
         .parse_stream(input)
 }
 
-fn unary_application(input: &str) -> ParseResult<UnaryApplication, &str> {
+fn unary_application(input: &str) -> ParseResult<(UnaryOperator, Box<Expr>), &str> {
     use combine::char::char;
     use combine::parser;
 
     ((char('$').map(|_| UnaryOperator::Query)).or(char('!').map(|_| UnaryOperator::Mutate)))
         .and(parser(expr))
-        .map(|(op, x)| UnaryApplication(op, Box::new(x)))
+        .map(|(op, x)| (op, Box::new(x)))
         .parse_stream(input)
 }
 

@@ -1,1 +1,1 @@
-UnApp(UnaryApplication(Mutate, Deref("x")))
+UnApp(Mutate, Deref("x"))
