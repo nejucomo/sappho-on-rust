@@ -3,6 +3,7 @@ mod boolean;
 mod expr;
 mod identifier;
 pub mod keywords; // FIXME: Make non-pub after removing `Keyword::all()`.
+mod leftassoc;
 mod listexpr;
 mod number;
 mod postapp;

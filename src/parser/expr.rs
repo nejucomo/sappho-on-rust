@@ -1,25 +1,45 @@
-use ast::{Expr, UnaryOperator};
+use ast::{BinaryOperator, Expr, UnaryOperator};
 use combine::{ParseResult, Parser};
 
 pub fn expr(input: &str) -> ParseResult<Expr, &str> {
+    use combine::parser;
+    use parser::leftassoc::left_associative;
+
+    left_associative(
+        Box::new(|| parser(binapp_left)),
+        Box::new(|| parser(binapp_right)),
+        |left, (op, right)| Expr::BinOp(op, Box::new(left), Box::new(right)),
+    ).parse_stream(input)
+}
+
+fn binapp_left(input: &str) -> ParseResult<Expr, &str> {
+    use combine::parser;
+    use parser::leftassoc::left_associative;
+
+    use super::postapp::app_postfix;
     use super::postapp::ApplicationPostFix::{FuncAPF, LookupAPF};
-    use super::postapp::{app_postfix, ApplicationPostFix};
     use ast::Expr::{FuncApp, LookupApp};
-    use combine::{many, parser};
 
-    parser(applicand)
-        .then(|app| {
-            // FIXME: Can we make apfs an iterator to avoid excessive allocation/copy?
-            many(parser(app_postfix)).map(move |apfs: Vec<ApplicationPostFix>| {
-                use std::clone::Clone;
+    left_associative(
+        Box::new(|| parser(applicand)),
+        Box::new(|| parser(app_postfix)),
+        |x, apf| match apf {
+            LookupAPF(sym) => LookupApp(Box::new(x), sym),
+            FuncAPF(apf) => FuncApp(Box::new(x), Box::new(apf)),
+        },
+    ).parse_stream(input)
+}
 
-                // FIXME: Can we move-capture app so we don't need a clone?
-                apfs.into_iter().fold(app.clone(), |x, apf| match apf {
-                    LookupAPF(sym) => LookupApp(Box::new(x), sym),
-                    FuncAPF(apf) => FuncApp(Box::new(x), Box::new(apf)),
-                })
-            })
-        })
+fn binapp_right(input: &str) -> ParseResult<(BinaryOperator, Expr), &str> {
+    use combine::char::char;
+    use combine::parser;
+
+    char('+')
+        .with(parser(expr))
+        .map(|x| (BinaryOperator::Plus, x))
+        .or(char('*')
+            .with(parser(expr))
+            .map(|x| (BinaryOperator::Times, x)))
         .parse_stream(input)
 }
 
