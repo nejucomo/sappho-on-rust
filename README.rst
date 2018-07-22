@@ -29,7 +29,8 @@ So far we've been sacrificing 2 by naming each test case file redundantly in mac
 TODO
 ====
 
-#. Implement binary operators w/ operator precedence.
-#. Create parser abstraction for each layer of binary application, incl. lookup & funcapp.
+#. Introduce parens expressions and limit targets of lookup/application.
+#. Introduce pure 𝜆.
+#. Introduce query/proc 𝜆.
 #. Create type abstraction over AST to reify Sappho mutation categories into the rust type system.
 
