@@ -38,10 +38,11 @@ fn funcapp(input: &str) -> ParseResult<Expr, &str> {
 
 fn applicand(input: &str) -> ParseResult<Expr, &str> {
     use combine::parser;
-    use parser::listexpr::listexpr;
+    use parser::subexpr::{list_expr, parens_expr};
     use parser::{atom, identifier};
 
-    parser(listexpr)
+    parser(list_expr)
+        .or(parser(parens_expr))
         .or(parser(unary_application).map(|(op, x)| Expr::UnApp(op, x)))
         .or(parser(atom).map(Expr::Atom))
         .or(parser(identifier).map(Expr::Deref))
