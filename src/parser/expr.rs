@@ -1,26 +1,39 @@
-use ast::{Expr, UnaryOperator};
+use ast::{BinaryOperator, Expr, UnaryOperator};
 use combine::{ParseResult, Parser};
 
 pub fn expr(input: &str) -> ParseResult<Expr, &str> {
+    use combine::char::char;
+    use combine::parser;
+
+    left_associative!(
+        parser(times_expr),
+        char('+').with(parser(times_expr)),
+        |left, right| Expr::BinOp(BinaryOperator::Plus, Box::new(left), Box::new(right))
+    ).parse_stream(input)
+}
+
+fn times_expr(input: &str) -> ParseResult<Expr, &str> {
+    use combine::char::char;
+    use combine::parser;
+
+    left_associative!(
+        parser(funcapp),
+        char('*').with(parser(funcapp)),
+        |left, right| Expr::BinOp(BinaryOperator::Times, Box::new(left), Box::new(right))
+    ).parse_stream(input)
+}
+
+fn funcapp(input: &str) -> ParseResult<Expr, &str> {
+    use combine::parser;
+
+    use super::postapp::app_postfix;
     use super::postapp::ApplicationPostFix::{FuncAPF, LookupAPF};
-    use super::postapp::{app_postfix, ApplicationPostFix};
     use ast::Expr::{FuncApp, LookupApp};
-    use combine::{many, parser};
 
-    parser(applicand)
-        .then(|app| {
-            // FIXME: Can we make apfs an iterator to avoid excessive allocation/copy?
-            many(parser(app_postfix)).map(move |apfs: Vec<ApplicationPostFix>| {
-                use std::clone::Clone;
-
-                // FIXME: Can we move-capture app so we don't need a clone?
-                apfs.into_iter().fold(app.clone(), |x, apf| match apf {
-                    LookupAPF(sym) => LookupApp(Box::new(x), sym),
-                    FuncAPF(apf) => FuncApp(Box::new(x), Box::new(apf)),
-                })
-            })
-        })
-        .parse_stream(input)
+    left_associative!(parser(applicand), parser(app_postfix), |x, apf| match apf {
+        LookupAPF(sym) => LookupApp(Box::new(x), sym),
+        FuncAPF(apf) => FuncApp(Box::new(x), Box::new(apf)),
+    }).parse_stream(input)
 }
 
 fn applicand(input: &str) -> ParseResult<Expr, &str> {
