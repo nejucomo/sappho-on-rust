@@ -1,3 +1,6 @@
+#[macro_use]
+mod leftassoc;
+
 mod atom;
 mod boolean;
 mod expr;

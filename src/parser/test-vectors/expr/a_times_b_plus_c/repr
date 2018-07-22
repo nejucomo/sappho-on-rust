@@ -1,0 +1,1 @@
+BinOp(Plus, BinOp(Times, Deref("a"), Deref("b")), Deref("c"))
