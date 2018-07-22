@@ -9,15 +9,12 @@ pub enum ApplicationPostFix {
 
 pub fn app_postfix(input: &str) -> ParseResult<ApplicationPostFix, &str> {
     use self::ApplicationPostFix::{FuncAPF, LookupAPF};
-    use combine::char::char;
-    use combine::{between, parser, Parser};
-    use parser::listexpr::listexpr;
-    use parser::{expr, symbol};
+    use combine::{parser, Parser};
+    use parser::subexpr::{list_expr, parens_expr};
+    use parser::symbol;
 
     parser(symbol)
         .map(LookupAPF)
-        .or(between(char('('), char(')'), parser(expr))
-            .or(parser(listexpr))
-            .map(FuncAPF))
+        .or(parser(parens_expr).or(parser(list_expr)).map(FuncAPF))
         .parse_stream(input)
 }
