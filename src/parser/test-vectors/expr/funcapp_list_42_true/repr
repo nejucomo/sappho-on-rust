@@ -1,1 +1,1 @@
-FuncApp(Deref("foo"), List([Atom(Number(Number 42)), Atom(Bool(true))]))
+FuncApp(Deref(Identifier("foo")), List([Atom(Number(Number 42)), Atom(Bool(true))]))

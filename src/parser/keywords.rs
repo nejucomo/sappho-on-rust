@@ -99,7 +99,7 @@ pub struct KeywordParser<I> {
 }
 
 impl Keyword {
-    pub fn parser<I>(self: Keyword) -> KeywordParser<I> {
+    pub fn parser<I>(self) -> KeywordParser<I> {
         KeywordParser {
             keyword: self,
             _marker: PhantomData,

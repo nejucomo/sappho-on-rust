@@ -1,7 +1,8 @@
+use ast::Identifier;
 use combine::ParseResult;
 use value::Symbol;
 
-pub fn identifier(input: &str) -> ParseResult<String, &str> {
+pub fn identifier(input: &str) -> ParseResult<Identifier, &str> {
     use combine::char::{alpha_num, char, letter};
     use combine::combinator::many;
     use combine::{parser, Parser};
@@ -19,7 +20,7 @@ pub fn identifier(input: &str) -> ParseResult<String, &str> {
                 let _: &str = input; // Require &str as input type.
 
                 if !KEYWORDS.contains(&id.as_str()) {
-                    Ok((id.clone(), Consumed::Empty(input)))
+                    Ok((Identifier(id.clone()), Consumed::Empty(input)))
                 } else {
                     let position = input.position();
                     let err = ParseError::new(
@@ -45,7 +46,7 @@ pub fn symbol(input: &str) -> ParseResult<Symbol, &str> {
     use value::Symbol;
 
     char('.')
-        .with(parser(identifier).map(Symbol))
+        .with(parser(identifier).map(|id| Symbol(id.0)))
         .parse_stream(input)
 }
 
