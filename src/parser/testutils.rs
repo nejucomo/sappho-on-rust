@@ -59,22 +59,24 @@ where
             {
                 let actualres = parse_input(makeparser(), input);
 
-                if actualres.is_ok() {
-                    let (actualobj, rem) = actualres.unwrap();
-                    if rem != "" {
-                        log_failure!(caselog, "Unparsed input: {:?}\n", rem);
+                match actualres {
+                    Ok((actualobj, rem)) => {
+                        if rem != "" {
+                            log_failure!(caselog, "Unparsed input: {:?}\n", rem);
+                        }
+                        let actual = format!("{:?}", actualobj);
+                        if actual != expected {
+                            log_failure!(
+                                caselog,
+                                "mismatch:\nexpected: {:?}\nactual  : {:?}\n",
+                                expected,
+                                actual
+                            );
+                        }
                     }
-                    let actual = format!("{:?}", actualobj);
-                    if actual != expected {
-                        log_failure!(
-                            caselog,
-                            "mismatch:\nexpected: {:?}\nactual  : {:?}\n",
-                            expected,
-                            actual
-                        );
+                    Err(e) => {
+                        log_failure!(caselog, "{}\nFor input {:?}\n", e, input);
                     }
-                } else {
-                    log_failure!(caselog, "Parse failure: {:?}\n", actualres);
                 }
             }
         }
