@@ -4,18 +4,19 @@ use combine::ParseResult;
 pub fn lambda_expr(input: &str) -> ParseResult<Expr, &str> {
     use ast::{FunctionDefinition, LambdaDefinition};
     use combine::char::char;
-    use combine::{many1, parser, Parser};
+    use combine::{parser, Parser};
     use parser::keywords::Keyword;
+    use parser::space::{linespace, space};
     use parser::{expr, identifier};
 
     Keyword::Lambda
         .parser()
-        .with(many1::<Vec<_>, _>(char(' ')))
+        .with(space())
         .with(parser(identifier))
         .and(
-            many1::<Vec<_>, _>(char(' '))
+            space()
                 .with(char('→'))
-                .with(many1::<Vec<_>, _>(char(' ').or(char('\n'))))
+                .with(linespace())
                 .with(parser(expr)),
         )
         .map(|(ident, expr)| {

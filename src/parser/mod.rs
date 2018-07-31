@@ -9,6 +9,7 @@ pub mod keywords; // FIXME: Make non-pub after removing `Keyword::all()`.
 mod lambda;
 mod number;
 mod postapp;
+mod space;
 mod subexpr;
 mod text;
 
