@@ -29,7 +29,7 @@ So far we've been sacrificing 2 by naming each test case file redundantly in mac
 TODO
 ====
 
-#. Introduce consistent whitespace.
+#. Change test framework to allow multi-line rejects.
 #. Introduce query/proc 𝜆.
 #. Create type abstraction over AST to reify Sappho mutation categories into the rust type system.
 

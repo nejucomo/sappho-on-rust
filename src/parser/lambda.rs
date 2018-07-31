@@ -14,9 +14,9 @@ pub fn lambda_expr(input: &str) -> ParseResult<Expr, &str> {
         .with(space())
         .with(parser(identifier))
         .and(
-            space()
+            linespace()
                 .with(char('→'))
-                .with(linespace())
+                .with(space())
                 .with(parser(expr)),
         )
         .map(|(ident, expr)| {
