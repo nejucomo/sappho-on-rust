@@ -1,6 +1,39 @@
 use combine::{ParseError, Parser};
-use include_dir::Dir;
+use include_dir::{Dir, File};
 use std::fmt::{Debug, Error, Write};
+
+#[macro_export]
+macro_rules! parser_tests_mod {
+    ($modname:ident, $parserfn:ident, $incdir:expr) => {
+        #[cfg(test)]
+        mod $modname {
+            use parser;
+
+            parser_accept_reject_tests!(parser::$parserfn, $incdir);
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! parser_accept_reject_tests {
+    ($parserfn:expr, $incdir:expr) => {
+        #[test]
+        fn accepts() {
+            use combine::parser;
+            use parser::testutils::run_parser_repr_tests;
+
+            run_parser_repr_tests(|| parser($parserfn), $incdir);
+        }
+
+        #[test]
+        fn rejects() {
+            use combine::parser;
+            use parser::testutils::run_parser_reject_tests;
+
+            run_parser_reject_tests(|| parser($parserfn), $incdir);
+        }
+    };
+}
 
 macro_rules! log_failure {
     ( $caselog:expr, $( $args:expr ),* ) => {
@@ -17,12 +50,11 @@ where
     use std::fmt::Write;
     let mut flog = FailureLog::new();
 
-    fn check_nonempty<'a, T>(vd: Dir<'a>, xs: &'a [T], label: &'static str) -> &'a [T] {
-        assert!(xs.len() > 0, "Missing {} in {:?}.", label, vd.path());
-        xs
-    }
+    for casedir in check_nonempty(&vecdir, vecdir.dirs(), "cases") {
+        if casedir.path().file_name().unwrap() == "rejects" {
+            continue;
+        }
 
-    for casedir in check_nonempty(vecdir, vecdir.dirs(), "cases") {
         let mut reprbuf = casedir.path().to_path_buf();
         reprbuf.push("repr");
 
@@ -30,13 +62,7 @@ where
         let rawexp = reprf.contents_utf8().unwrap().to_string();
         let expected = rawexp.trim_right();
 
-        for inentry in check_nonempty(vecdir, casedir.files(), "case inputs") {
-            let mut caselog = flog.subcase_log(&format!(
-                "{:?} {:?}",
-                casedir.path().file_name().unwrap(),
-                &inentry.path().file_name().unwrap()
-            ));
-
+        for inentry in check_nonempty(&vecdir, casedir.files(), "case inputs") {
             let stem = {
                 use std::os::unix::ffi::OsStrExt;
                 use std::str::from_utf8;
@@ -57,6 +83,7 @@ where
             let input = inentry.contents_utf8().unwrap();
 
             {
+                let mut caselog = flog.subcase_log(inentry, input);
                 let actualres = parse_input(makeparser(), input);
 
                 match actualres {
@@ -83,7 +110,7 @@ where
     }
 }
 
-pub fn run_parser_reject_tests<'a, F, P, O>(makeparser: F, input: &'a str)
+pub fn run_parser_reject_tests<'a, F, P, O>(makeparser: F, vecdir: Dir<'a>)
 where
     F: Fn() -> P,
     P: Parser<Input = &'a str, Output = O>,
@@ -91,13 +118,28 @@ where
 {
     let mut flog = FailureLog::new();
 
-    for line in input.trim_right().split("\n") {
-        let mut caselog = flog.subcase_log(&line);
-        let res = parse_input(makeparser(), line);
+    let rejectsdir = vecdir
+        .dirs()
+        .into_iter()
+        .find(|d| d.path().file_name().unwrap() == "rejects")
+        .expect(&format!(
+            "Could not find \"rejects\" dir within {:?}",
+            vecdir
+        ));
+
+    for inentry in check_nonempty(rejectsdir, rejectsdir.files(), "reject inputs") {
+        let input = inentry.contents_utf8().unwrap();
+        let mut caselog = flog.subcase_log(inentry, input);
+        let res = parse_input(makeparser(), input);
         if res.is_ok() {
             log_failure!(caselog, "Invalidly parsed to {:?}\n", res);
         }
     }
+}
+
+fn check_nonempty<'a, T>(vd: &'a Dir<'a>, xs: &'a [T], label: &'static str) -> &'a [T] {
+    assert!(xs.len() > 0, "Missing {} in {:?}.", label, vd.path());
+    xs
 }
 
 fn parse_input<'a, P, O>(p: P, input: &'a str) -> Result<(O, &'a str), ParseError<&'a str>>
@@ -118,8 +160,12 @@ impl FailureLog {
         FailureLog(String::new())
     }
 
-    fn subcase_log<'a>(&'a mut self, casename: &str) -> SubcaseLog<'a> {
-        SubcaseLog(self, false, format!("*** Case {} ***\n", casename))
+    fn subcase_log<'a>(&'a mut self, file: &'a File<'a>, casename: &str) -> SubcaseLog<'a> {
+        SubcaseLog(
+            self,
+            false,
+            format!("*** Case {:?} {:?}\n", file.path(), casename),
+        )
     }
 }
 

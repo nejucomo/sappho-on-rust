@@ -50,19 +50,14 @@ macro_rules! define_keyword {
                     fn rejects() {
                         use parser::testutils::run_parser_reject_tests;
                         use parser::keywords::Keyword;
-                        use std::path::Path;
 
                         let casename = stringify!($name).to_lowercase();
-                        let rejectpath = Path::new(&casename).join("reject");
-                        let emsg = &format!("{:?}", rejectpath);
 
                         run_parser_reject_tests(
                             || Keyword::$name.parser(),
                             include_dir!("src/parser/test-vectors/keywords/")
-                                .get_file(rejectpath)
-                                .expect(&format!("{:?} missing reject file", emsg))
-                                .contents_utf8()
-                                .expect(&format!("{:?} bad reject file", emsg)),
+                                .get_dir(&casename)
+                                .expect(&format!("{:?} missing reject file", casename)),
                         );
                     }
                 }

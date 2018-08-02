@@ -74,24 +74,7 @@ fn unary_application(input: &str) -> ParseResult<(UnaryOperator, Box<Expr>), &st
 mod tests {
     use super::expr;
 
-    #[test]
-    fn accepts() {
-        use combine::parser;
-        use parser::testutils::run_parser_repr_tests;
-
-        run_parser_repr_tests(
-            || parser(expr),
-            include_dir!("src/parser/test-vectors/expr/"),
-        );
-    }
-
-    #[test]
-    fn rejects() {
-        use combine::parser;
-        use parser::testutils::run_parser_reject_tests;
-
-        run_parser_reject_tests(|| parser(expr), include_str!("test-vectors/expr/reject"));
-    }
+    parser_accept_reject_tests!(expr, include_dir!("src/parser/test-vectors/expr/"));
 
     #[test]
     fn accepts_atom_cases() {

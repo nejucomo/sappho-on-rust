@@ -13,26 +13,5 @@ pub fn atom(input: &str) -> ParseResult<Atom, &str> {
         .parse_stream(input)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::atom;
-
-    #[test]
-    fn accepts() {
-        use combine::parser;
-        use parser::testutils::run_parser_repr_tests;
-
-        run_parser_repr_tests(
-            || parser(atom),
-            include_dir!("src/parser/test-vectors/atom/"),
-        );
-    }
-
-    #[test]
-    fn rejects() {
-        use combine::parser;
-        use parser::testutils::run_parser_reject_tests;
-
-        run_parser_reject_tests(|| parser(atom), include_str!("test-vectors/atom/reject"));
-    }
-}
+#[cfg(tests)]
+parser_tests_mod!(tests, atom, include_dir!("src/parser/test-vectors/atom/"));

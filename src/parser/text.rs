@@ -114,52 +114,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    mod text {
-        use parser::text;
+    parser_tests_mod!(text, text, include_dir!("src/parser/test-vectors/text/"));
 
-        #[test]
-        fn accepts() {
-            use combine::parser;
-            use parser::testutils::run_parser_repr_tests;
-
-            run_parser_repr_tests(
-                || parser(text),
-                include_dir!("src/parser/test-vectors/text/"),
-            );
-        }
-
-        #[test]
-        fn rejects() {
-            use combine::parser;
-            use parser::testutils::run_parser_reject_tests;
-
-            run_parser_reject_tests(|| parser(text), include_str!("test-vectors/text/reject"));
-        }
-    }
-
-    mod character {
-        use parser::character;
-
-        #[test]
-        fn accepts() {
-            use combine::parser;
-            use parser::testutils::run_parser_repr_tests;
-
-            run_parser_repr_tests(
-                || parser(character),
-                include_dir!("src/parser/test-vectors/character/"),
-            );
-        }
-
-        #[test]
-        fn rejects() {
-            use combine::parser;
-            use parser::testutils::run_parser_reject_tests;
-
-            run_parser_reject_tests(
-                || parser(character),
-                include_str!("test-vectors/character/reject"),
-            );
-        }
-    }
+    parser_tests_mod!(
+        character,
+        character,
+        include_dir!("src/parser/test-vectors/character/")
+    );
 }

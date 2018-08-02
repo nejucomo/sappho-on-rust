@@ -76,29 +76,9 @@ pub fn decimal_number(input: &str) -> ParseResult<Number, &str> {
         .parse_stream(input)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::number;
-
-    #[test]
-    fn accepts() {
-        use combine::parser;
-        use parser::testutils::run_parser_repr_tests;
-
-        run_parser_repr_tests(
-            || parser(number),
-            include_dir!("src/parser/test-vectors/number/"),
-        );
-    }
-
-    #[test]
-    fn rejects() {
-        use combine::parser;
-        use parser::testutils::run_parser_reject_tests;
-
-        run_parser_reject_tests(
-            || parser(number),
-            include_str!("test-vectors/number/reject"),
-        );
-    }
-}
+#[cfg(tests)]
+parser_tests_mod!(
+    tests,
+    number,
+    include_dir!("src/parser/test-vectors/number/")
+);

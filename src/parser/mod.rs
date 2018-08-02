@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[macro_use]
+mod testutils;
+
 #[macro_use]
 mod leftassoc;
 
@@ -19,6 +23,3 @@ pub use self::expr::expr;
 pub use self::identifier::{identifier, symbol};
 pub use self::number::number;
 pub use self::text::{character, text};
-
-#[cfg(test)]
-mod testutils;
