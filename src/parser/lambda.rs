@@ -2,7 +2,7 @@ use ast::Expr;
 use combine::ParseResult;
 
 pub fn lambda_expr(input: &str) -> ParseResult<Expr, &str> {
-    use ast::{FunctionDefinition, LambdaDefinition};
+    use ast::FunctionDefinition;
     use combine::char::char;
     use combine::{parser, Parser};
     use parser::keywords::Keyword;
@@ -19,10 +19,6 @@ pub fn lambda_expr(input: &str) -> ParseResult<Expr, &str> {
                 .with(space())
                 .with(parser(expr)),
         )
-        .map(|(ident, expr)| {
-            Expr::Lambda(LambdaDefinition {
-                func: Some(FunctionDefinition(ident, Box::new(expr))),
-            })
-        })
+        .map(|(ident, expr)| Expr::Lambda(FunctionDefinition(ident, Box::new(expr)).into()))
         .parse_stream(input)
 }

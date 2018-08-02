@@ -29,8 +29,30 @@ pub enum BinaryOperator {
 
 #[derive(Clone, Debug)]
 pub struct LambdaDefinition {
-    pub func: Option<FunctionDefinition>,
+    func: Option<FunctionDefinition>,
+    query: Option<QueryDefinition>,
 }
 
 #[derive(Clone, Debug)]
 pub struct FunctionDefinition(pub Identifier, pub Box<Expr>);
+
+impl From<FunctionDefinition> for LambdaDefinition {
+    fn from(fd: FunctionDefinition) -> LambdaDefinition {
+        LambdaDefinition {
+            func: Some(fd),
+            query: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct QueryDefinition(pub Box<Expr>);
+
+impl From<QueryDefinition> for LambdaDefinition {
+    fn from(qd: QueryDefinition) -> LambdaDefinition {
+        LambdaDefinition {
+            func: None,
+            query: Some(qd),
+        }
+    }
+}
