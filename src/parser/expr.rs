@@ -46,15 +46,10 @@ fn funcapp(input: &str) -> ParseResult<Expr, &str> {
 fn applicand(input: &str) -> ParseResult<Expr, &str> {
     use combine::parser;
     use parser::lambda::lambda_expr;
-    use parser::subexpr::{list_expr, parens_expr};
-    use parser::{atom, identifier};
 
-    parser(list_expr)
-        .or(parser(parens_expr))
-        .or(parser(lambda_expr))
+    parser(lambda_expr)
         .or(parser(unary_application).map(|(op, x)| Expr::UnApp(op, x)))
-        .or(parser(atom).map(Expr::Atom))
-        .or(parser(identifier).map(Expr::Deref))
+        .or(parser(unary_applicand))
         .parse_stream(input)
 }
 
@@ -65,8 +60,20 @@ fn unary_application(input: &str) -> ParseResult<(UnaryOperator, Box<Expr>), &st
 
     ((char('$').map(|_| UnaryOperator::Query)).or(char('!').map(|_| UnaryOperator::Mutate)))
         .skip(optspace())
-        .and(parser(expr))
+        .and(parser(unary_applicand))
         .map(|(op, x)| (op, Box::new(x)))
+        .parse_stream(input)
+}
+
+fn unary_applicand(input: &str) -> ParseResult<Expr, &str> {
+    use combine::parser;
+    use parser::subexpr::{list_expr, parens_expr};
+    use parser::{atom, identifier};
+
+    parser(parens_expr)
+        .or(parser(list_expr))
+        .or(parser(atom).map(Expr::Atom))
+        .or(parser(identifier).map(Expr::Deref))
         .parse_stream(input)
 }
 
