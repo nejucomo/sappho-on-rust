@@ -53,17 +53,22 @@ pub fn symbol(input: &str) -> ParseResult<Symbol, &str> {
 #[cfg(test)]
 mod tests {
     mod identifier {
+        use combine::parser;
         use parser::identifier;
 
         parser_accept_reject_tests!(
-            identifier,
+            || parser(identifier),
             include_dir!("src/parser/test-vectors/identifier/")
         );
     }
 
     mod symbol {
+        use combine::parser;
         use parser::symbol;
 
-        parser_accept_reject_tests!(symbol, include_dir!("src/parser/test-vectors/symbol/"));
+        parser_accept_reject_tests!(
+            || parser(symbol),
+            include_dir!("src/parser/test-vectors/symbol/")
+        );
     }
 }

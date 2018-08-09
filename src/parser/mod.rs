@@ -3,6 +3,9 @@
 mod testutils;
 
 #[macro_use]
+mod defparser;
+
+#[macro_use]
 mod leftassoc;
 
 mod atom;
@@ -16,6 +19,7 @@ mod postapp;
 mod space;
 mod subexpr;
 mod text;
+mod unop;
 
 pub use self::atom::atom;
 pub use self::boolean::boolean;

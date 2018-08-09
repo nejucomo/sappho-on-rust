@@ -1,34 +1,33 @@
 /* Reused sub-expressions; the ast has self-identical child nodes sometimes, so reuse code. */
 
-use ast::Expr;
-use combine::ParseResult;
+use ast::GenExpr;
+use combine::{ParseResult, Parser};
 
-pub fn list_expr(input: &str) -> ParseResult<Expr, &str> {
+def_ge_parser!(ListExpr, |applier| {
     use combine::char::char;
-    use combine::{between, parser, sep_end_by, Parser};
-    use parser::expr;
+    use combine::{between, sep_end_by};
+    use parser::expr::GenExprParser;
     use parser::space::{optlinespace, optspace};
 
     between(
         char('[').skip(optlinespace()),
         char(']'),
         sep_end_by(
-            parser(expr).skip(optspace()),
+            GenExprParser(applier).skip(optspace()),
             char(',').skip(optlinespace()),
         ),
-    ).map(Expr::List)
-        .parse_stream(input)
-}
+    ).map(GenExpr::List)
+});
 
-pub fn parens_expr(input: &str) -> ParseResult<Expr, &str> {
+def_ge_parser!(ParensExpr, |applier| {
+    use combine::between;
     use combine::char::char;
-    use combine::{between, parser, Parser};
-    use parser::expr;
+    use parser::expr::GenExprParser;
     use parser::space::optlinespace;
 
     between(
         char('(').skip(optlinespace()),
         char(')'),
-        parser(expr).skip(optlinespace()),
-    ).parse_stream(input)
-}
+        GenExprParser(applier).skip(optlinespace()),
+    )
+});

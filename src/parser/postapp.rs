@@ -1,20 +1,31 @@
-use ast::Expr;
-use combine::ParseResult;
+use ast::GenExpr;
+use combine::{ParseResult, Parser};
 use value::Symbol;
 
-pub enum ApplicationPostFix {
+pub enum ApplicationPostfix<T> {
     LookupAPF(Symbol),
-    FuncAPF(Expr),
+    FuncAPF(GenExpr<T>),
 }
 
-pub fn app_postfix(input: &str) -> ParseResult<ApplicationPostFix, &str> {
-    use self::ApplicationPostFix::{FuncAPF, LookupAPF};
-    use combine::{parser, Parser};
-    use parser::subexpr::{list_expr, parens_expr};
-    use parser::symbol;
+pub struct AppPostfix<P>(pub P);
 
-    parser(symbol)
-        .map(LookupAPF)
-        .or(parser(parens_expr).or(parser(list_expr)).map(FuncAPF))
-        .parse_stream(input)
+impl<'a, P, T> Parser for AppPostfix<P>
+where
+    P: Parser<Input = &'a str, Output = T>,
+    T: Clone,
+{
+    type Input = &'a str;
+    type Output = ApplicationPostfix<T>;
+
+    fn parse_stream(&mut self, input: Self::Input) -> ParseResult<Self::Output, Self::Input> {
+        use self::ApplicationPostfix::{FuncAPF, LookupAPF};
+        use combine::parser;
+        use parser::subexpr::{ListExpr, ParensExpr};
+        use parser::symbol;
+
+        parser(symbol)
+            .map(LookupAPF)
+            .or(ParensExpr(self.0).or(ListExpr(self.0)).map(FuncAPF))
+            .parse_stream(input)
+    }
 }

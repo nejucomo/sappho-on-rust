@@ -4,12 +4,12 @@ use std::fmt::{Debug, Error, Write};
 
 #[macro_export]
 macro_rules! parser_tests_mod {
-    ($modname:ident, $parserfn:ident, $incdir:expr) => {
+    ($modname:ident, $parserfn:expr, $incdir:expr) => {
         #[cfg(test)]
         mod $modname {
             use parser;
 
-            parser_accept_reject_tests!(parser::$parserfn, $incdir);
+            parser_accept_reject_tests!($parserfn, $incdir);
         }
     };
 }
@@ -19,18 +19,16 @@ macro_rules! parser_accept_reject_tests {
     ($parserfn:expr, $incdir:expr) => {
         #[test]
         fn accepts() {
-            use combine::parser;
             use parser::testutils::run_parser_repr_tests;
 
-            run_parser_repr_tests(|| parser($parserfn), $incdir);
+            run_parser_repr_tests($parserfn, $incdir);
         }
 
         #[test]
         fn rejects() {
-            use combine::parser;
             use parser::testutils::run_parser_reject_tests;
 
-            run_parser_reject_tests(|| parser($parserfn), $incdir);
+            run_parser_reject_tests($parserfn, $incdir);
         }
     };
 }

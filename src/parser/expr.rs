@@ -1,81 +1,79 @@
-use ast::{BinaryOperator, Expr, UnaryOperator};
+use ast::{BinaryOperator, GenExpr};
 use combine::{ParseResult, Parser};
+use parser::unop::FuncApplier;
 
-pub fn expr(input: &str) -> ParseResult<Expr, &str> {
-    use combine::char::char;
-    use combine::parser;
-    use parser::space::optspace;
+pub fn expr<'a>() -> GenExprParser<FuncApplier<'a>> {
+    use parser::unop::FuncApplier;
 
-    left_associative!(
-        parser(times_expr).skip(optspace()),
-        char('+').skip(optspace()).with(parser(times_expr)),
-        |left, right| Expr::BinOp(BinaryOperator::Plus, Box::new(left), Box::new(right))
-    ).parse_stream(input)
+    GenExprParser(FuncApplier::new())
 }
 
-fn times_expr(input: &str) -> ParseResult<Expr, &str> {
+def_ge_parser!(GenExprParser, |applier| {
     use combine::char::char;
-    use combine::parser;
     use parser::space::optspace;
 
     left_associative!(
-        parser(funcapp).skip(optspace()),
-        char('*').skip(optspace()).with(parser(funcapp)),
-        |left, right| Expr::BinOp(BinaryOperator::Times, Box::new(left), Box::new(right))
-    ).parse_stream(input)
-}
+        TimeExpr(applier).skip(optspace()),
+        char('+').skip(optspace()).with(TimeExpr(applier)),
+        |left, right| GenExpr::BinOp(BinaryOperator::Plus, Box::new(left), Box::new(right))
+    )
+});
 
-fn funcapp(input: &str) -> ParseResult<Expr, &str> {
-    use combine::parser;
-
-    use super::postapp::app_postfix;
-    use super::postapp::ApplicationPostFix::{FuncAPF, LookupAPF};
-    use ast::Expr::{FuncApp, LookupApp};
+def_ge_parser!(TimeExpr, |applier| {
+    use combine::char::char;
     use parser::space::optspace;
 
     left_associative!(
-        parser(applicand).skip(optspace()),
-        optspace().with(parser(app_postfix)),
+        FuncApp(applier).skip(optspace()),
+        char('*').skip(optspace()).with(FuncApp(applier)),
+        |left, right| GenExpr::BinOp(BinaryOperator::Times, Box::new(left), Box::new(right))
+    )
+});
+
+def_ge_parser!(FuncApp, |applier| {
+    use super::postapp::AppPostfix;
+    use super::postapp::ApplicationPostfix::{FuncAPF, LookupAPF};
+    use ast::GenExpr::{FuncApp, LookupApp};
+    use parser::space::optspace;
+
+    left_associative!(
+        Applicand(applier).skip(optspace()),
+        optspace().with(AppPostfix(applier)),
         |x, apf| match apf {
             LookupAPF(sym) => LookupApp(Box::new(x), sym),
             FuncAPF(apf) => FuncApp(Box::new(x), Box::new(apf)),
         }
-    ).parse_stream(input)
-}
+    )
+});
 
-fn applicand(input: &str) -> ParseResult<Expr, &str> {
+def_ge_parser!(Applicand, |applier| {
     use combine::parser;
     use parser::lambda::lambda_expr;
 
     parser(lambda_expr)
-        .or(parser(unary_application).map(|(op, x)| Expr::UnApp(op, x)))
-        .or(parser(unary_applicand))
-        .parse_stream(input)
-}
+        .or(UnaryApplication(applier))
+        .or(UnaryApplicand(applier))
+});
 
-fn unary_application(input: &str) -> ParseResult<(UnaryOperator, Box<Expr>), &str> {
-    use combine::char::char;
-    use combine::parser;
+def_ge_parser!(UnaryApplication, |applier| {
     use parser::space::optspace;
 
-    ((char('$').map(|_| UnaryOperator::Query)).or(char('!').map(|_| UnaryOperator::Mutate)))
+    applier
         .skip(optspace())
-        .and(parser(unary_applicand))
-        .map(|(op, x)| (op, Box::new(x)))
-        .parse_stream(input)
-}
+        .and(UnaryApplicand(applier))
+        .map(|(op, x)| GenExpr::UnApp(op, Box::new(x)))
+});
 
-fn unary_applicand(input: &str) -> ParseResult<Expr, &str> {
+def_ge_parser!(UnaryApplicand, |applier| {
     use combine::parser;
-    use parser::subexpr::{list_expr, parens_expr};
+    use parser::subexpr::{ListExpr, ParensExpr};
     use parser::{atom, identifier};
 
-    parser(parens_expr)
-        .or(parser(list_expr))
-        .or(parser(atom).map(Expr::Atom))
-        .or(parser(identifier).map(Expr::Deref))
-        .parse_stream(input)
-}
+    ParensExpr(applier)
+        .or(ListExpr(applier))
+        .or(parser(atom).map(GenExpr::Atom))
+        .or(parser(identifier).map(GenExpr::Deref))
+});
 
 #[cfg(test)]
 mod tests {
@@ -85,8 +83,7 @@ mod tests {
 
     #[test]
     fn accepts_atom_cases() {
-        use ast::Expr;
-        use combine::{parser, Parser};
+        use combine::Parser;
         use parser::testutils::run_parser_repr_tests;
         use std::error::Error;
         use std::fmt;
@@ -108,8 +105,10 @@ mod tests {
 
         run_parser_repr_tests(
             || {
-                parser(expr).and_then(|x| match x {
-                    Expr::Atom(a) => Ok(a),
+                use ast::GenExpr;
+
+                expr().and_then(|x| match x {
+                    GenExpr::Atom(a) => Ok(a),
                     _ => Err(MyError(format!("Expected atom found {:?}", x))),
                 })
             },
