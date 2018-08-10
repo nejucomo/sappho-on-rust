@@ -43,26 +43,30 @@ fn funcdef(input: &str) -> ParseResult<FunctionDefinition, &str> {
     use combine::char::char;
     use combine::{parser, Parser};
     use parser::space::{linespace, space};
-    use parser::{expr, identifier};
+    use parser::{func_expr, identifier};
 
     parser(identifier)
-        .and(linespace().with(char('→')).with(space()).with(expr()))
+        .and(
+            linespace()
+                .with(char('→'))
+                .with(space())
+                .with(func_expr()),
+        )
         .map(|(ident, x)| FunctionDefinition(ident, Box::new(x)))
         .parse_stream(input)
 }
 
 fn querydef(input: &str) -> ParseResult<QueryDefinition, &str> {
     use ast::QueryDefinition;
-    use combine::Parser;
-    use parser::expr::GenExprParser;
+    use combine::{parser, Parser};
+    use parser::expr::query_expr;
     use parser::keywords::Keyword;
     use parser::space::space;
-    use parser::unop::QueryApplier;
 
     Keyword::Query
         .parser()
         .with(space())
-        .with(GenExprParser(QueryApplier::new()))
+        .with(parser(query_expr))
         .map(|x| QueryDefinition(Box::new(x)))
         .parse_stream(input)
 }

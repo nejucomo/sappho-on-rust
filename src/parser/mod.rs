@@ -19,11 +19,11 @@ mod postapp;
 mod space;
 mod subexpr;
 mod text;
-mod unop;
+mod unaryapp;
 
 pub use self::atom::atom;
 pub use self::boolean::boolean;
-pub use self::expr::expr;
+pub use self::expr::func_expr;
 pub use self::identifier::{identifier, symbol};
 pub use self::number::number;
 pub use self::text::{character, text};

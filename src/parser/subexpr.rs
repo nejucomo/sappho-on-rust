@@ -2,32 +2,33 @@
 
 use ast::GenExpr;
 use combine::{ParseResult, Parser};
+use std::marker::PhantomData;
 
-def_ge_parser!(ListExpr, |applier| {
+def_ge_parser!(list_expr, ListExprParser, |applier| {
     use combine::char::char;
     use combine::{between, sep_end_by};
-    use parser::expr::GenExprParser;
+    use parser::expr::gen_expr;
     use parser::space::{optlinespace, optspace};
 
     between(
         char('[').skip(optlinespace()),
         char(']'),
         sep_end_by(
-            GenExprParser(applier).skip(optspace()),
+            gen_expr(applier).skip(optspace()),
             char(',').skip(optlinespace()),
         ),
     ).map(GenExpr::List)
 });
 
-def_ge_parser!(ParensExpr, |applier| {
+def_ge_parser!(parens_expr, ParensExprParser, |applier| {
     use combine::between;
     use combine::char::char;
-    use parser::expr::GenExprParser;
+    use parser::expr::gen_expr;
     use parser::space::optlinespace;
 
     between(
         char('(').skip(optlinespace()),
         char(')'),
-        GenExprParser(applier).skip(optlinespace()),
+        gen_expr(applier).skip(optlinespace()),
     )
 });

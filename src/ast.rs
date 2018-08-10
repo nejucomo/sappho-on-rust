@@ -15,7 +15,7 @@ pub enum QueryExpr {
 #[derive(Clone, Debug)]
 pub enum ProcExpr {
     GExpr(GenExpr<ProcExpr>),
-    QExpr(QueryExpr),
+    Query(Box<ProcExpr>),
     Mutate(Box<ProcExpr>),
 }
 
