@@ -13,8 +13,8 @@ mod value;
 
 fn main() {
     use combine::{eof, parser, Parser};
-    use parser::expr;
     use parser::keywords::Keyword;
+    use parser::stepping_stone_proc_expr;
     use std::io::BufRead;
 
     // Keyword coverage in main:
@@ -38,7 +38,7 @@ fn main() {
     for lineres in stdin.lock().lines() {
         let line = lineres.unwrap();
         println!("input: {:?}", &line);
-        let result = parser(expr).skip(eof()).parse(&line);
+        let result = parser(stepping_stone_proc_expr).skip(eof()).parse(&line);
         println!("result: {:?}", &result);
         prompt();
     }

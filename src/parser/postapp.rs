@@ -1,10 +1,10 @@
-use ast::Expr;
+use ast::SteppingStoneProcExpr;
 use combine::ParseResult;
 use value::Symbol;
 
 pub enum ApplicationPostFix {
     LookupAPF(Symbol),
-    FuncAPF(Expr),
+    FuncAPF(SteppingStoneProcExpr),
 }
 
 pub fn app_postfix(input: &str) -> ParseResult<ApplicationPostFix, &str> {
