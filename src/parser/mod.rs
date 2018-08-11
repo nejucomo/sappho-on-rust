@@ -2,15 +2,13 @@
 #[macro_use]
 mod testutils;
 
-#[macro_use]
-mod leftassoc;
-
 mod atom;
 mod boolean;
 mod expr;
 mod identifier;
 pub mod keywords; // FIXME: Make non-pub after removing `Keyword::all()`.
 mod lambda;
+mod leftassoc;
 mod number;
 mod postapp;
 mod space;
