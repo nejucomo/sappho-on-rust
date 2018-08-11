@@ -1,13 +1,19 @@
-macro_rules! left_associative {
-    ($first:expr, $subsequent:expr, $combine:expr) => {
-        ($first).then(|first| {
-            use combine::many;
+use combine::Parser;
 
-            // FIXME: Can we avoid creating the intermediate vec qos?
-            many($subsequent).map(move |subs: Vec<_>| {
-                // FIXME: Can we move-capture app so we don't need a clone?
-                subs.into_iter().fold(first.clone(), $combine)
-            })
-        })
-    };
+pub fn left_associative<'a, LP, LO, SP, SO, MF>(
+    left: LP,
+    subsequent: SP,
+    merge: MF,
+) -> impl Parser<Input = &'a str, Output = LO>
+where
+    LP: Parser<Input = &'a str, Output = LO>,
+    SP: Clone + Parser<Input = &'a str, Output = SO>,
+    MF: Clone + Fn(LO, SO) -> LO,
+    LO: Clone,
+{
+    left.then(move |lval| {
+        use combine::{many, value};
+
+        value(lval).and(many(subsequent.clone()))
+    }).map(move |(lval, subs): (_, Vec<_>)| subs.into_iter().fold(lval.clone(), merge.clone()))
 }
