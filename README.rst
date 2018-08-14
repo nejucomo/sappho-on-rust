@@ -29,7 +29,6 @@ So far we've been sacrificing 2 by naming each test case file redundantly in mac
 TODO
 ====
 
-#. Try using `impl Trait` and removing `parser()` calls.
-#. Introduce query/proc 𝜆.
 #. Create type abstraction over AST to reify Sappho mutation categories into the rust type system.
+#. Introduce query/proc 𝜆.
 

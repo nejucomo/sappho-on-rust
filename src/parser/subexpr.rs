@@ -1,37 +1,37 @@
 /* Reused sub-expressions; the ast has self-identical child nodes sometimes, so reuse code. */
 
-use ast::{GenExpr, SteppingStoneProcExpr};
-use combine::ParseResult;
+use ast::GenExpr;
+use combine::{ParseResult, Parser};
+use std::marker::PhantomData;
 
-pub fn list_expr(input: &str) -> ParseResult<SteppingStoneProcExpr, &str> {
+def_ge_parser!(list_expr, ListExprParser, |f| {
     use ast::{ProcExpr, SteppingStoneProcExpr};
     use combine::char::char;
-    use combine::{between, parser, sep_end_by, Parser};
+    use combine::{between, sep_end_by, Parser};
+    use parser::func_expr;
     use parser::space::{optlinespace, optspace};
-    use parser::stepping_stone_proc_expr;
 
     between(
         char('[').skip(optlinespace()),
         char(']'),
         sep_end_by(
-            parser(stepping_stone_proc_expr).skip(optspace()),
+            func_expr(f).skip(optspace()),
             char(',').skip(optlinespace()),
         ),
     ).map(GenExpr::List)
         .map(ProcExpr::GenExpr)
         .map(SteppingStoneProcExpr)
-        .parse_stream(input)
-}
+});
 
-pub fn parens_expr(input: &str) -> ParseResult<SteppingStoneProcExpr, &str> {
+def_ge_parser!(parens_expr, ParensExprParser, |f| {
     use combine::char::char;
-    use combine::{between, parser, Parser};
+    use combine::{between, Parser};
+    use parser::func_expr;
     use parser::space::optlinespace;
-    use parser::stepping_stone_proc_expr;
 
     between(
         char('(').skip(optlinespace()),
         char(')'),
-        parser(stepping_stone_proc_expr).skip(optlinespace()),
-    ).parse_stream(input)
-}
+        func_expr(f).skip(optlinespace()),
+    )
+});

@@ -31,7 +31,10 @@ pub enum ProcExpr {
 pub struct SteppingStoneProcExpr(pub ProcExpr);
 
 #[derive(Clone, Debug)]
-pub enum GenExpr<X> {
+pub enum GenExpr<X>
+where
+    X: Clone,
+{
     Atom(Atom),
     Deref(Identifier),
     List(Vec<X>),

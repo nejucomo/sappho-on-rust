@@ -1,13 +1,18 @@
-use ast::SteppingStoneProcExpr;
-use combine::ParseResult;
+use ast::GenExpr;
+use combine::{ParseResult, Parser};
+use std::marker::PhantomData;
 use value::Symbol;
 
-pub enum ApplicationPostFix {
+#[derive(Clone, Debug)]
+pub enum ApplicationPostFix<T>
+where
+    T: Clone,
+{
     LookupAPF(Symbol),
-    FuncAPF(SteppingStoneProcExpr),
+    FuncAPF(GenExpr<T>),
 }
 
-pub fn app_postfix(input: &str) -> ParseResult<ApplicationPostFix, &str> {
+def_parser!(app_postfix, AppPostfixParser, ApplicationPostFix, |f| {
     use self::ApplicationPostFix::{FuncAPF, LookupAPF};
     use combine::{parser, Parser};
     use parser::subexpr::{list_expr, parens_expr};
@@ -15,6 +20,5 @@ pub fn app_postfix(input: &str) -> ParseResult<ApplicationPostFix, &str> {
 
     parser(symbol)
         .map(LookupAPF)
-        .or(parser(parens_expr).or(parser(list_expr)).map(FuncAPF))
-        .parse_stream(input)
-}
+        .or(parens_expr(f).or(list_expr(f)).map(FuncAPF))
+});
