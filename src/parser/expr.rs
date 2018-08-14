@@ -1,11 +1,26 @@
-use ast::FuncExpr;
+use ast::{FuncExpr, QueryExpr};
 use combine::{ParseResult, Parser};
 
 pub fn func_expr(input: &str) -> ParseResult<FuncExpr, &str> {
     use combine::Parser;
     use parser::genexpr::gen_expr;
 
-    gen_expr(&func_expr).map(FuncExpr);
+    gen_expr(&func_expr).map(FuncExpr).parse_stream(input)
+}
+
+pub fn query_expr(input: &str) -> ParseResult<QueryExpr, &str> {
+    use combine::char::char;
+    use combine::Parser;
+    use parser::genexpr::gen_expr;
+    use parser::space::optspace;
+
+    gen_expr(&query_expr)
+        .map(QueryExpr::GenExpr)
+        .or(char('$')
+            .skip(optspace())
+            .with(gen_expr(&query_expr))
+            .map(QueryExpr::Query))
+        .parse_stream(input)
 }
 
 #[cfg(test)]
@@ -39,10 +54,10 @@ mod tests {
 
         run_parser_repr_tests(
             || {
-                use ast::{ProcExpr, SteppingStoneProcExpr};
+                use ast::FuncExpr;
 
                 parser(func_expr).and_then(|x| match x {
-                    SteppingStoneProcExpr(ProcExpr::GenExpr(GenExpr::Atom(a))) => Ok(a),
+                    FuncExpr(GenExpr::Atom(a)) => Ok(a),
                     _ => Err(MyError(format!("Expected atom found {:?}", x))),
                 })
             },

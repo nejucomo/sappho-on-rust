@@ -61,14 +61,14 @@ fn funcdef(input: &str) -> ParseResult<FunctionDefinition, &str> {
 fn querydef(input: &str) -> ParseResult<QueryDefinition, &str> {
     use ast::QueryDefinition;
     use combine::{parser, Parser};
-    use parser::func_expr;
+    use parser::expr::query_expr;
     use parser::keywords::Keyword;
     use parser::space::space;
 
     Keyword::Query
         .parser()
         .with(space())
-        .with(parser(func_expr))
+        .with(parser(query_expr))
         .map(|x| QueryDefinition(Box::new(x)))
         .parse_stream(input)
 }

@@ -5,33 +5,27 @@ use combine::{ParseResult, Parser};
 use std::marker::PhantomData;
 
 def_ge_parser!(list_expr, ListExprParser, |f| {
-    use ast::{ProcExpr, SteppingStoneProcExpr};
     use combine::char::char;
+    use combine::parser;
     use combine::{between, sep_end_by, Parser};
-    use parser::func_expr;
     use parser::space::{optlinespace, optspace};
 
     between(
         char('[').skip(optlinespace()),
         char(']'),
-        sep_end_by(
-            func_expr(f).skip(optspace()),
-            char(',').skip(optlinespace()),
-        ),
+        sep_end_by(parser(f).skip(optspace()), char(',').skip(optlinespace())),
     ).map(GenExpr::List)
-        .map(ProcExpr::GenExpr)
-        .map(SteppingStoneProcExpr)
 });
 
 def_ge_parser!(parens_expr, ParensExprParser, |f| {
     use combine::char::char;
     use combine::{between, Parser};
-    use parser::func_expr;
+    use parser::genexpr::gen_expr;
     use parser::space::optlinespace;
 
     between(
         char('(').skip(optlinespace()),
         char(')'),
-        func_expr(f).skip(optlinespace()),
+        gen_expr(f).skip(optlinespace()),
     )
 });

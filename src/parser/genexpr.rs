@@ -5,6 +5,7 @@ use std::marker::PhantomData;
 def_ge_parser!(gen_expr, GenExprParser, |f| {
     use ast::{BinaryOperator, GenExpr};
     use combine::char::char;
+    use combine::Parser;
     use parser::leftassoc::left_associative;
     use parser::space::optspace;
     use parser::timesexpr::times_expr;
