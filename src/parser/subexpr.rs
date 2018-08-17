@@ -6,7 +6,7 @@ use combine::ParseResult;
 pub fn list_expr(input: &str) -> ParseResult<Expr, &str> {
     use combine::char::char;
     use combine::{between, parser, sep_end_by, Parser};
-    use parser::expr;
+    use parser::expr::expr;
     use parser::space::{optlinespace, optspace};
 
     between(
@@ -23,7 +23,7 @@ pub fn list_expr(input: &str) -> ParseResult<Expr, &str> {
 pub fn parens_expr(input: &str) -> ParseResult<Expr, &str> {
     use combine::char::char;
     use combine::{between, parser, Parser};
-    use parser::expr;
+    use parser::expr::expr;
     use parser::space::optlinespace;
 
     between(

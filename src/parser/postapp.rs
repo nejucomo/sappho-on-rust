@@ -10,8 +10,8 @@ pub enum ApplicationPostFix {
 pub fn app_postfix(input: &str) -> ParseResult<ApplicationPostFix, &str> {
     use self::ApplicationPostFix::{FuncAPF, LookupAPF};
     use combine::{parser, Parser};
+    use parser::atom::symbol;
     use parser::subexpr::{list_expr, parens_expr};
-    use parser::symbol;
 
     parser(symbol)
         .map(LookupAPF)

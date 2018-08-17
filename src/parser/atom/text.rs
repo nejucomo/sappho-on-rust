@@ -114,11 +114,15 @@ where
 
 #[cfg(test)]
 mod tests {
-    parser_tests_mod!(text, text, include_dir!("src/parser/test-vectors/text/"));
+    parser_tests_mod!(
+        text,
+        parser::atom::text::text,
+        include_dir!("src/parser/test-vectors/text/")
+    );
 
     parser_tests_mod!(
         character,
-        character,
+        parser::atom::text::character,
         include_dir!("src/parser/test-vectors/character/")
     );
 }

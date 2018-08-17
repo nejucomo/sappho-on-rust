@@ -42,8 +42,9 @@ fn funcdef(input: &str) -> ParseResult<FunctionDefinition, &str> {
     use ast::FunctionDefinition;
     use combine::char::char;
     use combine::{parser, Parser};
+    use parser::atom::identifier;
+    use parser::expr::expr;
     use parser::space::{linespace, space};
-    use parser::{expr, identifier};
 
     parser(identifier)
         .and(
@@ -59,7 +60,7 @@ fn funcdef(input: &str) -> ParseResult<FunctionDefinition, &str> {
 fn querydef(input: &str) -> ParseResult<QueryDefinition, &str> {
     use ast::QueryDefinition;
     use combine::{parser, Parser};
-    use parser::expr;
+    use parser::expr::expr;
     use parser::keywords::Keyword;
     use parser::space::space;
 

@@ -4,12 +4,12 @@ use std::fmt::{Debug, Error, Write};
 
 #[macro_export]
 macro_rules! parser_tests_mod {
-    ($modname:ident, $parserfn:ident, $incdir:expr) => {
+    ($modname:ident, $parserfn:path, $incdir:expr) => {
         #[cfg(test)]
         mod $modname {
             use parser;
 
-            parser_accept_reject_tests!(parser::$parserfn, $incdir);
+            parser_accept_reject_tests!($parserfn, $incdir);
         }
     };
 }

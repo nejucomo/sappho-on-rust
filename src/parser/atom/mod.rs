@@ -1,9 +1,22 @@
+mod boolean;
+mod identifier;
+mod number;
+mod text;
+
+pub use self::boolean::boolean;
+pub use self::identifier::{identifier, symbol};
+pub use self::number::number;
+pub use self::text::{character, text};
+
 use combine::{ParseResult, Parser};
 use value::Atom;
 
 pub fn atom(input: &str) -> ParseResult<Atom, &str> {
+    use self::boolean::boolean;
+    use self::identifier::symbol;
+    use self::number::number;
+    use self::text::{character, text};
     use combine::{parser, try};
-    use parser::{boolean, character, number, symbol, text};
 
     (try(parser(boolean)).map(Atom::Bool))
         .or(parser(number).map(Atom::Number))

@@ -69,8 +69,8 @@ fn unary_application(input: &str) -> ParseResult<(UnaryOperator, Box<Expr>), &st
 
 fn unary_applicand(input: &str) -> ParseResult<Expr, &str> {
     use combine::parser;
+    use parser::atom::{atom, identifier};
     use parser::subexpr::{list_expr, parens_expr};
-    use parser::{atom, identifier};
 
     parser(parens_expr)
         .or(parser(list_expr))
