@@ -1,5 +1,6 @@
 use ast::{BinaryOperator, Expr, UnaryOperator};
 use combine::{ParseResult, Parser};
+use value::Symbol;
 
 pub fn expr(input: &str) -> ParseResult<Expr, &str> {
     use combine::char::char;
@@ -28,8 +29,7 @@ fn times_expr(input: &str) -> ParseResult<Expr, &str> {
 }
 
 fn funcapp(input: &str) -> ParseResult<Expr, &str> {
-    use super::postapp::app_postfix;
-    use super::postapp::ApplicationPostFix::{FuncAPF, LookupAPF};
+    use self::ApplicationPostFix::{FuncAPF, LookupAPF};
     use ast::Expr::{FuncApp, LookupApp};
     use combine::parser;
     use parser::leftassoc::left_associative;
@@ -45,6 +45,21 @@ fn funcapp(input: &str) -> ParseResult<Expr, &str> {
     ).parse_stream(input)
 }
 
+pub enum ApplicationPostFix {
+    LookupAPF(Symbol),
+    FuncAPF(Expr),
+}
+
+pub fn app_postfix(input: &str) -> ParseResult<ApplicationPostFix, &str> {
+    use self::ApplicationPostFix::{FuncAPF, LookupAPF};
+    use combine::{parser, Parser};
+    use parser::atom::symbol;
+
+    parser(symbol)
+        .map(LookupAPF)
+        .or(parser(parens_expr).or(parser(list_expr)).map(FuncAPF))
+        .parse_stream(input)
+}
 fn applicand(input: &str) -> ParseResult<Expr, &str> {
     use combine::parser;
     use parser::lambda::lambda_expr;
@@ -70,13 +85,42 @@ fn unary_application(input: &str) -> ParseResult<(UnaryOperator, Box<Expr>), &st
 fn unary_applicand(input: &str) -> ParseResult<Expr, &str> {
     use combine::parser;
     use parser::atom::{atom, identifier};
-    use parser::subexpr::{list_expr, parens_expr};
 
     parser(parens_expr)
         .or(parser(list_expr))
         .or(parser(atom).map(Expr::Atom))
         .or(parser(identifier).map(Expr::Deref))
         .parse_stream(input)
+}
+
+fn list_expr(input: &str) -> ParseResult<Expr, &str> {
+    use combine::char::char;
+    use combine::{between, parser, sep_end_by, Parser};
+    use parser::expr::expr;
+    use parser::space::{optlinespace, optspace};
+
+    between(
+        char('[').skip(optlinespace()),
+        char(']'),
+        sep_end_by(
+            parser(expr).skip(optspace()),
+            char(',').skip(optlinespace()),
+        ),
+    ).map(Expr::List)
+        .parse_stream(input)
+}
+
+fn parens_expr(input: &str) -> ParseResult<Expr, &str> {
+    use combine::char::char;
+    use combine::{between, parser, Parser};
+    use parser::expr::expr;
+    use parser::space::optlinespace;
+
+    between(
+        char('(').skip(optlinespace()),
+        char(')'),
+        parser(expr).skip(optlinespace()),
+    ).parse_stream(input)
 }
 
 #[cfg(test)]
