@@ -4,9 +4,8 @@ mod testutils;
 
 mod atom;
 mod expr;
-pub mod keywords; // FIXME: Make non-pub after removing `Keyword::all()`.
 mod lambda;
 mod leftassoc;
-mod space;
+pub mod terminal;
 
 pub use self::expr::expr;

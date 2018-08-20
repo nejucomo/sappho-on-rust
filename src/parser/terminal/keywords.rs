@@ -34,7 +34,7 @@ macro_rules! define_keyword {
                     #[test]
                     fn accepts() {
                         use parser::testutils::run_parser_repr_tests;
-                        use parser::keywords::Keyword;
+                        use parser::terminal::keywords::Keyword;
 
                         let casename = &stringify!($name).to_lowercase();
 
@@ -49,7 +49,7 @@ macro_rules! define_keyword {
                     #[test]
                     fn rejects() {
                         use parser::testutils::run_parser_reject_tests;
-                        use parser::keywords::Keyword;
+                        use parser::terminal::keywords::Keyword;
 
                         let casename = stringify!($name).to_lowercase();
 

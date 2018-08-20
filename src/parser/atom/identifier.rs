@@ -6,7 +6,7 @@ pub fn identifier(input: &str) -> ParseResult<Identifier, &str> {
     use combine::char::{alpha_num, char, letter};
     use combine::combinator::many;
     use combine::{parser, Parser};
-    use parser::keywords::KEYWORDS;
+    use parser::terminal::keywords::KEYWORDS;
 
     let head = letter().or(char('_'));
     let tail = alpha_num().or(char('_'));

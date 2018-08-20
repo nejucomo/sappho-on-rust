@@ -14,7 +14,7 @@ mod value;
 fn main() {
     use combine::{eof, parser, Parser};
     use parser::expr;
-    use parser::keywords::Keyword;
+    use parser::terminal::keywords::Keyword;
     use std::io::BufRead;
 
     // Keyword coverage in main:

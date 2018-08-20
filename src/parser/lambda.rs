@@ -12,8 +12,8 @@ pub fn lambda_expr(input: &str) -> ParseResult<Expr, &str> {
 
 fn kw_lambda_expr(input: &str) -> ParseResult<LambdaDefinition, &str> {
     use combine::{parser, Parser};
-    use parser::keywords::Keyword;
-    use parser::space::space;
+    use parser::terminal::keywords::Keyword;
+    use parser::terminal::space::space;
 
     Keyword::Lambda
         .parser()
@@ -29,7 +29,7 @@ fn kw_lambda_expr(input: &str) -> ParseResult<LambdaDefinition, &str> {
 fn squigglydef(input: &str) -> ParseResult<LambdaDefinition, &str> {
     use combine::char::char;
     use combine::{between, parser, Parser};
-    use parser::space::optlinespace;
+    use parser::terminal::space::optlinespace;
 
     between(
         char('{').skip(optlinespace()),
@@ -44,7 +44,7 @@ fn funcdef(input: &str) -> ParseResult<FunctionDefinition, &str> {
     use combine::{parser, Parser};
     use parser::atom::identifier;
     use parser::expr::expr;
-    use parser::space::{linespace, space};
+    use parser::terminal::space::{linespace, space};
 
     parser(identifier)
         .and(
@@ -61,8 +61,8 @@ fn querydef(input: &str) -> ParseResult<QueryDefinition, &str> {
     use ast::QueryDefinition;
     use combine::{parser, Parser};
     use parser::expr::expr;
-    use parser::keywords::Keyword;
-    use parser::space::space;
+    use parser::terminal::keywords::Keyword;
+    use parser::terminal::space::space;
 
     Keyword::Query
         .parser()

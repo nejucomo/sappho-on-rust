@@ -6,7 +6,7 @@ pub fn expr(input: &str) -> ParseResult<Expr, &str> {
     use combine::char::char;
     use combine::parser;
     use parser::leftassoc::left_associative;
-    use parser::space::optspace;
+    use parser::terminal::space::optspace;
 
     left_associative(
         parser(times_expr).skip(optspace()),
@@ -19,7 +19,7 @@ fn times_expr(input: &str) -> ParseResult<Expr, &str> {
     use combine::char::char;
     use combine::parser;
     use parser::leftassoc::left_associative;
-    use parser::space::optspace;
+    use parser::terminal::space::optspace;
 
     left_associative(
         parser(funcapp).skip(optspace()),
@@ -33,7 +33,7 @@ fn funcapp(input: &str) -> ParseResult<Expr, &str> {
     use ast::Expr::{FuncApp, LookupApp};
     use combine::parser;
     use parser::leftassoc::left_associative;
-    use parser::space::optspace;
+    use parser::terminal::space::optspace;
 
     left_associative(
         parser(applicand).skip(optspace()),
@@ -73,7 +73,7 @@ fn applicand(input: &str) -> ParseResult<Expr, &str> {
 fn unary_application(input: &str) -> ParseResult<(UnaryOperator, Box<Expr>), &str> {
     use combine::char::char;
     use combine::parser;
-    use parser::space::optspace;
+    use parser::terminal::space::optspace;
 
     ((char('$').map(|_| UnaryOperator::Query)).or(char('!').map(|_| UnaryOperator::Mutate)))
         .skip(optspace())
@@ -97,7 +97,7 @@ fn list_expr(input: &str) -> ParseResult<Expr, &str> {
     use combine::char::char;
     use combine::{between, parser, sep_end_by, Parser};
     use parser::expr::expr;
-    use parser::space::{optlinespace, optspace};
+    use parser::terminal::space::{optlinespace, optspace};
 
     between(
         char('[').skip(optlinespace()),
@@ -114,7 +114,7 @@ fn parens_expr(input: &str) -> ParseResult<Expr, &str> {
     use combine::char::char;
     use combine::{between, parser, Parser};
     use parser::expr::expr;
-    use parser::space::optlinespace;
+    use parser::terminal::space::optlinespace;
 
     between(
         char('(').skip(optlinespace()),
