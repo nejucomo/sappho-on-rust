@@ -1,4 +1,5 @@
-use combine::ParseResult;
+use combine::{ParseResult, Parser};
+use std::ops::Neg;
 use value::Number;
 
 macro_rules! from_radix {
@@ -7,18 +8,23 @@ macro_rules! from_radix {
     };
 }
 
-macro_rules! signed {
-    ($p:expr) => {{
-        use combine::char::char;
-
-        char('+').with($p).or(char('-').with($p).map(|n| -n)).or($p)
-    }};
-}
-
 pub fn number(input: &str) -> ParseResult<Number, &str> {
     use combine::{parser, Parser};
 
-    signed!(parser(signless_number)).parse_stream(input)
+    signed(parser(signless_number)).parse_stream(input)
+}
+
+fn signed<'a, P, O>(p: P) -> impl Parser<Output = O, Input = &'a str>
+where
+    P: Clone + Parser<Output = O, Input = &'a str>,
+    O: Neg<Output = O>,
+{
+    use combine::char::char;
+
+    char('+')
+        .with(p.clone())
+        .or(char('-').with(p.clone()).map(|n| -n))
+        .or(p)
 }
 
 fn signless_number(input: &str) -> ParseResult<Number, &str> {
@@ -52,9 +58,11 @@ fn decimal_number(input: &str) -> ParseResult<Number, &str> {
 
     many1(digit())
         .and(optional(try(char('.').with(many1(digit())))))
-        .and(optional(char('e').or(char('E')).with(signed!(
-            many1(digit()).and_then(from_radix!(i32, 10))
-        ))))
+        .and(optional(
+            char('e')
+                .or(char('E'))
+                .with(signed(many1(digit()).and_then(from_radix!(i32, 10)))),
+        ))
         .and_then(
             |((mut digs, optdec), optexp): ((String, Option<String>), Option<i32>)| {
                 use num::{BigInt, Num};
