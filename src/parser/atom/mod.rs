@@ -19,7 +19,7 @@ pub fn atom(input: &str) -> ParseResult<Atom, &str> {
     use combine::{parser, try};
 
     (try(boolean()).map(Atom::Bool))
-        .or(parser(number).map(Atom::Number))
+        .or(number().map(Atom::Number))
         .or(try(parser(character)).map(Atom::Char))
         .or(parser(text).map(Atom::Text))
         .or(parser(symbol).map(Atom::Symbol))

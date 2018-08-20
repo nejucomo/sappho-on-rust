@@ -1,15 +1,13 @@
-use combine::{ParseResult, Parser};
+use combine::Parser;
 use num::{BigInt, Num};
 use std::ops::Neg;
 use value::Number;
 
-pub fn number(input: &str) -> ParseResult<Number, &str> {
-    use combine::{parser, Parser};
-
-    signed(parser(signless_number)).parse_stream(input)
+pub fn number<'a>() -> impl Parser<Output = Number, Input = &'a str> {
+    signed(signless_number())
 }
 
-fn signed<'a, P, O>(p: P) -> impl Parser<Output = O, Input = &'a str>
+fn signed<'a, P, O>(p: P) -> impl Clone + Parser<Output = O, Input = &'a str>
 where
     P: Clone + Parser<Output = O, Input = &'a str>,
     O: Neg<Output = O>,
@@ -22,15 +20,13 @@ where
         .or(p)
 }
 
-fn signless_number(input: &str) -> ParseResult<Number, &str> {
-    use combine::{parser, try, Parser};
+fn signless_number<'a>() -> impl Clone + Parser<Output = Number, Input = &'a str> {
+    use combine::{try, Parser};
 
-    try(parser(zero_or_hexbin_number))
-        .or(parser(decimal_number))
-        .parse_stream(input)
+    try(zero_or_hexbin_number()).or(decimal_number())
 }
 
-fn zero_or_hexbin_number(input: &str) -> ParseResult<Number, &str> {
+fn zero_or_hexbin_number<'a>() -> impl Clone + Parser<Output = Number, Input = &'a str> {
     use combine::char::{char, hex_digit};
     use combine::{many1, satisfy, Parser};
 
@@ -41,10 +37,9 @@ fn zero_or_hexbin_number(input: &str) -> ParseResult<Number, &str> {
                 .or(char('b').with(from_radix(2, many1(satisfy(|c| c == '0' || c == '1'))))),
         )
         .map(Number::from_bigint)
-        .parse_stream(input)
 }
 
-fn decimal_number(input: &str) -> ParseResult<Number, &str> {
+fn decimal_number<'a>() -> impl Clone + Parser<Output = Number, Input = &'a str> {
     use combine::char::{char, digit};
     use combine::{many1, optional, try, Parser};
 
@@ -73,7 +68,6 @@ fn decimal_number(input: &str) -> ParseResult<Number, &str> {
                 BigInt::from_str_radix(digs.as_str(), 10).map(|i| Number::new(i, places))
             },
         )
-        .parse_stream(input)
 }
 
 fn from_radix<'a, P>(radix: u32, p: P) -> impl Clone + Parser<Output = BigInt, Input = &'a str>
