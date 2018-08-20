@@ -18,7 +18,7 @@ pub fn atom(input: &str) -> ParseResult<Atom, &str> {
     use self::text::{character, text};
     use combine::{parser, try};
 
-    (try(parser(boolean)).map(Atom::Bool))
+    (try(boolean()).map(Atom::Bool))
         .or(parser(number).map(Atom::Number))
         .or(try(parser(character)).map(Atom::Char))
         .or(parser(text).map(Atom::Text))
