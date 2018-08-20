@@ -1,11 +1,14 @@
+mod lambda;
+mod leftassoc;
+
 use ast::{BinaryOperator, Expr, UnaryOperator};
 use combine::{ParseResult, Parser};
 use value::Symbol;
 
 pub fn expr(input: &str) -> ParseResult<Expr, &str> {
+    use self::leftassoc::left_associative;
     use combine::char::char;
     use combine::parser;
-    use parser::leftassoc::left_associative;
     use parser::terminal::space::optspace;
 
     left_associative(
@@ -16,9 +19,9 @@ pub fn expr(input: &str) -> ParseResult<Expr, &str> {
 }
 
 fn times_expr(input: &str) -> ParseResult<Expr, &str> {
+    use self::leftassoc::left_associative;
     use combine::char::char;
     use combine::parser;
-    use parser::leftassoc::left_associative;
     use parser::terminal::space::optspace;
 
     left_associative(
@@ -29,10 +32,10 @@ fn times_expr(input: &str) -> ParseResult<Expr, &str> {
 }
 
 fn funcapp(input: &str) -> ParseResult<Expr, &str> {
+    use self::leftassoc::left_associative;
     use self::ApplicationPostFix::{FuncAPF, LookupAPF};
     use ast::Expr::{FuncApp, LookupApp};
     use combine::parser;
-    use parser::leftassoc::left_associative;
     use parser::terminal::space::optspace;
 
     left_associative(
@@ -61,8 +64,8 @@ pub fn app_postfix(input: &str) -> ParseResult<ApplicationPostFix, &str> {
         .parse_stream(input)
 }
 fn applicand(input: &str) -> ParseResult<Expr, &str> {
+    use self::lambda::lambda_expr;
     use combine::parser;
-    use parser::lambda::lambda_expr;
 
     parser(lambda_expr)
         .or(parser(unary_application).map(|(op, x)| Expr::UnApp(op, x)))
