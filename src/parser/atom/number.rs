@@ -21,7 +21,7 @@ pub fn number(input: &str) -> ParseResult<Number, &str> {
     signed!(parser(signless_number)).parse_stream(input)
 }
 
-pub fn signless_number(input: &str) -> ParseResult<Number, &str> {
+fn signless_number(input: &str) -> ParseResult<Number, &str> {
     use combine::{parser, try, Parser};
 
     try(parser(zero_or_hexbin_number))
@@ -29,7 +29,7 @@ pub fn signless_number(input: &str) -> ParseResult<Number, &str> {
         .parse_stream(input)
 }
 
-pub fn zero_or_hexbin_number(input: &str) -> ParseResult<Number, &str> {
+fn zero_or_hexbin_number(input: &str) -> ParseResult<Number, &str> {
     use combine::char::{char, hex_digit};
     use combine::{many1, satisfy, Parser};
     use num::{BigInt, Num};
@@ -46,7 +46,7 @@ pub fn zero_or_hexbin_number(input: &str) -> ParseResult<Number, &str> {
         .parse_stream(input)
 }
 
-pub fn decimal_number(input: &str) -> ParseResult<Number, &str> {
+fn decimal_number(input: &str) -> ParseResult<Number, &str> {
     use combine::char::{char, digit};
     use combine::{many1, optional, try, Parser};
 
