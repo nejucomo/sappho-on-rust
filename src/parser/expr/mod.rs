@@ -2,10 +2,31 @@ mod lambda;
 mod leftassoc;
 
 use ast::{BinaryOperator, Expr, UnaryOperator};
-use combine::Parser;
+use combine::{ParseResult, Parser};
+use std::marker::PhantomData;
 use value::Symbol;
 
-pub fn expr<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
+pub fn expr<'a>() -> ExprParser<'a> {
+    ExprParser {
+        _marker: PhantomData,
+    }
+}
+
+#[derive(Clone)]
+pub struct ExprParser<'a> {
+    _marker: PhantomData<&'a ()>,
+}
+
+impl<'a> Parser for ExprParser<'a> {
+    type Input = &'a str;
+    type Output = Expr;
+
+    fn parse_stream(&mut self, input: Self::Input) -> ParseResult<Self::Output, Self::Input> {
+        plus_expr().parse_stream(input)
+    }
+}
+
+fn plus_expr<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
     use self::leftassoc::left_associative;
     use combine::char::char;
     use parser::terminal::space::optspace;
