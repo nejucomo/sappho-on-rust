@@ -1,8 +1,8 @@
 use ast::Identifier;
-use combine::ParseResult;
+use combine::Parser;
 use value::Symbol;
 
-pub fn identifier(input: &str) -> ParseResult<Identifier, &str> {
+pub fn identifier<'a>() -> impl Clone + Parser<Output = Identifier, Input = &'a str> {
     use combine::char::{alpha_num, char, letter};
     use combine::combinator::many;
     use combine::{parser, Parser};
@@ -37,17 +37,14 @@ pub fn identifier(input: &str) -> ParseResult<Identifier, &str> {
                 }
             })
         })
-        .parse_stream(input)
 }
 
-pub fn symbol(input: &str) -> ParseResult<Symbol, &str> {
+pub fn symbol<'a>() -> impl Clone + Parser<Output = Symbol, Input = &'a str> {
     use combine::char::char;
-    use combine::{parser, Parser};
+    use combine::Parser;
     use value::Symbol;
 
-    char('.')
-        .with(parser(identifier).map(|id| Symbol(id.0)))
-        .parse_stream(input)
+    char('.').with(identifier().map(|id| Symbol(id.0)))
 }
 
 #[cfg(test)]

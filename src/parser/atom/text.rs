@@ -1,26 +1,26 @@
 use combine::{ParseResult, Parser, Stream};
 use std::marker::PhantomData;
 
-pub fn character(input: &str) -> ParseResult<char, &str> {
+pub fn character<'a>() -> impl Clone + Parser<Output = char, Input = &'a str> {
     use combine::char::char;
     use combine::{between, Parser};
 
-    char('c')
-        .with(between(char('\''), char('\''), char_lit('\'')).or(between(
-            char('"'),
-            char('"'),
-            char_lit('"'),
-        )))
-        .parse_stream(input)
+    char('c').with(between(char('\''), char('\''), char_lit('\'')).or(between(
+        char('"'),
+        char('"'),
+        char_lit('"'),
+    )))
 }
 
-pub fn text(input: &str) -> ParseResult<String, &str> {
+pub fn text<'a>() -> impl Clone + Parser<Output = String, Input = &'a str> {
     use combine::char::char;
     use combine::{between, many, Parser};
 
-    between(char('"'), char('"'), many(char_lit('"')))
-        .or(between(char('\''), char('\''), many(char_lit('\''))))
-        .parse_stream(input)
+    between(char('"'), char('"'), many(char_lit('"'))).or(between(
+        char('\''),
+        char('\''),
+        many(char_lit('\'')),
+    ))
 }
 
 fn char_lit<I>(delim: char) -> CharLit<I>
@@ -33,6 +33,7 @@ where
     }
 }
 
+#[derive(Clone)]
 struct CharLit<I> {
     delim: char,
     _marker: PhantomData<I>,

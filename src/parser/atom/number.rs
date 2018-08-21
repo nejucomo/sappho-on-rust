@@ -3,7 +3,7 @@ use num::{BigInt, Num};
 use std::ops::Neg;
 use value::Number;
 
-pub fn number<'a>() -> impl Parser<Output = Number, Input = &'a str> {
+pub fn number<'a>() -> impl Clone + Parser<Output = Number, Input = &'a str> {
     signed(signless_number())
 }
 

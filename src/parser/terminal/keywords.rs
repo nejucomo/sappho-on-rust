@@ -1,7 +1,7 @@
 macro_rules! define_keyword {
     ( $( ($name:ident, $testname:ident, $text:expr) ),* ) => {
 
-        #[derive(Debug)]
+        #[derive(Clone, Debug)]
         pub enum Keyword {
             $( $name ),*
         }
@@ -88,6 +88,7 @@ impl fmt::Display for Keyword {
     }
 }
 
+#[derive(Clone)]
 pub struct KeywordParser<I> {
     keyword: Keyword,
     _marker: PhantomData<I>,

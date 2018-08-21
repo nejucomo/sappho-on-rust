@@ -4,9 +4,9 @@ pub fn left_associative<'a, LP, LO, SP, SO, MF>(
     left: LP,
     subsequent: SP,
     merge: MF,
-) -> impl Parser<Input = &'a str, Output = LO>
+) -> impl Clone + Parser<Input = &'a str, Output = LO>
 where
-    LP: Parser<Input = &'a str, Output = LO>,
+    LP: Clone + Parser<Input = &'a str, Output = LO>,
     SP: Clone + Parser<Input = &'a str, Output = SO>,
     MF: Clone + Fn(LO, SO) -> LO,
     LO: Clone,

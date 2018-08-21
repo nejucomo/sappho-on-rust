@@ -8,22 +8,21 @@ pub use self::identifier::{identifier, symbol};
 pub use self::number::number;
 pub use self::text::{character, text};
 
-use combine::{ParseResult, Parser};
+use combine::Parser;
 use value::Atom;
 
-pub fn atom(input: &str) -> ParseResult<Atom, &str> {
+pub fn atom<'a>() -> impl Clone + Parser<Output = Atom, Input = &'a str> {
     use self::boolean::boolean;
     use self::identifier::symbol;
     use self::number::number;
     use self::text::{character, text};
-    use combine::{parser, try};
+    use combine::try;
 
     (try(boolean()).map(Atom::Bool))
         .or(number().map(Atom::Number))
-        .or(try(parser(character)).map(Atom::Char))
-        .or(parser(text).map(Atom::Text))
-        .or(parser(symbol).map(Atom::Symbol))
-        .parse_stream(input)
+        .or(try(character()).map(Atom::Char))
+        .or(text().map(Atom::Text))
+        .or(symbol().map(Atom::Symbol))
 }
 
 #[cfg(tests)]

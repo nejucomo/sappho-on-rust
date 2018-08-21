@@ -1,6 +1,6 @@
 use combine::Parser;
 
-pub fn boolean<'a>() -> impl Parser<Input = &'a str, Output = bool> {
+pub fn boolean<'a>() -> impl Clone + Parser<Input = &'a str, Output = bool> {
     use combine::char::string;
     use combine::{value, Parser};
 
