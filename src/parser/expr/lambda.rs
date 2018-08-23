@@ -1,7 +1,7 @@
 use ast::{Expr, FunctionDefinition, LambdaDefinition, QueryDefinition};
 use combine::Parser;
 
-pub fn lambda_expr<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
+pub fn lambda_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str> {
     use combine::Parser;
 
     kw_lambda_expr()
@@ -48,7 +48,7 @@ fn funcdef<'a>() -> impl Clone + Parser<Output = FunctionDefinition, Input = &'a
 fn querydef<'a>() -> impl Clone + Parser<Output = QueryDefinition, Input = &'a str> {
     use ast::QueryDefinition;
     use combine::Parser;
-    use parser::expr::expr;
+    use parser::expr;
     use parser::terminal::keywords::Keyword;
     use parser::terminal::space::space;
 

@@ -1,8 +1,19 @@
-use ast::{BinaryOperator, Expr, UnaryOperator};
+use ast::{BinaryOperator, Expr};
 use combine::Parser;
+use parser::expr::parsesto::ParsesTo;
 use value::Symbol;
 
-pub fn plus_expr<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
+pub fn top_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+where
+    OP: ParsesTo<'a>,
+{
+    plus_expr()
+}
+
+fn plus_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+where
+    OP: ParsesTo<'a>,
+{
     use super::leftassoc::left_associative;
     use combine::char::char;
     use parser::terminal::space::optspace;
@@ -14,7 +25,10 @@ pub fn plus_expr<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
     )
 }
 
-fn times_expr<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
+fn times_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+where
+    OP: ParsesTo<'a>,
+{
     use super::leftassoc::left_associative;
     use combine::char::char;
     use parser::terminal::space::optspace;
@@ -26,7 +40,10 @@ fn times_expr<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
     )
 }
 
-fn funcapp<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
+fn funcapp<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+where
+    OP: ParsesTo<'a>,
+{
     use self::ApplicationPostFix::{FuncAPF, LookupAPF};
     use super::leftassoc::left_associative;
     use ast::Expr::{FuncApp, LookupApp};
@@ -42,12 +59,15 @@ fn funcapp<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
     )
 }
 
-pub enum ApplicationPostFix {
+pub enum ApplicationPostFix<OP> {
     LookupAPF(Symbol),
-    FuncAPF(Expr),
+    FuncAPF(Expr<OP>),
 }
 
-pub fn app_postfix<'a>() -> impl Clone + Parser<Output = ApplicationPostFix, Input = &'a str> {
+pub fn app_postfix<'a, OP>() -> impl Clone + Parser<Output = ApplicationPostFix<OP>, Input = &'a str>
+where
+    OP: ParsesTo<'a>,
+{
     use self::ApplicationPostFix::{FuncAPF, LookupAPF};
     use combine::Parser;
     use parser::atom::symbol;
@@ -57,26 +77,31 @@ pub fn app_postfix<'a>() -> impl Clone + Parser<Output = ApplicationPostFix, Inp
         .or(parens_expr().or(list_expr()).map(FuncAPF))
 }
 
-fn applicand<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
+fn applicand<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+where
+    OP: ParsesTo<'a>,
+{
     use super::lambda::lambda_expr;
 
-    lambda_expr()
-        .or(unary_application().map(|(op, x)| Expr::UnApp(op, x)))
-        .or(unary_applicand())
+    lambda_expr().or(unary_application()).or(unary_applicand())
 }
 
-fn unary_application<'a>(
-) -> impl Clone + Parser<Output = (UnaryOperator, Box<Expr>), Input = &'a str> {
-    use combine::char::char;
+fn unary_application<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+where
+    OP: ParsesTo<'a>,
+{
     use parser::terminal::space::optspace;
 
-    ((char('$').map(|_| UnaryOperator::Query)).or(char('!').map(|_| UnaryOperator::Mutate)))
+    OP::parser()
         .skip(optspace())
         .and(unary_applicand())
-        .map(|(op, x)| (op, Box::new(x)))
+        .map(|(op, x)| Expr::UnApp(op, Box::new(x)))
 }
 
-fn unary_applicand<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
+fn unary_applicand<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+where
+    OP: ParsesTo<'a>,
+{
     use parser::atom::{atom, identifier};
 
     parens_expr()
@@ -85,7 +110,10 @@ fn unary_applicand<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> 
         .or(identifier().map(Expr::Deref))
 }
 
-fn list_expr<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
+fn list_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+where
+    OP: ParsesTo<'a>,
+{
     use combine::char::char;
     use combine::{between, sep_end_by, Parser};
     use parser::expr::expr;
@@ -98,7 +126,10 @@ fn list_expr<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
     ).map(Expr::List)
 }
 
-fn parens_expr<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
+fn parens_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+where
+    OP: ParsesTo<'a>,
+{
     use combine::char::char;
     use combine::{between, Parser};
     use parser::expr::expr;

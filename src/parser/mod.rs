@@ -6,4 +6,4 @@ mod atom;
 mod expr;
 pub mod terminal;
 
-pub use self::expr::expr;
+pub use self::expr::{expr, proc_expr};

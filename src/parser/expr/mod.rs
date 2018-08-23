@@ -1,15 +1,16 @@
 mod compound;
 mod lambda;
 mod leftassoc;
+mod parsesto;
 mod top;
 
-pub use self::top::expr;
+pub use self::top::{expr, proc_expr};
 
 #[cfg(test)]
 mod tests {
-    use super::expr;
+    use super::proc_expr;
 
-    parser_accept_reject_tests!(expr, include_dir!("src/parser/test-vectors/expr/"));
+    parser_accept_reject_tests!(proc_expr, include_dir!("src/parser/test-vectors/expr/"));
 
     #[test]
     fn accepts_atom_cases() {
@@ -36,7 +37,7 @@ mod tests {
 
         run_parser_repr_tests(
             || {
-                expr().and_then(|x| match x {
+                proc_expr().and_then(|x| match x {
                     Expr::Atom(a) => Ok(a),
                     _ => Err(MyError(format!("Expected atom found {:?}", x))),
                 })

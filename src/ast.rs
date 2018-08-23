@@ -3,21 +3,36 @@ use value::{Atom, Symbol};
 #[derive(Clone, Debug)]
 pub struct Identifier(pub String);
 
+pub type FuncExpr = Expr<FuncUnOp>;
+pub type QueryExpr = Expr<QueryUnOp>;
+pub type ProcExpr = Expr<ProcUnOp>;
+
 #[derive(Clone, Debug)]
-pub enum Expr {
+pub enum Expr<OP> {
     Atom(Atom),
     Deref(Identifier),
-    List(Vec<Expr>),
-    LookupApp(Box<Expr>, Symbol),
-    FuncApp(Box<Expr>, Box<Expr>),
-    UnApp(UnaryOperator, Box<Expr>),
-    BinOp(BinaryOperator, Box<Expr>, Box<Expr>),
+    List(Vec<Expr<OP>>),
+    LookupApp(Box<Expr<OP>>, Symbol),
+    FuncApp(Box<Expr<OP>>, Box<Expr<OP>>),
+    UnApp(OP, Box<Expr<OP>>),
+    BinOp(BinaryOperator, Box<Expr<OP>>, Box<Expr<OP>>),
     Lambda(LambdaDefinition),
 }
 
 #[derive(Clone, Debug)]
-pub enum UnaryOperator {
-    Query,
+pub enum FuncUnOp {
+    Invert,
+}
+
+#[derive(Clone, Debug)]
+pub enum QueryUnOp {
+    FUO(FuncUnOp),
+    Resolve,
+}
+
+#[derive(Clone, Debug)]
+pub enum ProcUnOp {
+    QUO(QueryUnOp),
     Mutate,
 }
 
@@ -34,7 +49,7 @@ pub struct LambdaDefinition {
 }
 
 #[derive(Clone, Debug)]
-pub struct FunctionDefinition(pub Identifier, pub Box<Expr>);
+pub struct FunctionDefinition(pub Identifier, pub Box<FuncExpr>);
 
 impl From<FunctionDefinition> for LambdaDefinition {
     fn from(fd: FunctionDefinition) -> LambdaDefinition {
@@ -46,7 +61,7 @@ impl From<FunctionDefinition> for LambdaDefinition {
 }
 
 #[derive(Clone, Debug)]
-pub struct QueryDefinition(pub Box<Expr>);
+pub struct QueryDefinition(pub Box<QueryExpr>);
 
 impl From<QueryDefinition> for LambdaDefinition {
     fn from(qd: QueryDefinition) -> LambdaDefinition {

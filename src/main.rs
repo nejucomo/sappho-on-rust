@@ -13,7 +13,6 @@ mod value;
 
 fn main() {
     use combine::{eof, Parser};
-    use parser::expr;
     use parser::terminal::keywords::Keyword;
     use std::io::BufRead;
 
@@ -36,9 +35,12 @@ fn main() {
 
     let stdin = std::io::stdin();
     for lineres in stdin.lock().lines() {
+        use ast::ProcExpr;
+        use parser::proc_expr;
+
         let line = lineres.unwrap();
         println!("input: {:?}", &line);
-        let result = expr().skip(eof()).parse(&line);
+        let result: Result<(ProcExpr, _), _> = proc_expr().skip(eof()).parse(&line);
         println!("result: {:?}", &result);
         prompt();
     }
