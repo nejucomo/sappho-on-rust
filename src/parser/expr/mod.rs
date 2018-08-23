@@ -1,19 +1,20 @@
 mod compound;
 mod lambda;
 mod leftassoc;
+mod tepi;
 mod top;
 
-pub use self::top::expr;
+pub use self::top::func_expr;
 
 #[cfg(test)]
 mod tests {
-    use super::expr;
+    use super::func_expr;
 
-    parser_accept_reject_tests!(expr, include_dir!("src/parser/test-vectors/expr/"));
+    parser_accept_reject_tests!(func_expr, include_dir!("src/parser/test-vectors/expr/"));
 
     #[test]
     fn accepts_atom_cases() {
-        use ast::Expr;
+        use ast::CompoundExpr;
         use combine::Parser;
         use parser::testutils::run_parser_repr_tests;
         use std::error::Error;
@@ -36,8 +37,10 @@ mod tests {
 
         run_parser_repr_tests(
             || {
-                expr().and_then(|x| match x {
-                    Expr::Atom(a) => Ok(a),
+                use ast::FuncExpr;
+
+                func_expr().and_then(|x| match x {
+                    FuncExpr(CompoundExpr::Atom(a)) => Ok(a),
                     _ => Err(MyError(format!("Expected atom found {:?}", x))),
                 })
             },

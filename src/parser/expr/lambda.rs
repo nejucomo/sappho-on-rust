@@ -1,12 +1,17 @@
-use ast::{Expr, FunctionDefinition, LambdaDefinition, QueryDefinition};
+use ast::{CompoundExpr, FunctionDefinition, LambdaDefinition, QueryDefinition};
 use combine::Parser;
+use parser::expr::tepi::TopExprParseInfo;
 
-pub fn lambda_expr<'a>() -> impl Clone + Parser<Output = Expr, Input = &'a str> {
+pub fn lambda_expr<'a, T>() -> impl Clone + Parser<Output = T, Input = &'a str>
+where
+    T: TopExprParseInfo<'a>,
+{
     use combine::Parser;
 
     kw_lambda_expr()
         .or(querydef().map(LambdaDefinition::from))
-        .map(Expr::Lambda)
+        .map(CompoundExpr::Lambda)
+        .map(T::wrap_compound)
 }
 
 fn kw_lambda_expr<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &'a str> {
@@ -37,24 +42,29 @@ fn funcdef<'a>() -> impl Clone + Parser<Output = FunctionDefinition, Input = &'a
     use combine::char::char;
     use combine::Parser;
     use parser::atom::identifier;
-    use parser::expr::expr;
+    use parser::expr::top::func_expr;
     use parser::terminal::space::{linespace, space};
 
     identifier()
-        .and(linespace().with(char('→')).with(space()).with(expr()))
+        .and(
+            linespace()
+                .with(char('→'))
+                .with(space())
+                .with(func_expr()),
+        )
         .map(|(ident, expr)| FunctionDefinition(ident, Box::new(expr)))
 }
 
 fn querydef<'a>() -> impl Clone + Parser<Output = QueryDefinition, Input = &'a str> {
     use ast::QueryDefinition;
     use combine::Parser;
-    use parser::expr::expr;
+    use parser::expr::top::query_expr;
     use parser::terminal::keywords::Keyword;
     use parser::terminal::space::space;
 
     Keyword::Query
         .parser()
         .with(space())
-        .with(expr())
+        .with(query_expr())
         .map(|x| QueryDefinition(Box::new(x)))
 }
