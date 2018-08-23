@@ -29,7 +29,6 @@ So far we've been sacrificing 2 by naming each test case file redundantly in mac
 TODO
 ====
 
-#. distinct func/query/proc parser unit tests with distinguishing reject/accept criteria
 #. syntactic scope check:
 
    - no free references
