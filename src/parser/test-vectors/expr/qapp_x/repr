@@ -1,1 +1,1 @@
-UnApp(Query, Deref(Identifier("x")))
+Resolve(Compound(Deref(Identifier("x"))))

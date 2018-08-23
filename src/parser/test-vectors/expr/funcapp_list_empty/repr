@@ -1,1 +1,1 @@
-FuncApp(Deref(Identifier("foo")), List([]))
+Compound(FuncApp(Compound(Deref(Identifier("foo"))), Compound(List([]))))

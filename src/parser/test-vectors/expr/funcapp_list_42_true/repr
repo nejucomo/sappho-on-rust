@@ -1,1 +1,1 @@
-FuncApp(Deref(Identifier("foo")), List([Atom(Number(Number 42)), Atom(Bool(true))]))
+Compound(FuncApp(Compound(Deref(Identifier("foo"))), Compound(List([Compound(Atom(Number(Number 42))), Compound(Atom(Bool(true)))]))))

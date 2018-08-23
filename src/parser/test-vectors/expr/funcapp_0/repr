@@ -1,1 +1,1 @@
-FuncApp(Deref(Identifier("foo")), Atom(Number(Number 0)))
+Compound(FuncApp(Compound(Deref(Identifier("foo"))), Compound(Atom(Number(Number 0)))))

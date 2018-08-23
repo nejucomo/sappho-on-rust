@@ -1,1 +1,1 @@
-Deref(Identifier("x"))
+Compound(Deref(Identifier("x")))

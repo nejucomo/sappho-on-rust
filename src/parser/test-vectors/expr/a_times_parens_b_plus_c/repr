@@ -1,1 +1,1 @@
-BinOp(Times, Deref(Identifier("a")), BinOp(Plus, Deref(Identifier("b")), Deref(Identifier("c"))))
+Compound(BinOp(Times, Compound(Deref(Identifier("a"))), Compound(BinOp(Plus, Compound(Deref(Identifier("b"))), Compound(Deref(Identifier("c")))))))

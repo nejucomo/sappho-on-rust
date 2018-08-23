@@ -1,1 +1,1 @@
-Lambda(LambdaDefinition { func: Some(FunctionDefinition(Identifier("x"), Deref(Identifier("x")))), query: None })
+Compound(Lambda(LambdaDefinition { func: Some(FunctionDefinition(Identifier("x"), FuncExpr(Deref(Identifier("x"))))), query: None }))

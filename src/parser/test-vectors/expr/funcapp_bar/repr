@@ -1,1 +1,1 @@
-FuncApp(Deref(Identifier("foo")), Deref(Identifier("bar")))
+Compound(FuncApp(Compound(Deref(Identifier("foo"))), Compound(Deref(Identifier("bar")))))

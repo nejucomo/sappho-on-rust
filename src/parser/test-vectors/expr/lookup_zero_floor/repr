@@ -1,1 +1,1 @@
-LookupApp(Atom(Number(Number 0)), Symbol("floor"))
+Compound(LookupApp(Compound(Atom(Number(Number 0))), Symbol("floor")))

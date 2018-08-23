@@ -1,1 +1,1 @@
-UnApp(Mutate, Deref(Identifier("x")))
+Mutate(Compound(Deref(Identifier("x"))))

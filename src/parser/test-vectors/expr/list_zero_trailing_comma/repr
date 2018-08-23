@@ -1,1 +1,1 @@
-List([Atom(Number(Number 0))])
+Compound(List([Compound(Atom(Number(Number 0)))]))

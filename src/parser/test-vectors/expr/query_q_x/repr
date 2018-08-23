@@ -1,1 +1,1 @@
-Lambda(LambdaDefinition { func: None, query: Some(QueryDefinition(UnApp(Query, Deref(Identifier("x"))))) })
+Compound(Lambda(LambdaDefinition { func: None, query: Some(QueryDefinition(Resolve(Compound(Deref(Identifier("x")))))) }))
