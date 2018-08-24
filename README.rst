@@ -29,6 +29,8 @@ So far we've been sacrificing 2 by naming each test case file redundantly in mac
 TODO
 ====
 
+#. introduce proc statements (with only `return` initially).
+#. introduce patterns
 #. syntactic scope check:
 
    - no free references
