@@ -1,4 +1,4 @@
-use ast::{Expr, FunctionDefinition, LambdaDefinition, QueryDefinition};
+use ast::{Expr, FunctionDefinition, LambdaDefinition, ProcDefinition, QueryDefinition};
 use combine::Parser;
 
 pub fn lambda_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str> {
@@ -6,6 +6,7 @@ pub fn lambda_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &
 
     kw_lambda_expr()
         .or(querydef().map(LambdaDefinition::from))
+        .or(procdef().map(LambdaDefinition::from))
         .map(Expr::Lambda)
 }
 
@@ -22,13 +23,67 @@ fn kw_lambda_expr<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input 
 
 fn squigglydef<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &'a str> {
     use combine::char::char;
-    use combine::{between, Parser};
-    use parser::terminal::space::optlinespace;
+    use combine::{between, optional, value, Parser};
+    use parser::terminal::space::{linespace, optlinespace, optspace};
+    use std::fmt::Debug;
+
+    fn merge_options<T: Debug>(left: Option<T>, right: Option<T>) -> Option<T> {
+        match (left, right) {
+            (Some(l), Some(r)) => panic!(
+                "invalid LambdaDefinition merge state in parser: {:?} {:?}",
+                l, r
+            ),
+            (Some(l), None) => Some(l),
+            (None, Some(r)) => Some(r),
+            (None, None) => None,
+        }
+    }
+
+    fn merge_ldef<T>((left, right): (T, Option<LambdaDefinition>)) -> LambdaDefinition
+    where
+        LambdaDefinition: From<T>,
+    {
+        let ldef = LambdaDefinition::from(left);
+
+        right.map_or(ldef.clone(), |rdef| LambdaDefinition {
+            func: merge_options(ldef.func, rdef.func),
+            query: merge_options(ldef.query, rdef.query),
+            proc: merge_options(ldef.proc, rdef.proc),
+        })
+    }
+
+    fn func_or_nothing<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &'a str> {
+        funcdef()
+            .map(LambdaDefinition::from)
+            .or(value(LambdaDefinition {
+                func: None,
+                query: None,
+                proc: None,
+            }))
+    }
+
+    fn query_or_rest<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &'a str> {
+        querydef()
+            .skip(optspace())
+            .and(optional(
+                char(';').skip(linespace()).with(func_or_nothing()),
+            ))
+            .map(merge_ldef)
+            .or(func_or_nothing())
+    }
+
+    fn proc_or_rest<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &'a str> {
+        procdef()
+            .skip(optspace())
+            .and(optional(char(';').skip(linespace()).with(query_or_rest())))
+            .map(merge_ldef)
+            .or(query_or_rest())
+    }
 
     between(
         char('{').skip(optlinespace()),
         optlinespace().with(char('}')),
-        querydef().map(LambdaDefinition::from),
+        proc_or_rest(),
     )
 }
 
@@ -57,4 +112,26 @@ fn querydef<'a>() -> impl Clone + Parser<Output = QueryDefinition, Input = &'a s
         .with(space())
         .with(expr())
         .map(|x| QueryDefinition(Box::new(x)))
+}
+
+fn procdef<'a>() -> impl Clone + Parser<Output = ProcDefinition, Input = &'a str> {
+    use ast::ProcDefinition;
+    use combine::char::char;
+    use combine::{between, optional, value, Parser};
+    use parser::proc_expr;
+    use parser::terminal::keywords::Keyword;
+    use parser::terminal::space::optlinespace;
+    use parser::terminal::space::space;
+
+    Keyword::Proc.parser().skip(space()).with(between(
+        char('{').skip(optlinespace()),
+        optlinespace().with(char('}')),
+        Keyword::Return
+            .parser()
+            .skip(space())
+            .with(optional(proc_expr()))
+            .map(|ox| ox.map(Box::new))
+            .map(ProcDefinition::Return)
+            .or(value(ProcDefinition::Return(None))),
+    ))
 }

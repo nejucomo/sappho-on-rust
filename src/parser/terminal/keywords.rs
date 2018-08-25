@@ -23,7 +23,7 @@ macro_rules! define_keyword {
             }
         }
 
-        pub const KEYWORDS: [&'static str; 9] = [
+        pub const KEYWORDS: [&'static str; 10] = [
             $( $text ),*
         ];
 
@@ -75,7 +75,8 @@ define_keyword!(
     (Let, kw_let, "let"),
     (In, kw_in, "in"),
     (From, kw_from, "from"),
-    (Bind, kw_bind, "bind")
+    (Bind, kw_bind, "bind"),
+    (Return, kw_return, "return")
 );
 
 use combine::{ParseResult, Parser, Stream};
