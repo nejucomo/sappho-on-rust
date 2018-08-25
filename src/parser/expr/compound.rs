@@ -16,7 +16,7 @@ where
 {
     use super::leftassoc::left_associative;
     use combine::char::char;
-    use parser::terminal::space::optspace;
+    use parser::common::space::optspace;
 
     left_associative(
         times_expr().skip(optspace()),
@@ -31,7 +31,7 @@ where
 {
     use super::leftassoc::left_associative;
     use combine::char::char;
-    use parser::terminal::space::optspace;
+    use parser::common::space::optspace;
 
     left_associative(
         funcapp().skip(optspace()),
@@ -47,7 +47,7 @@ where
     use self::ApplicationPostFix::{FuncAPF, LookupAPF};
     use super::leftassoc::left_associative;
     use ast::Expr::{FuncApp, LookupApp};
-    use parser::terminal::space::optspace;
+    use parser::common::space::optspace;
 
     left_associative(
         applicand().skip(optspace()),
@@ -90,7 +90,7 @@ fn unary_application<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input =
 where
     OP: ParsesTo<'a>,
 {
-    use parser::terminal::space::optspace;
+    use parser::common::space::optspace;
 
     OP::parser()
         .skip(optspace())
@@ -116,9 +116,9 @@ where
 {
     use combine::char::char;
     use combine::{sep_end_by, Parser};
-    use parser::expr::brackets::bracketed;
+    use parser::common::brackets::bracketed;
     use parser::expr::expr;
-    use parser::terminal::space::{optlinespace, optspace};
+    use parser::common::space::{optlinespace, optspace};
 
     bracketed(
         '[',
@@ -131,7 +131,7 @@ fn parens_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a s
 where
     OP: ParsesTo<'a>,
 {
-    use parser::expr::brackets::bracketed;
+    use parser::common::brackets::bracketed;
     use parser::expr::expr;
 
     bracketed('(', ')', expr())

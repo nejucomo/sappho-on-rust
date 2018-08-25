@@ -10,7 +10,7 @@ where
 {
     use combine::between;
     use combine::char::char;
-    use parser::terminal::space::optlinespace;
+    use parser::common::space::optlinespace;
 
     between(
         char(open).skip(optlinespace()),

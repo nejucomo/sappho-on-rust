@@ -12,8 +12,8 @@ pub fn lambda_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &
 
 fn kw_lambda_expr<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &'a str> {
     use combine::Parser;
-    use parser::terminal::keywords::Keyword;
-    use parser::terminal::space::space;
+    use parser::common::keywords::Keyword;
+    use parser::common::space::space;
 
     Keyword::Lambda
         .parser()
@@ -24,8 +24,8 @@ fn kw_lambda_expr<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input 
 fn squigglydef<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &'a str> {
     use combine::char::char;
     use combine::{optional, value, Parser};
-    use parser::expr::brackets::bracketed;
-    use parser::terminal::space::{linespace, optspace};
+    use parser::common::brackets::bracketed;
+    use parser::common::space::{linespace, optspace};
     use std::fmt::Debug;
 
     fn merge_options<T: Debug>(left: Option<T>, right: Option<T>) -> Option<T> {
@@ -90,7 +90,7 @@ fn funcdef<'a>() -> impl Clone + Parser<Output = FunctionDefinition, Input = &'a
     use combine::Parser;
     use parser::atom::identifier;
     use parser::expr::expr;
-    use parser::terminal::space::{linespace, space};
+    use parser::common::space::{linespace, space};
 
     identifier()
         .and(linespace().with(char('→')).with(space()).with(expr()))
@@ -101,8 +101,8 @@ fn querydef<'a>() -> impl Clone + Parser<Output = QueryDefinition, Input = &'a s
     use ast::QueryDefinition;
     use combine::Parser;
     use parser::expr;
-    use parser::terminal::keywords::Keyword;
-    use parser::terminal::space::space;
+    use parser::common::keywords::Keyword;
+    use parser::common::space::space;
 
     Keyword::Query
         .parser()
@@ -114,10 +114,10 @@ fn querydef<'a>() -> impl Clone + Parser<Output = QueryDefinition, Input = &'a s
 fn procdef<'a>() -> impl Clone + Parser<Output = ProcDefinition, Input = &'a str> {
     use ast::ProcDefinition;
     use combine::{optional, value, Parser};
-    use parser::expr::brackets::bracketed;
+    use parser::common::brackets::bracketed;
     use parser::proc_expr;
-    use parser::terminal::keywords::Keyword;
-    use parser::terminal::space::space;
+    use parser::common::keywords::Keyword;
+    use parser::common::space::space;
 
     Keyword::Proc.parser().skip(space()).with(bracketed(
         '{',

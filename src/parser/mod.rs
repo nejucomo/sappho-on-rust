@@ -3,8 +3,8 @@
 mod testutils;
 
 mod atom;
+pub mod common;
 mod expr;
-pub mod terminal;
 
 pub use self::expr::{expr, proc_expr};
 

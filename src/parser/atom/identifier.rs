@@ -6,7 +6,7 @@ pub fn identifier<'a>() -> impl Clone + Parser<Output = Identifier, Input = &'a 
     use combine::char::{alpha_num, char, letter};
     use combine::combinator::many;
     use combine::{parser, Parser};
-    use parser::terminal::keywords::KEYWORDS;
+    use parser::common::keywords::KEYWORDS;
 
     let head = letter().or(char('_'));
     let tail = alpha_num().or(char('_'));
