@@ -23,8 +23,9 @@ fn kw_lambda_expr<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input 
 
 fn squigglydef<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &'a str> {
     use combine::char::char;
-    use combine::{between, optional, value, Parser};
-    use parser::terminal::space::{linespace, optlinespace, optspace};
+    use combine::{optional, value, Parser};
+    use parser::expr::brackets::bracketed;
+    use parser::terminal::space::{linespace, optspace};
     use std::fmt::Debug;
 
     fn merge_options<T: Debug>(left: Option<T>, right: Option<T>) -> Option<T> {
@@ -80,11 +81,7 @@ fn squigglydef<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &
             .or(query_or_rest())
     }
 
-    between(
-        char('{').skip(optlinespace()),
-        optlinespace().with(char('}')),
-        proc_or_rest(),
-    )
+    bracketed('{', '}', proc_or_rest())
 }
 
 fn funcdef<'a>() -> impl Clone + Parser<Output = FunctionDefinition, Input = &'a str> {
@@ -116,16 +113,15 @@ fn querydef<'a>() -> impl Clone + Parser<Output = QueryDefinition, Input = &'a s
 
 fn procdef<'a>() -> impl Clone + Parser<Output = ProcDefinition, Input = &'a str> {
     use ast::ProcDefinition;
-    use combine::char::char;
-    use combine::{between, optional, value, Parser};
+    use combine::{optional, value, Parser};
+    use parser::expr::brackets::bracketed;
     use parser::proc_expr;
     use parser::terminal::keywords::Keyword;
-    use parser::terminal::space::optlinespace;
     use parser::terminal::space::space;
 
-    Keyword::Proc.parser().skip(space()).with(between(
-        char('{').skip(optlinespace()),
-        optlinespace().with(char('}')),
+    Keyword::Proc.parser().skip(space()).with(bracketed(
+        '{',
+        '}',
         Keyword::Return
             .parser()
             .skip(space())

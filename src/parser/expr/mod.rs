@@ -1,3 +1,4 @@
+mod brackets;
 mod compound;
 mod lambda;
 mod leftassoc;

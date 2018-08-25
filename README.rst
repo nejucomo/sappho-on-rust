@@ -29,7 +29,7 @@ So far we've been sacrificing 2 by naming each test case file redundantly in mac
 TODO
 ====
 
-#. factor out parser combinator building blocks such as `bracketed(P) -> ParseResult<P::Output>`.
+#. consistent space-follows item parsing
 #. introduce patterns
 #. syntactic scope check:
 

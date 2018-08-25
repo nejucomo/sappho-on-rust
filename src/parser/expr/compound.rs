@@ -115,13 +115,14 @@ where
     OP: ParsesTo<'a>,
 {
     use combine::char::char;
-    use combine::{between, sep_end_by, Parser};
+    use combine::{sep_end_by, Parser};
+    use parser::expr::brackets::bracketed;
     use parser::expr::expr;
     use parser::terminal::space::{optlinespace, optspace};
 
-    between(
-        char('[').skip(optlinespace()),
-        char(']'),
+    bracketed(
+        '[',
+        ']',
         sep_end_by(expr().skip(optspace()), char(',').skip(optlinespace())),
     ).map(Expr::List)
 }
@@ -130,14 +131,8 @@ fn parens_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a s
 where
     OP: ParsesTo<'a>,
 {
-    use combine::char::char;
-    use combine::{between, Parser};
+    use parser::expr::brackets::bracketed;
     use parser::expr::expr;
-    use parser::terminal::space::optlinespace;
 
-    between(
-        char('(').skip(optlinespace()),
-        char(')'),
-        expr().skip(optlinespace()),
-    )
+    bracketed('(', ')', expr())
 }
