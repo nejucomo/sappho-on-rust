@@ -81,11 +81,11 @@ fn funcdef<'a>() -> impl Clone + Parser<Output = FunctionDefinition, Input = &'a
     use ast::FunctionDefinition;
     use combine::char::char;
     use combine::Parser;
-    use parser::atom::identifier;
     use parser::common::space::{lsp, sp};
     use parser::expr::expr;
+    use parser::expr::pattern::pattern;
 
-    lsp(identifier())
+    lsp(pattern())
         .and(sp(char('→')).with(expr()))
         .map(|(ident, expr)| FunctionDefinition(ident, Box::new(expr)))
 }

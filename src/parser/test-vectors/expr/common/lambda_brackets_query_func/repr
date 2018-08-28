@@ -1,1 +1,1 @@
-Lambda(LambdaDefinition { func: Some(FunctionDefinition(Identifier("x"), Deref(Identifier("x")))), query: Some(QueryDefinition(Atom(Number(Number 42)))), proc: None })
+Lambda(LambdaDefinition { func: Some(FunctionDefinition(Bind(Identifier("x")), Deref(Identifier("x")))), query: Some(QueryDefinition(Atom(Number(Number 42)))), proc: None })

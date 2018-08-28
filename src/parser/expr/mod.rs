@@ -2,6 +2,7 @@ mod compound;
 mod lambda;
 mod leftassoc;
 mod parsesto;
+mod pattern;
 mod top;
 
 pub use self::top::{expr, proc_expr};

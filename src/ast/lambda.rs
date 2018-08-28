@@ -1,4 +1,4 @@
-use ast::{FuncExpr, Identifier, ProcExpr, QueryExpr};
+use ast::{FuncExpr, Pattern, ProcExpr, QueryExpr};
 
 #[derive(Clone, Debug)]
 pub struct LambdaDefinition {
@@ -8,7 +8,7 @@ pub struct LambdaDefinition {
 }
 
 #[derive(Clone, Debug)]
-pub struct FunctionDefinition(pub Identifier, pub Box<FuncExpr>);
+pub struct FunctionDefinition(pub Pattern, pub Box<FuncExpr>);
 
 #[derive(Clone, Debug)]
 pub struct QueryDefinition(pub Box<QueryExpr>);
