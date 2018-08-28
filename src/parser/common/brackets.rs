@@ -10,11 +10,7 @@ where
 {
     use combine::between;
     use combine::char::char;
-    use parser::common::space::optlinespace;
+    use parser::common::space::olsp;
 
-    between(
-        char(open).skip(optlinespace()),
-        optlinespace().with(char(close)),
-        inner,
-    )
+    between(olsp(char(open)), olsp(char(close)), inner)
 }

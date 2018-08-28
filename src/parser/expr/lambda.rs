@@ -13,19 +13,16 @@ pub fn lambda_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &
 fn kw_lambda_expr<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &'a str> {
     use combine::Parser;
     use parser::common::keywords::Keyword;
-    use parser::common::space::space;
+    use parser::common::space::sp;
 
-    Keyword::Lambda
-        .parser()
-        .with(space())
-        .with(funcdef().map(LambdaDefinition::from).or(squigglydef()))
+    sp(Keyword::Lambda.parser()).with(funcdef().map(LambdaDefinition::from).or(squigglydef()))
 }
 
 fn squigglydef<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &'a str> {
     use combine::char::char;
     use combine::{optional, value, Parser};
     use parser::common::brackets::bracketed;
-    use parser::common::space::{linespace, optspace};
+    use parser::common::space::{lsp, osp};
     use std::fmt::Debug;
 
     fn merge_options<T: Debug>(left: Option<T>, right: Option<T>) -> Option<T> {
@@ -64,19 +61,15 @@ fn squigglydef<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &
     }
 
     fn query_or_rest<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &'a str> {
-        querydef()
-            .skip(optspace())
-            .and(optional(
-                char(';').skip(linespace()).with(func_or_nothing()),
-            ))
+        osp(querydef())
+            .and(optional(lsp(char(';')).with(func_or_nothing())))
             .map(merge_ldef)
             .or(func_or_nothing())
     }
 
     fn proc_or_rest<'a>() -> impl Clone + Parser<Output = LambdaDefinition, Input = &'a str> {
-        procdef()
-            .skip(optspace())
-            .and(optional(char(';').skip(linespace()).with(query_or_rest())))
+        osp(procdef())
+            .and(optional(lsp(char(';')).with(query_or_rest())))
             .map(merge_ldef)
             .or(query_or_rest())
     }
@@ -89,24 +82,22 @@ fn funcdef<'a>() -> impl Clone + Parser<Output = FunctionDefinition, Input = &'a
     use combine::char::char;
     use combine::Parser;
     use parser::atom::identifier;
+    use parser::common::space::{lsp, sp};
     use parser::expr::expr;
-    use parser::common::space::{linespace, space};
 
-    identifier()
-        .and(linespace().with(char('→')).with(space()).with(expr()))
+    lsp(identifier())
+        .and(sp(char('→')).with(expr()))
         .map(|(ident, expr)| FunctionDefinition(ident, Box::new(expr)))
 }
 
 fn querydef<'a>() -> impl Clone + Parser<Output = QueryDefinition, Input = &'a str> {
     use ast::QueryDefinition;
     use combine::Parser;
-    use parser::expr;
     use parser::common::keywords::Keyword;
-    use parser::common::space::space;
+    use parser::common::space::sp;
+    use parser::expr;
 
-    Keyword::Query
-        .parser()
-        .with(space())
+    sp(Keyword::Query.parser())
         .with(expr())
         .map(|x| QueryDefinition(Box::new(x)))
 }
@@ -115,16 +106,14 @@ fn procdef<'a>() -> impl Clone + Parser<Output = ProcDefinition, Input = &'a str
     use ast::ProcDefinition;
     use combine::{optional, value, Parser};
     use parser::common::brackets::bracketed;
-    use parser::proc_expr;
     use parser::common::keywords::Keyword;
-    use parser::common::space::space;
+    use parser::common::space::sp;
+    use parser::proc_expr;
 
-    Keyword::Proc.parser().skip(space()).with(bracketed(
+    sp(Keyword::Proc.parser()).with(bracketed(
         '{',
         '}',
-        Keyword::Return
-            .parser()
-            .skip(space())
+        sp(Keyword::Return.parser())
             .with(optional(proc_expr()))
             .map(|ox| ox.map(Box::new))
             .map(ProcDefinition::Return)

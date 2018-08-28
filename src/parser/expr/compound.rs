@@ -16,11 +16,11 @@ where
 {
     use super::leftassoc::left_associative;
     use combine::char::char;
-    use parser::common::space::optspace;
+    use parser::common::space::osp;
 
     left_associative(
-        times_expr().skip(optspace()),
-        char('+').skip(optspace()).with(times_expr()),
+        osp(times_expr()),
+        osp(char('+')).with(times_expr()),
         |left, right| Expr::BinOp(BinaryOperator::Plus, Box::new(left), Box::new(right)),
     )
 }
@@ -31,11 +31,11 @@ where
 {
     use super::leftassoc::left_associative;
     use combine::char::char;
-    use parser::common::space::optspace;
+    use parser::common::space::osp;
 
     left_associative(
-        funcapp().skip(optspace()),
-        char('*').skip(optspace()).with(funcapp()),
+        osp(funcapp()),
+        osp(char('*')).with(funcapp()),
         |left, right| Expr::BinOp(BinaryOperator::Times, Box::new(left), Box::new(right)),
     )
 }
@@ -47,16 +47,12 @@ where
     use self::ApplicationPostFix::{FuncAPF, LookupAPF};
     use super::leftassoc::left_associative;
     use ast::Expr::{FuncApp, LookupApp};
-    use parser::common::space::optspace;
+    use parser::common::space::osp;
 
-    left_associative(
-        applicand().skip(optspace()),
-        optspace().with(app_postfix()),
-        |x, apf| match apf {
-            LookupAPF(sym) => LookupApp(Box::new(x), sym),
-            FuncAPF(apf) => FuncApp(Box::new(x), Box::new(apf)),
-        },
-    )
+    left_associative(osp(applicand()), osp(app_postfix()), |x, apf| match apf {
+        LookupAPF(sym) => LookupApp(Box::new(x), sym),
+        FuncAPF(apf) => FuncApp(Box::new(x), Box::new(apf)),
+    })
 }
 
 pub enum ApplicationPostFix<OP> {
@@ -90,10 +86,9 @@ fn unary_application<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input =
 where
     OP: ParsesTo<'a>,
 {
-    use parser::common::space::optspace;
+    use parser::common::space::osp;
 
-    OP::parser()
-        .skip(optspace())
+    osp(OP::parser())
         .and(unary_applicand())
         .map(|(op, x)| Expr::UnApp(op, Box::new(x)))
 }
@@ -117,14 +112,10 @@ where
     use combine::char::char;
     use combine::{sep_end_by, Parser};
     use parser::common::brackets::bracketed;
+    use parser::common::space::{olsp, osp};
     use parser::expr::expr;
-    use parser::common::space::{optlinespace, optspace};
 
-    bracketed(
-        '[',
-        ']',
-        sep_end_by(expr().skip(optspace()), char(',').skip(optlinespace())),
-    ).map(Expr::List)
+    bracketed('[', ']', sep_end_by(osp(expr()), olsp(char(',')))).map(Expr::List)
 }
 
 fn parens_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
