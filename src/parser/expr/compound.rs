@@ -1,16 +1,17 @@
 use ast::{BinaryOperator, Expr};
 use combine::Parser;
 use parser::expr::parsesto::ParsesTo;
+use parser::expr::scopecheck::ScopeCheck;
 use value::Symbol;
 
-pub fn top_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+pub fn top_expr<'a, OP>(sc: ScopeCheck) -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
 where
     OP: ParsesTo<'a>,
 {
-    plus_expr()
+    plus_expr(sc)
 }
 
-fn plus_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+fn plus_expr<'a, OP>(sc: ScopeCheck) -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
 where
     OP: ParsesTo<'a>,
 {
@@ -19,13 +20,13 @@ where
     use parser::common::space::osp;
 
     left_associative(
-        osp(times_expr()),
-        osp(char('+')).with(times_expr()),
+        osp(times_expr(sc.clone())),
+        osp(char('+')).with(times_expr(sc)),
         |left, right| Expr::BinOp(BinaryOperator::Plus, Box::new(left), Box::new(right)),
     )
 }
 
-fn times_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+fn times_expr<'a, OP>(sc: ScopeCheck) -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
 where
     OP: ParsesTo<'a>,
 {
@@ -34,13 +35,13 @@ where
     use parser::common::space::osp;
 
     left_associative(
-        osp(funcapp()),
-        osp(char('*')).with(funcapp()),
+        osp(funcapp(sc.clone())),
+        osp(char('*')).with(funcapp(sc)),
         |left, right| Expr::BinOp(BinaryOperator::Times, Box::new(left), Box::new(right)),
     )
 }
 
-fn funcapp<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+fn funcapp<'a, OP>(sc: ScopeCheck) -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
 where
     OP: ParsesTo<'a>,
 {
@@ -49,10 +50,14 @@ where
     use ast::Expr::{FuncApp, LookupApp};
     use parser::common::space::osp;
 
-    left_associative(osp(applicand()), osp(app_postfix()), |x, apf| match apf {
-        LookupAPF(sym) => LookupApp(Box::new(x), sym),
-        FuncAPF(apf) => FuncApp(Box::new(x), Box::new(apf)),
-    })
+    left_associative(
+        osp(applicand(sc.clone())),
+        osp(app_postfix(sc)),
+        |x, apf| match apf {
+            LookupAPF(sym) => LookupApp(Box::new(x), sym),
+            FuncAPF(apf) => FuncApp(Box::new(x), Box::new(apf)),
+        },
+    )
 }
 
 pub enum ApplicationPostFix<OP> {
@@ -60,7 +65,9 @@ pub enum ApplicationPostFix<OP> {
     FuncAPF(Expr<OP>),
 }
 
-pub fn app_postfix<'a, OP>() -> impl Clone + Parser<Output = ApplicationPostFix<OP>, Input = &'a str>
+pub fn app_postfix<'a, OP>(
+    sc: ScopeCheck,
+) -> impl Clone + Parser<Output = ApplicationPostFix<OP>, Input = &'a str>
 where
     OP: ParsesTo<'a>,
 {
@@ -70,42 +77,49 @@ where
 
     symbol()
         .map(LookupAPF)
-        .or(parens_expr().or(list_expr()).map(FuncAPF))
+        .or(parens_expr(sc.clone()).or(list_expr(sc)).map(FuncAPF))
 }
 
-fn applicand<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+fn applicand<'a, OP>(sc: ScopeCheck) -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
 where
     OP: ParsesTo<'a>,
 {
     use super::lambda::lambda_expr;
 
-    lambda_expr().or(unary_application()).or(unary_applicand())
+    lambda_expr(sc.clone())
+        .or(unary_application(sc.clone()))
+        .or(unary_applicand(sc))
 }
 
-fn unary_application<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+fn unary_application<'a, OP>(
+    sc: ScopeCheck,
+) -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
 where
     OP: ParsesTo<'a>,
 {
     use parser::common::space::osp;
 
     osp(OP::parser())
-        .and(unary_applicand())
+        .and(unary_applicand(sc))
         .map(|(op, x)| Expr::UnApp(op, Box::new(x)))
 }
 
-fn unary_applicand<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+fn unary_applicand<'a, OP>(
+    sc: ScopeCheck,
+) -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
 where
     OP: ParsesTo<'a>,
 {
-    use parser::atom::{atom, identifier};
+    use parser::atom::atom;
+    use parser::expr::scopecheck::deref;
 
-    parens_expr()
-        .or(list_expr())
+    parens_expr(sc.clone())
+        .or(list_expr(sc.clone()))
         .or(atom().map(Expr::Atom))
-        .or(identifier().map(Expr::Deref))
+        .or(deref(sc))
 }
 
-fn list_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+fn list_expr<'a, OP>(sc: ScopeCheck) -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
 where
     OP: ParsesTo<'a>,
 {
@@ -115,15 +129,15 @@ where
     use parser::common::space::{olsp, osp};
     use parser::expr::expr;
 
-    bracketed('[', ']', sep_end_by(osp(expr()), olsp(char(',')))).map(Expr::List)
+    bracketed('[', ']', sep_end_by(osp(expr(sc)), olsp(char(',')))).map(Expr::List)
 }
 
-fn parens_expr<'a, OP>() -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
+fn parens_expr<'a, OP>(sc: ScopeCheck) -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str>
 where
     OP: ParsesTo<'a>,
 {
     use parser::common::brackets::bracketed;
     use parser::expr::expr;
 
-    bracketed('(', ')', expr())
+    bracketed('(', ')', expr(sc))
 }

@@ -1,13 +1,15 @@
 use ast::{Expr, ProcUnOp};
 use combine::{ParseResult, Parser};
 use parser::expr::parsesto::ParsesTo;
+use parser::expr::scopecheck::ScopeCheck;
 use std::marker::PhantomData;
 
 #[cfg(test)]
 use ast::{FuncUnOp, QueryUnOp};
 
-pub fn expr<'a, OP>() -> ExprParser<'a, OP> {
+pub fn expr<'a, OP>(sc: ScopeCheck) -> ExprParser<'a, OP> {
     ExprParser {
+        sc: sc,
         _marker_life: PhantomData,
         _marker_op: PhantomData,
     }
@@ -15,16 +17,16 @@ pub fn expr<'a, OP>() -> ExprParser<'a, OP> {
 
 #[cfg(test)]
 pub fn func_expr<'a>() -> ExprParser<'a, FuncUnOp> {
-    expr()
+    expr(ScopeCheck::new())
 }
 
 #[cfg(test)]
 pub fn query_expr<'a>() -> ExprParser<'a, QueryUnOp> {
-    expr()
+    expr(ScopeCheck::new())
 }
 
 pub fn proc_expr<'a>() -> ExprParser<'a, ProcUnOp> {
-    expr()
+    expr(ScopeCheck::new())
 }
 
 /* An explicit ExprParser is necessary, rather than an `impl Parser`
@@ -33,6 +35,7 @@ pub fn proc_expr<'a>() -> ExprParser<'a, ProcUnOp> {
  */
 #[derive(Clone)]
 pub struct ExprParser<'a, OP> {
+    sc: ScopeCheck,
     _marker_life: PhantomData<&'a ()>,
     _marker_op: PhantomData<OP>,
 }
@@ -47,6 +50,6 @@ where
     fn parse_stream(&mut self, input: Self::Input) -> ParseResult<Self::Output, Self::Input> {
         use parser::expr::compound::top_expr;
 
-        top_expr().parse_stream(input)
+        top_expr(self.sc.clone()).parse_stream(input)
     }
 }
