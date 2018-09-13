@@ -1,1 +1,1 @@
-𝜆 { query 42; x → x }
+𝜆 { query 42; new_binding_n → new_binding_n }

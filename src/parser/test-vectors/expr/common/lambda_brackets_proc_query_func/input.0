@@ -1,1 +1,1 @@
-𝜆 { proc {}; query 42; x → x }
+𝜆 { proc {}; query 42; new_binding_n → new_binding_n }

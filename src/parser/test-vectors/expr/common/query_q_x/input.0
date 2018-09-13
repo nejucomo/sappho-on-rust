@@ -1,1 +1,1 @@
-query $x
+query $implicitly_defined_x

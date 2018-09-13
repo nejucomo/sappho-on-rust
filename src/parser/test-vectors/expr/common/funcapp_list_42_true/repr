@@ -1,1 +1,1 @@
-FuncApp(Deref(Identifier("foo")), List([Atom(Number(Number 42)), Atom(Bool(true))]))
+FuncApp(Deref(Identifier("implicitly_defined_x")), List([Atom(Number(Number 42)), Atom(Bool(true))]))

@@ -1,1 +1,1 @@
-𝜆 { proc {}; x → x }
+𝜆 { proc {}; new_binding_n → new_binding_n }

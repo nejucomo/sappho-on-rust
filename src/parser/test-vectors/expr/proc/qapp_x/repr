@@ -1,1 +1,1 @@
-UnApp(QUO(Resolve), Deref(Identifier("x")))
+UnApp(QUO(Resolve), Deref(Identifier("implicitly_defined_x")))

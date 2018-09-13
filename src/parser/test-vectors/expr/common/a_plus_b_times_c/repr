@@ -1,1 +1,1 @@
-BinOp(Plus, Deref(Identifier("a")), BinOp(Times, Deref(Identifier("b")), Deref(Identifier("c"))))
+BinOp(Plus, Deref(Identifier("implicitly_defined_x")), BinOp(Times, Deref(Identifier("implicitly_defined_y")), Deref(Identifier("implicitly_defined_z"))))

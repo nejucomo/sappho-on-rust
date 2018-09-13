@@ -1,1 +1,1 @@
-FuncApp(Deref(Identifier("foo")), Atom(Number(Number 0)))
+FuncApp(Deref(Identifier("implicitly_defined_x")), Atom(Number(Number 0)))

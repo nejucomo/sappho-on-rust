@@ -1,1 +1,1 @@
-FuncApp(Deref(Identifier("foo")), List([]))
+FuncApp(Deref(Identifier("implicitly_defined_x")), List([]))
