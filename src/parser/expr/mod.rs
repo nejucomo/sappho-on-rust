@@ -9,26 +9,41 @@ mod top;
 pub use self::top::{expr, proc_expr};
 
 #[cfg(test)]
-pub use self::top::{func_expr, query_expr};
-
-#[cfg(test)]
 mod tests {
-    macro_rules! def_expr_kind_test_mod {
-        ($pname:ident, $path:expr) => {
-            mod $pname {
-                mod common {
-                    use parser::$pname;
+    fn implicit_bindings() -> impl Iterator<Item = &'static str> {
+        const BINDINGS: &[&'static str] = &[
+            "implicitly_defined_x",
+            "implicitly_defined_y",
+            "implicitly_defined_z",
+        ];
 
+        BINDINGS.into_iter().map(|sr| *sr)
+    }
+
+    macro_rules! def_expr_kind_test_mod {
+        ($pname:ident, $path:expr, $pexpr:expr) => {
+            mod $pname {
+
+                mod common {
                     parser_accept_reject_tests!(
-                        $pname,
+                        || {
+                            use parser::expr::tests::implicit_bindings;
+
+                            $pexpr(implicit_bindings())
+                        },
                         include_dir!("src/parser/test-vectors/expr/common")
                     );
                 }
 
                 mod specialized {
-                    use parser::$pname;
+                    parser_accept_reject_tests!(
+                        || {
+                            use parser::expr::tests::implicit_bindings;
 
-                    parser_accept_reject_tests!($pname, include_dir!($path));
+                            $pexpr(implicit_bindings())
+                        },
+                        include_dir!($path)
+                    );
                 }
 
                 #[test]
@@ -56,9 +71,9 @@ mod tests {
 
                     run_parser_repr_tests(
                         || {
-                            use parser::$pname;
+                            use parser::expr::tests::implicit_bindings;
 
-                            $pname().and_then(|x| match x {
+                            $pexpr(implicit_bindings()).and_then(|x| match x {
                                 Expr::Atom(a) => Ok(a),
                                 _ => Err(MyError(format!("Expected atom found {:?}", x))),
                             })
@@ -70,7 +85,22 @@ mod tests {
         };
     }
 
-    def_expr_kind_test_mod!(func_expr, "src/parser/test-vectors/expr/func");
-    def_expr_kind_test_mod!(query_expr, "src/parser/test-vectors/expr/query");
-    def_expr_kind_test_mod!(proc_expr, "src/parser/test-vectors/expr/proc");
+    def_expr_kind_test_mod!(func_expr, "src/parser/test-vectors/expr/func", |bindings| {
+        use parser::expr::top::func_expr;
+        func_expr(bindings)
+    });
+
+    def_expr_kind_test_mod!(
+        query_expr,
+        "src/parser/test-vectors/expr/query",
+        |bindings| {
+            use parser::expr::top::query_expr;
+            query_expr(bindings)
+        }
+    );
+
+    def_expr_kind_test_mod!(proc_expr, "src/parser/test-vectors/expr/proc", |bindings| {
+        use parser::expr::top::proc_expr;
+        proc_expr(bindings)
+    });
 }

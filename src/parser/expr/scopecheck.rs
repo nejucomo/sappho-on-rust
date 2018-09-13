@@ -1,4 +1,4 @@
-use ast::{Expr, Identifier, Pattern};
+use ast::{Expr, Identifier};
 use combine::Parser;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -28,16 +28,28 @@ enum Layer {
 }
 
 impl ScopeCheck {
-    pub fn new() -> ScopeCheck {
+    pub fn empty() -> ScopeCheck {
         ScopeCheck(Rc::new(Layer::Empty))
     }
 
-    pub fn push(self, pat: &Pattern) -> ScopeCheck {
+    pub fn with_implicit_bindings<'a, I, S>(bindings: I) -> ScopeCheck
+    where
+        I: IntoIterator<Item = S>,
+        Identifier: From<S>,
+    {
+        ScopeCheck::empty().push(bindings)
+    }
+
+    pub fn push<'a, I, S>(self, bindings: I) -> ScopeCheck
+    where
+        I: IntoIterator<Item = S>,
+        Identifier: From<S>,
+    {
         let mut map = HashMap::new();
 
-        match pat {
-            &Pattern::Bind(ref id) => map.insert(id.clone(), false),
-        };
+        for id in bindings {
+            map.insert(Identifier::from(id), false);
+        }
 
         ScopeCheck(Rc::new(Layer::MapLink(self.0.clone(), map)))
     }

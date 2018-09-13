@@ -40,7 +40,8 @@ fn main() {
 
         let line = lineres.unwrap();
         println!("input: {:?}", &line);
-        let result: Result<(ProcExpr, _), _> = proc_expr().skip(eof()).parse(&line);
+        let implicitbindings: Vec<&'static str> = vec![];
+        let result: Result<(ProcExpr, _), _> = proc_expr(implicitbindings).skip(eof()).parse(&line);
         println!("result: {:?}", &result);
         prompt();
     }

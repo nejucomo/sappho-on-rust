@@ -1,4 +1,4 @@
-use ast::{Expr, ProcUnOp};
+use ast::{Expr, Identifier, ProcUnOp};
 use combine::{ParseResult, Parser};
 use parser::expr::parsesto::ParsesTo;
 use parser::expr::scopecheck::ScopeCheck;
@@ -16,17 +16,29 @@ pub fn expr<'a, OP>(sc: ScopeCheck) -> ExprParser<'a, OP> {
 }
 
 #[cfg(test)]
-pub fn func_expr<'a>() -> ExprParser<'a, FuncUnOp> {
-    expr(ScopeCheck::new())
+pub fn func_expr<'a, I, S>(bindings: I) -> ExprParser<'a, FuncUnOp>
+where
+    I: IntoIterator<Item = S>,
+    Identifier: From<S>,
+{
+    expr(ScopeCheck::with_implicit_bindings(bindings))
 }
 
 #[cfg(test)]
-pub fn query_expr<'a>() -> ExprParser<'a, QueryUnOp> {
-    expr(ScopeCheck::new())
+pub fn query_expr<'a, I, S>(bindings: I) -> ExprParser<'a, QueryUnOp>
+where
+    I: IntoIterator<Item = S>,
+    Identifier: From<S>,
+{
+    expr(ScopeCheck::with_implicit_bindings(bindings))
 }
 
-pub fn proc_expr<'a>() -> ExprParser<'a, ProcUnOp> {
-    expr(ScopeCheck::new())
+pub fn proc_expr<'a, I, S>(bindings: I) -> ExprParser<'a, ProcUnOp>
+where
+    I: IntoIterator<Item = S>,
+    Identifier: From<S>,
+{
+    expr(ScopeCheck::with_implicit_bindings(bindings))
 }
 
 /* An explicit ExprParser is necessary, rather than an `impl Parser`
