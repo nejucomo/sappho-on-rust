@@ -1,0 +1,1 @@
+Lambda(LambdaDefinition { func: Some(FunctionDefinition(Bind(Identifier("_unused_binding")), List([]))), query: None, proc: None })

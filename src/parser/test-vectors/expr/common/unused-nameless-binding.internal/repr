@@ -1,0 +1,1 @@
+Lambda(LambdaDefinition { func: Some(FunctionDefinition(Bind(Identifier("used_binding")), Lambda(LambdaDefinition { func: Some(FunctionDefinition(Bind(Identifier("_")), Deref(Identifier("used_binding")))), query: None, proc: None }))), query: None, proc: None })

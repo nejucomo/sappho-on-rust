@@ -56,7 +56,9 @@ where
         let mut reprbuf = casedir.path().to_path_buf();
         reprbuf.push("repr");
 
-        let reprf = casedir.get_file(reprbuf).unwrap();
+        let reprf = casedir
+            .get_file(&reprbuf)
+            .expect(&format!("Not found {:?}.", reprbuf));
         let rawexp = reprf.contents_utf8().unwrap().to_string();
         let expected = rawexp.trim_right();
 
