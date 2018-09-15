@@ -11,9 +11,16 @@ pub fn deref<'a, OP>(sc: ScopeCheck) -> impl Clone + Parser<Output = Expr<OP>, I
     position()
         .and(identifier())
         .flat_map(move |(pos, id)| {
-            sc.check_deref(&id)
-                .map_err(|e| ParseError::new(pos, Error::Message(Info::Owned(e))))
-                .map(|_| id)
+            let build_pe = |e| ParseError::new(pos, Error::Message(Info::Owned(e)));
+
+            if id.starts_with("_") {
+                Err(build_pe(format!(
+                    "Disallowed Underscore Derefence: {:?}",
+                    id
+                )))
+            } else {
+                sc.check_deref(&id).map_err(build_pe).map(|_| id)
+            }
         })
         .map(Expr::Deref)
 }
