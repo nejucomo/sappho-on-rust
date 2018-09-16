@@ -99,16 +99,21 @@ fn funcdef<'a>(
 ) -> impl Clone + Parser<Output = FunctionDefinition, Input = &'a str> {
     use ast::FunctionDefinition;
     use combine::char::char;
+    use combine::position;
     use combine::{value, Parser};
     use parser::common::space::{lsp, sp};
     use parser::expr::expr;
     use parser::expr::pattern::pattern;
 
-    lsp(pattern())
-        .then(move |pat| {
+    lsp(position().and(pattern()))
+        .then(move |(pos, pat)| {
             let subsc = sc.clone().push(&pat);
 
-            value(pat).and(sp(char('→')).with(expr(subsc)))
+            value(pat).and(
+                sp(char('→'))
+                    .with(expr(subsc.clone()))
+                    .flat_map(move |x| subsc.clone().check_unused(pos, x)),
+            )
         })
         .map(|(pat, x)| FunctionDefinition(pat, Box::new(x)))
 }

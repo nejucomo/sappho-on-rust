@@ -1,25 +1,25 @@
 use ast::{Expr, Identifier};
-use combine::Parser;
+use combine::{ParseError, Parser, StreamOnce};
+use std::cell::Cell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
 pub fn deref<'a, OP>(sc: ScopeCheck) -> impl Clone + Parser<Output = Expr<OP>, Input = &'a str> {
-    use combine::primitives::{Error, Info};
-    use combine::{position, ParseError};
+    use combine::position;
     use parser::atom::identifier;
 
     position()
         .and(identifier())
         .flat_map(move |(pos, id)| {
-            let build_pe = |e| ParseError::new(pos, Error::Message(Info::Owned(e)));
-
             if id.starts_with("_") {
-                Err(build_pe(format!(
+                Err(make_parse_error_builder(pos)(format!(
                     "Disallowed Underscore Derefence: {:?}",
                     id
                 )))
             } else {
-                sc.check_deref(&id).map_err(build_pe).map(|_| id)
+                sc.mark_deref(&id)
+                    .map_err(make_parse_error_builder(pos))
+                    .map(|_| id)
             }
         })
         .map(Expr::Deref)
@@ -31,7 +31,7 @@ pub struct ScopeCheck(Rc<Layer>);
 #[derive(Clone)]
 enum Layer {
     Empty,
-    MapLink(Rc<Layer>, HashMap<Identifier, bool>),
+    MapLink(Rc<Layer>, HashMap<Identifier, Cell<bool>>),
 }
 
 impl ScopeCheck {
@@ -55,26 +55,71 @@ impl ScopeCheck {
         let mut map = HashMap::new();
 
         for id in bindings {
-            map.insert(Identifier::from(id), false);
+            map.insert(Identifier::from(id), Cell::new(false));
         }
 
         ScopeCheck(Rc::new(Layer::MapLink(self.0.clone(), map)))
     }
 
+    pub fn check_unused<'a, T>(
+        self,
+        pos: <(&str) as StreamOnce>::Position,
+        thing: T,
+    ) -> Result<T, ParseError<&'a str>> {
+        self.0
+            .check_unused()
+            .map(|()| thing)
+            .map_err(make_parse_error_builder(pos))
+    }
+
     // FIXME: This does not mark the binding as referenced yet; requires mut.
-    fn check_deref(&self, id: &Identifier) -> Result<(), String> {
-        self.0.check_deref(id)
+    fn mark_deref(&self, id: &Identifier) -> Result<(), String> {
+        self.0.mark_deref(id)
     }
 }
 
 impl Layer {
-    fn check_deref(&self, id: &Identifier) -> Result<(), String> {
+    fn mark_deref(&self, id: &Identifier) -> Result<(), String> {
         match self {
             &Layer::Empty => Err(format!("Undefined reference: {:?}", id)),
             &Layer::MapLink(ref supref, ref map) => match map.get(id) {
-                None => supref.check_deref(id),
-                Some(_) => Ok(()),
+                None => supref.mark_deref(id),
+                Some(cell) => {
+                    cell.set(true);
+                    Ok(())
+                }
             },
         }
     }
+
+    fn check_unused(&self) -> Result<(), String> {
+        if let &Layer::MapLink(_, ref map) = self {
+            let mut prefix = "Unused bindings: ";
+            let mut errstr = String::new();
+
+            for (id, usecell) in map {
+                if !(id.starts_with("_") || usecell.get()) {
+                    errstr.push_str(prefix);
+                    errstr.push_str(&id);
+                    prefix = ", ";
+                }
+            }
+
+            if errstr.len() > 0 {
+                return Err(errstr);
+            }
+        }
+
+        return Ok(());
+    }
+}
+
+fn make_parse_error_builder<S>(pos: S::Position) -> impl FnOnce(String) -> ParseError<S>
+where
+    S: StreamOnce,
+{
+    use combine::primitives::{Error, Info};
+    use combine::ParseError;
+
+    |e| ParseError::new(pos, Error::Message(Info::Owned(e)))
 }
