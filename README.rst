@@ -29,10 +29,6 @@ So far we've been sacrificing 2 by naming each test case file redundantly in mac
 TODO
 ====
 
-#. syntactic scope check:
-
-   - no free references
-   - must use unless '_'-prefixed
-
+#. fix parse error message position display
 #. func eval first draft: bindings, no-gc
 #. proc & query eval
